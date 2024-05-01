@@ -1,4 +1,5 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery.dart';
 
 class CustomDropdown extends StatelessWidget {
   final String name;
@@ -34,7 +35,7 @@ class CustomDropdown extends StatelessWidget {
     this.keyboardType = TextInputType.name,
     this.onChanged,
     required this.items,
-    this.isErrorState = false,
+    this.isErrorState = false, required DeliveryType value,
   });
 
   @override

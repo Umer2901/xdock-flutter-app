@@ -17,4 +17,5 @@ class AppImages {
   static const String frozen = 'assets/images/frozen.png';
   static const String priority = 'assets/images/priority.png';
   static const String cardboard = 'assets/images/cardboard_boxes.png';
+  static const String clock = 'assets/images/Clock.png';
 }

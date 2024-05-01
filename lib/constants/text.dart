@@ -153,6 +153,7 @@ class AppText {
 
   //Delivery
   static const String delivery = 'Delivery';
+  static const String setdeliveryHours = 'Set Delivery Hours';
   static const String space = 'Space';
   static const String weight = 'Weight';
   static const String specialInstructions = 'Special Instructions';

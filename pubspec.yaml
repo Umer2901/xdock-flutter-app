@@ -46,6 +46,7 @@ dependencies:
   intl: ^0.18.1
   loading_indicator: ^3.1.1
   pinput: ^4.0.0
+  progressive_time_picker: ^1.0.1
   provider: ^6.1.2
   shared_preferences: ^2.2.2
   shimmer: ^3.0.0

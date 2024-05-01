@@ -1,4 +1,5 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery.dart';
 
 class AppPages extends AppRoutes {
@@ -65,6 +66,10 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.consigmentReorder,
       page: () => const MyConsigmentReorder(),
+    ),
+     GetPage(
+      name: AppRoutes.Stopwatch,
+      page: () => EditTime(),
     ),
   ];
 }
