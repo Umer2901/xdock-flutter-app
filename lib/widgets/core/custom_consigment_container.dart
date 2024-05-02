@@ -2,9 +2,17 @@ import 'package:coldxpress/export.dart';
 
 class CustomConsignmentContainer extends StatelessWidget {
   final bool isLoading;
+  final bool? isSelected;
+  final Widget? icon;
+  final Function? onTap;
   final Map? consignment;
   const CustomConsignmentContainer(
-      {super.key, this.isLoading = false, this.consignment});
+      {super.key,
+      this.isLoading = false,
+      this.consignment,
+      this.icon,
+      this.isSelected,
+      this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +71,11 @@ class CustomConsignmentContainer extends StatelessWidget {
                       padding: EdgeInsets.symmetric(
                         horizontal: 4.w,
                       ),
-                      child: Icon(Icons.drag_handle),
+                      child: isSelected != null
+                          ? (isSelected == true
+                              ? const Icon(Icons.check_box)
+                              : const Icon(Icons.check_box_outline_blank))
+                          : icon,
                     ),
                     // CircleAvatar(
                     //   backgroundColor: AppColors.darkGrey.withOpacity(0.16),

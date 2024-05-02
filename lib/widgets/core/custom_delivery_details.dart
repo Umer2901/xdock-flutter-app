@@ -23,7 +23,7 @@ class CustomDeliveryDetailsContainer extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+            padding: EdgeInsets.symmetric(horizontal: 3.5.w, vertical: 1.5.h),
             height: 6.h,
             width: 13.5.w,
             decoration: BoxDecoration(
@@ -31,8 +31,6 @@ class CustomDeliveryDetailsContainer extends StatelessWidget {
               borderRadius: BorderRadius.circular(8.sp),
             ),
             child: SizedBox(
-              height: 4.h,
-              width: 9.5.w,
               child: svgIcon,
             ),
           ),

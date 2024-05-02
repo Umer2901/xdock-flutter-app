@@ -3,7 +3,7 @@ import 'package:coldxpress/export.dart';
 class CustomTextField extends StatelessWidget {
   final String name;
   final String? hintText;
-  final Icon? prefixIcon;
+  final Widget? prefixIcon;
   final Widget? suffixIcon;
   final bool obscureText;
   final String? Function(String?)? validator;

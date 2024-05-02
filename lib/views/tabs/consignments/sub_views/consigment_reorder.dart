@@ -48,7 +48,6 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
             'Accept': 'application/json',
           },
         );
-        print(response.body);
         if (response.statusCode == 200) {
           final dynamic data = json.decode(response.body);
           if (data['status'] == 'success') {
@@ -109,8 +108,9 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                 radius: 9.w,
                 backgroundColor: AppColors.greyWhite,
                 child: SvgPicture.asset(
-                  AppSvgs.pallet,
+                  AppSvgs.reorderBlack,
                   width: 10.w,
+                  color: AppColors.blue,
                 ),
               ),
               Padding(
@@ -150,7 +150,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                         children: [
                           if (_consignments != null)
                             ReorderableListView(
-                              physics: NeverScrollableScrollPhysics(),
+                              physics: const NeverScrollableScrollPhysics(),
                               shrinkWrap: true,
                               onReorder: (oldIndex, newIndex) {
                                 setState(() {
@@ -169,6 +169,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                                   return CustomConsignmentContainer(
                                     key: ValueKey(consignment['id']),
                                     consignment: consignment,
+                                    icon: const Icon(Icons.drag_handle),
                                   );
                                 },
                               ),
@@ -274,6 +275,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                               for (int i = 0; i < 10; i++) ...{
                                 const CustomConsignmentContainer(
                                   isLoading: true,
+                                  icon: Icon(Icons.drag_handle),
                                 ),
                               }
                             ],

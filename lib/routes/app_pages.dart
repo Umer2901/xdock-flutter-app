@@ -67,9 +67,13 @@ class AppPages extends AppRoutes {
       name: AppRoutes.consigmentReorder,
       page: () => const MyConsigmentReorder(),
     ),
-     GetPage(
+    GetPage(
       name: AppRoutes.Stopwatch,
       page: () => EditTime(),
+    ),
+    GetPage(
+      name: AppRoutes.consigmentGroup,
+      page: () => const MyConsigmentGroup(),
     ),
   ];
 }

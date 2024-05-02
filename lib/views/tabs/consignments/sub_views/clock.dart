@@ -70,7 +70,8 @@ class _EditTimeState extends State<EditTime> {
                             children: [
                               Text(
                                 'Ritchies IGA',
-                                style: Theme.of(context).textTheme.headlineMedium,
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium,
                               ),
                             ],
                           ),
@@ -84,11 +85,10 @@ class _EditTimeState extends State<EditTime> {
                             width: 9.5.w,
                             height: 4.h,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50.sp),
-                              border: Border.all(
-                                color: AppColors.black.withOpacity(0.8),
-                              )
-                            ),
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all(
+                                  color: AppColors.black.withOpacity(0.8),
+                                )),
                             child: Icon(
                               Icons.call,
                               color: AppColors.black,
@@ -125,13 +125,19 @@ class _EditTimeState extends State<EditTime> {
                               ),
                               Text(
                                 "Start Time",
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.black),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(color: AppColors.black),
                               ),
                             ],
                           ),
                           Text(
                             "${_startTime.h}:${_startTime.m}",
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: const Color(0xFFE29400)),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(color: const Color(0xFFE29400)),
                           ),
                         ],
                       ),
@@ -154,13 +160,19 @@ class _EditTimeState extends State<EditTime> {
                               ),
                               Text(
                                 "End Time",
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.black),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(color: AppColors.black),
                               ),
                             ],
                           ),
                           Text(
                             "${_endTime.h}:${_endTime.m}",
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: AppColors.blue),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(color: AppColors.blue),
                           ),
                         ],
                       ),
@@ -175,69 +187,70 @@ class _EditTimeState extends State<EditTime> {
                   Center(
                     child: Text(
                       "*24 HR CLOCK",
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(color: AppColors.grey),
                     ),
                   ),
                   SizedBox(
                     height: 1.h,
                   ),
-             
-   Center(
-  child: TimePicker(
-    initTime: _startTime,
-    endTime: _endTime,
-    onSelectionChange: (start, end, isDisableRange) =>
-      print('onSelectionChange => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
-    onSelectionEnd: (start, end, isDisableRange) =>
-      print('onSelectionEnd => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
-    decoration: TimePickerDecoration(
-      sweepDecoration: TimePickerSweepDecoration(
-        pickerStrokeWidth: 8,
-        pickerGradient: const SweepGradient(
-          colors: [
-            Color.fromARGB(255, 9,103, 198),
-            Colors.blue,
-          ],
-          stops: [0.0, 1.0],
-        ),
-      ),
-      baseColor: const Color.fromARGB(255, 200, 198, 198), 
-      initHandlerDecoration: TimePickerHandlerDecoration(
-     color: AppColors.grey,
-        shape: BoxShape.circle,
-        radius: 12.0,
-         icon: const Icon(
-          Icons.circle,
-          size: 20.0,
-          color: AppColors.yellow,
-        ),
-      ),
-      endHandlerDecoration: TimePickerHandlerDecoration(
-        color: AppColors.grey,
-        shape: BoxShape.circle,
-        radius: 12.0,
-        icon: const Icon(
-          Icons.circle,
-          size: 20.0,
-          color: AppColors.blue,
-        ),
-      ),
-    ),
-    child: const CircleAvatar(
-      backgroundImage: AssetImage(AppImages.clock),
-    )
-  ),
-),
-
-
-
- SizedBox(
+                  Center(
+                    child: TimePicker(
+                        initTime: _startTime,
+                        endTime: _endTime,
+                        onSelectionChange: (start, end, isDisableRange) => print(
+                            'onSelectionChange => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
+                        onSelectionEnd: (start, end, isDisableRange) => print(
+                            'onSelectionEnd => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
+                        decoration: TimePickerDecoration(
+                          sweepDecoration: TimePickerSweepDecoration(
+                            pickerStrokeWidth: 8,
+                            pickerGradient: const SweepGradient(
+                              colors: [
+                                Color.fromARGB(255, 9, 103, 198),
+                                Colors.blue,
+                              ],
+                              stops: [0.0, 1.0],
+                            ),
+                          ),
+                          baseColor: const Color.fromARGB(255, 200, 198, 198),
+                          initHandlerDecoration: TimePickerHandlerDecoration(
+                            color: AppColors.grey,
+                            shape: BoxShape.circle,
+                            radius: 12.0,
+                            icon: const Icon(
+                              Icons.circle,
+                              size: 20.0,
+                              color: AppColors.yellow,
+                            ),
+                          ),
+                          endHandlerDecoration: TimePickerHandlerDecoration(
+                            color: AppColors.grey,
+                            shape: BoxShape.circle,
+                            radius: 12.0,
+                            icon: const Icon(
+                              Icons.circle,
+                              size: 20.0,
+                              color: AppColors.blue,
+                            ),
+                          ),
+                        ),
+                        child: const CircleAvatar(
+                          backgroundImage: AssetImage(AppImages.clock),
+                        )),
+                  ),
+                  SizedBox(
                     height: 2.h,
                   ),
                   Center(
                     child: Text(
                       "*Changing these hours may impact drop order",
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(color: AppColors.grey),
                     ),
                   ),
                   SizedBox(
@@ -247,18 +260,20 @@ class _EditTimeState extends State<EditTime> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                     
                       Container(
-                        width: 30.w,
-                        child: CustomButton(label: "Cancel", onPressed: (){},backgroundColor: AppColors.white,foregroundColor: AppColors.darkGrey,borderColor: Colors.grey,)),
-                       Container(
-                        width: 30.w,
-                        child: CustomButton(label: "Save", onPressed: (){})),
+                          width: 30.w,
+                          child: CustomButton(
+                            label: "Cancel",
+                            onPressed: () {},
+                            backgroundColor: AppColors.white,
+                            foregroundColor: AppColors.darkGrey,
+                            borderColor: Colors.grey,
+                          )),
+                      Container(
+                          width: 30.w,
+                          child: CustomButton(label: "Save", onPressed: () {})),
                     ],
                   )
-
-
-
                 ],
               ),
             ),

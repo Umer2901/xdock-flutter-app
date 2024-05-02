@@ -28,6 +28,9 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider<LocationProvider>(
             create: (_) => LocationProvider(),
           ),
+          ChangeNotifierProvider<BottomNavProvider>(
+            create: (_) => BottomNavProvider(),
+          ),
         ],
         child: Sizer(
           builder: (context, language, child) {

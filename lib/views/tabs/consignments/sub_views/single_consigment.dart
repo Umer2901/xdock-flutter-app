@@ -1,4 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:coldxpress/export.dart';
+import 'package:flutter/material.dart';
 
 class SingleConsigmentView extends StatelessWidget {
   const SingleConsigmentView({super.key});
@@ -77,8 +80,8 @@ class SingleConsigmentView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(50.sp),
                               border: Border.all()),
                           child: SvgPicture.asset(
-                            AppSvgs.journey,
-                            color: AppColors.blue,
+                            AppSvgs.mapMarker,
+                            color: AppColors.black,
                           ),
                         ),
                       ),
@@ -151,10 +154,15 @@ class SingleConsigmentView extends StatelessWidget {
                   SizedBox(
                     height: 2.h,
                   ),
-                  CustomProductTypeAndTime(
-                    type: AppText.chilled,
-                    time: '10.00 - 12.00',
-                    svgImage: SvgPicture.asset(AppSvgs.pallet),
+                  GestureDetector(
+                    onTap: () {
+                      Get.toNamed(AppRoutes.Stopwatch);
+                    },
+                    child: CustomProductTypeAndTime(
+                      type: AppText.chilled,
+                      time: '10.00 - 12.00',
+                      svgImage: SvgPicture.asset(AppSvgs.frozen),
+                    ),
                   ),
                   SizedBox(
                     height: 2.h,
@@ -223,7 +231,6 @@ class SingleConsigmentView extends StatelessWidget {
                           stepIndex: 4,
                           subText:
                               'Pronto Fine Food 830 wellington road, Rowville',
-                          // isLastStep: true,
                         ),
                       ],
                     ),
@@ -240,12 +247,12 @@ class SingleConsigmentView extends StatelessWidget {
                           CustomDeliveryDetailsContainer(
                             type: AppText.cartons,
                             counts: '5',
-                            svgIcon: SvgPicture.asset(AppSvgs.pallet),
+                            svgIcon: SvgPicture.asset(AppSvgs.carton),
                           ),
                           CustomDeliveryDetailsContainer(
                             type: AppText.pallets,
                             counts: '5',
-                            svgIcon: SvgPicture.asset(AppSvgs.pallet),
+                            svgIcon: SvgPicture.asset(AppSvgs.palletBlue),
                           )
                         ],
                       ),
@@ -259,13 +266,13 @@ class SingleConsigmentView extends StatelessWidget {
                             type: AppText.space,
                             counts: '5',
                             countType: 'sqft',
-                            svgIcon: SvgPicture.asset(AppSvgs.pallet),
+                            svgIcon: SvgPicture.asset(AppSvgs.space),
                           ),
                           CustomDeliveryDetailsContainer(
                             type: AppText.weight,
                             counts: '5',
                             countType: 'KG',
-                            svgIcon: SvgPicture.asset(AppSvgs.pallet),
+                            svgIcon: SvgPicture.asset(AppSvgs.weight),
                           )
                         ],
                       ),
