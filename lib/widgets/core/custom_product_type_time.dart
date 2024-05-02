@@ -67,7 +67,7 @@ class CustomProductTypeAndTime extends StatelessWidget {
               ),
               Text(
                 time,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.white,
                       fontWeight: FontWeight.w700,
                     ),
