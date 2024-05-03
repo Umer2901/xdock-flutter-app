@@ -9,11 +9,13 @@ class EditTime extends StatefulWidget {
 }
 
 class _EditTimeState extends State<EditTime> {
-  final SignatureController controller = SignatureController(
-    penStrokeWidth: 3,
-    penColor: AppColors.black,
-    exportBackgroundColor: AppColors.white,
-  );
+  late TimeProvider _timeProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timeProvider = Provider.of<TimeProvider>(context);
+  }
 
   PickedTime _startTime = PickedTime(h: 6, m: 30);
   PickedTime _endTime = PickedTime(h: 19, m: 30);
@@ -84,10 +86,10 @@ class _EditTimeState extends State<EditTime> {
                             width: 9.5.w,
                             height: 4.h,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50.sp),
-                              border: Border.all(
-                                color: AppColors.black.withOpacity(0.8),
-                              )
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all(
+                                  color: AppColors.black.withOpacity(0.8),
+                                )
                             ),
                             child: Icon(
                               Icons.call,
@@ -269,7 +271,15 @@ class _EditTimeState extends State<EditTime> {
                         child: CustomButton(label: "Cancel", onPressed: (){},backgroundColor: AppColors.white,foregroundColor: AppColors.darkGrey,borderColor: Colors.grey,)),
                        Container(
                         width: 30.w,
-                        child: CustomButton(label: "Save", onPressed: (){})),
+                        child: CustomButton(label: "Save", onPressed: () {
+                          // Access the TimeProvider
+                          var timeProvider = Provider.of<TimeProvider>(context, listen: false);
+
+                          // Update the start and end times with the selected values
+                          timeProvider.updateTimes(_startTime, _endTime);
+Navigator.pop(context);
+                          // Navigate back to the previous screen or perform any other actions
+                        })),
                     ],
                   )
 
@@ -282,5 +292,19 @@ class _EditTimeState extends State<EditTime> {
         ),
       ),
     );
+  }
+}
+
+class TimeProvider extends ChangeNotifier {
+  PickedTime _startTime = PickedTime(h: 6, m: 30);
+  PickedTime _endTime = PickedTime(h: 19, m: 30);
+
+  PickedTime get startTime => _startTime;
+  PickedTime get endTime => _endTime;
+
+  void updateTimes(PickedTime startTime, PickedTime endTime) {
+    _startTime = startTime;
+    _endTime = endTime;
+    notifyListeners();
   }
 }

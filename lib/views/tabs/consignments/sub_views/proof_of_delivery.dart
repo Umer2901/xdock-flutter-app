@@ -1,5 +1,6 @@
-
+import 'package:flutter/material.dart';
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 
 enum DeliveryType { full, partial, none }
 
@@ -18,6 +19,34 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   );
  bool showSignature = false; 
 DeliveryType selectedDeliveryType = DeliveryType.full; 
+  int palletValue = 0;
+  int cartonsValue = 0;
+
+  void updatePalletValue(int value) {
+    setState(() {
+      palletValue = value;
+    });
+  }
+
+  void updateCartonsValue(int value) {
+    setState(() {
+      cartonsValue = value;
+    });
+  }
+  final TextEditingController serviceTimeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    serviceTimeController.text =
+        '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
+  }
+
+  @override
+  void dispose() {
+    serviceTimeController.dispose();
+    super.dispose();
+  }
  void _showSignaturePopup(BuildContext context) {
     showDialog(
       context: context,
@@ -349,20 +378,28 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           PalletContainer(
-            name: 'cartons',
-            heading: AppText.cartons,
-            icon: SvgPicture.asset(AppSvgs.pallet),
-            hintText: '0',
-            initialValue: 0,
-            totalPallet: 5,
-          ),
-          const PalletContainer(
-            name: 'pallets',
-            heading: AppText.pallets,
-            hintText: '0',
-            initialValue: 0,
-            totalPallet: 5,
-          ),
+                              name: 'cartons',
+                              heading: AppText.cartons,
+                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              hintText: '0',
+                              initialValue: cartonsValue, 
+                              totalPallet: 5,
+                              onValueChanged: (value) {
+                               
+                                updateCartonsValue(value);
+                              },
+                            ),
+           PalletContainer(
+                              name: 'pallets',
+                              heading: AppText.pallets,
+                              hintText: '0',
+                              initialValue: palletValue,
+                              totalPallet: 5,
+                              onValueChanged: (value) {
+                                
+                                updatePalletValue(value);
+                              },
+                            ),
         ],
       ),
       SizedBox(
@@ -400,39 +437,45 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
       SizedBox(
         height: 1.h,
       ),
-      CustomTextField(
-        name: 'serviceTime',
-        keyboardType: TextInputType.number,
-        readOnly: true,
-        onTap: () {
-          Get.toNamed(AppRoutes.Stopwatch);
-        },
-        suffixIcon: Padding(
-          padding:
-              EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                AppText.editHours,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(
-                      color: AppColors.black.withOpacity(0.5),
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 2.h,
-                color: AppColors.black.withOpacity(0.5),
-              )
-            ],
+     CustomTextField(
+  name: 'serviceTime',
+  keyboardType: TextInputType.number,
+  readOnly: true,
+  hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
+        
+  onTap: () {
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTime(),
+      ),
+    );
+  },
+  suffixIcon: Padding(
+    padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+         Text(
+          AppText.editHours,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w500,
           ),
         ),
-      ),
+       
+        Icon(
+          Icons.arrow_forward_ios,
+          size: 2.h,
+          color: AppColors.black.withOpacity(0.5),
+        )
+      ],
+    ),
+  ),
+),
+
       SizedBox(
         height: 1.h,
       ),
@@ -500,30 +543,24 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
               vertical: 1.h,
               horizontal: 2.w,
             ),
-            child: Positioned(
-              left: 4.w,
-              right: 4.w,
-              top: 2.h,
-              bottom: 2.h,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 50.sp,
-                    height: 50.sp,
-                    child: Image.asset(
-                      AppImages.handWithPen,
-                    ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 50.sp,
+                  height: 50.sp,
+                  child: Image.asset(
+                    AppImages.handWithPen,
                   ),
-                  Text(
-                    AppText.tapHereToSign,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  )
-                ],
-              ),
+                ),
+                Text(
+                  AppText.tapHereToSign,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                )
+              ],
             ),
           ),
         if (showSignature)
@@ -579,9 +616,64 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
         children: [
           SizedBox(
             width: 50.w,
-            child: CustomButton(label: "Next", onPressed: (){
-Get.toNamed(AppRoutes.podphotos);
-            },backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
+            child: CustomButton(label: "Next",onPressed: () {
+  if (selectedDeliveryType == DeliveryType.full &&
+      (palletValue < 5 || cartonsValue < 5)) { 
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            icon: SizedBox(
+              height: 20.w,
+              width: 20.w,
+              child: const Image(
+                image: AssetImage(AppImages.brakeWarning),
+              ),
+            ),
+            title: Text(
+              "You are missing 2 cartons. Please fix this mistake or change to “Partial Delivery”.",
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            titlePadding: EdgeInsets.symmetric(
+              vertical: 1.h,
+              horizontal: 2.w,
+            ),
+            iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.sp),
+            ),
+            backgroundColor: AppColors.white,
+            actions: <Widget>[
+              SizedBox(height: 2.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  CustomButton(
+                    height: 5.h,
+                    width: 30.w,
+                    label: 'Edit',
+                    backgroundColor: AppColors.white,
+                    borderColor: AppColors.yellow,
+                    foregroundColor: AppColors.black,
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  
+                ],
+              ),
+            ],
+          );
+        },
+      );
+  } else {
+    Get.toNamed(AppRoutes.podphotos);
+  }
+},backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
         ],
       ),
     ],
@@ -615,6 +707,37 @@ Get.toNamed(AppRoutes.podphotos);
             hintText: '0',
             initialValue: 0,
             totalPallet: 5,
+          ),
+        ],
+      ),
+         SizedBox(
+        height: 3.h,
+      ),
+      Text(
+        "Reason for partial delivery",
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+
+      SizedBox(
+        height: 1.h,
+      ),
+      Stack(
+        children: [
+          Container(
+            height: 15.h,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.navyBlue),
+              borderRadius: BorderRadius.all(
+                Radius.circular(5.sp),
+              ),
+            ),
+            padding: EdgeInsets.symmetric(
+                vertical: 1.h, horizontal: 2.w),
+            child: const CustomTextField(
+              borderColor: AppColors.white,
+      name: 'receiverLastName',
+      hintText: "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
+            ),
           ),
         ],
       ),
@@ -653,39 +776,44 @@ Get.toNamed(AppRoutes.podphotos);
       SizedBox(
         height: 1.h,
       ),
-      CustomTextField(
-        name: 'serviceTime',
-        keyboardType: TextInputType.number,
-        readOnly: true,
-        onTap: () {
-          Get.toNamed(AppRoutes.Stopwatch);
-        },
-        suffixIcon: Padding(
-          padding:
-              EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                AppText.editHours,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(
-                      color: AppColors.black.withOpacity(0.5),
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 2.h,
-                color: AppColors.black.withOpacity(0.5),
-              )
-            ],
+    CustomTextField(
+  name: 'serviceTime',
+  keyboardType: TextInputType.number,
+  readOnly: true,
+  hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
+        
+  onTap: () {
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTime(),
+      ),
+    );
+  },
+  suffixIcon: Padding(
+    padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+         Text(
+          AppText.editHours,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w500,
           ),
         ),
-      ),
+       
+        Icon(
+          Icons.arrow_forward_ios,
+          size: 2.h,
+          color: AppColors.black.withOpacity(0.5),
+        )
+      ],
+    ),
+  ),
+),
       SizedBox(
         height: 1.h,
       ),
@@ -753,30 +881,24 @@ Get.toNamed(AppRoutes.podphotos);
               vertical: 1.h,
               horizontal: 2.w,
             ),
-            child: Positioned(
-              left: 4.w,
-              right: 4.w,
-              top: 2.h,
-              bottom: 2.h,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 50.sp,
-                    height: 50.sp,
-                    child: Image.asset(
-                      AppImages.handWithPen,
-                    ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 50.sp,
+                  height: 50.sp,
+                  child: Image.asset(
+                    AppImages.handWithPen,
                   ),
-                  Text(
-                    AppText.tapHereToSign,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  )
-                ],
-              ),
+                ),
+                Text(
+                  AppText.tapHereToSign,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                )
+              ],
             ),
           ),
         if (showSignature)
@@ -833,7 +955,7 @@ Get.toNamed(AppRoutes.podphotos);
         children: [
           SizedBox(
             width: 50.w,
-            child: CustomButton(label: "Next", onPressed: (){},backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
+            child: CustomButton(label: "Next", onPressed: (){ Get.toNamed(AppRoutes.podphotos);},backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
         ],
       ),
     ],

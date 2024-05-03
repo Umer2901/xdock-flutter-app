@@ -68,10 +68,10 @@ class AppPages extends AppRoutes {
       name: AppRoutes.consigmentReorder,
       page: () => const MyConsigmentReorder(),
     ),
-     GetPage(
-      name: AppRoutes.Stopwatch,
-      page: () => const EditTime(),
-    ),
+    //  GetPage(
+    //   name: AppRoutes.Stopwatch,
+    //   page: () => const EditTime(),
+    // ),
      GetPage(
       name: AppRoutes.podphotos,
       page: () => const ProofOfDeliveryPhotos(),
