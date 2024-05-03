@@ -15,7 +15,7 @@ class _EditTimeState extends State<EditTime> {
     exportBackgroundColor: AppColors.white,
   );
 
-  final PickedTime _startTime = PickedTime(h: 6, m: 30);
+  PickedTime _startTime = PickedTime(h: 6, m: 30);
   PickedTime _endTime = PickedTime(h: 19, m: 30);
 
   @override
@@ -197,49 +197,75 @@ class _EditTimeState extends State<EditTime> {
                     height: 1.h,
                   ),
                   Center(
-                    child: TimePicker(
-                        initTime: _startTime,
-                        endTime: _endTime,
-                        onSelectionChange: (start, end, isDisableRange) => print(
-                            'onSelectionChange => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
-                        onSelectionEnd: (start, end, isDisableRange) => print(
-                            'onSelectionEnd => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
-                        decoration: TimePickerDecoration(
-                          sweepDecoration: TimePickerSweepDecoration(
-                            pickerStrokeWidth: 8,
-                            pickerGradient: const SweepGradient(
-                              colors: [
-                                Color.fromARGB(255, 9, 103, 198),
-                                Colors.blue,
-                              ],
-                              stops: [0.0, 1.0],
+                    child: Container(
+                      height: 31.h,
+                      width: 75.w,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: AppColors.white,
+                            backgroundImage: AssetImage(AppImages.clock),
+                            radius: 76.sp,
+                          ),
+                          Positioned(
+                            right: 0,
+                            left: 0,
+                            child: TimePicker(
+                              initTime: _startTime,
+                              endTime: _endTime,
+                              onSelectionChange: (start, end, isDisableRange) =>
+                                  print(
+                                      'onSelectionChange => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
+                              onSelectionEnd: (start, end, isDisableRange) {
+                                setState(() {
+                                  _startTime = start;
+                                  _endTime = end;
+                                });
+                                print(
+                                    'onSelectionEnd => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange');
+                              },
+                              decoration: TimePickerDecoration(
+                                sweepDecoration: TimePickerSweepDecoration(
+                                  pickerStrokeWidth: 8,
+                                  pickerGradient: const SweepGradient(
+                                    colors: [
+                                      Color.fromARGB(255, 9, 103, 198),
+                                      Colors.blue,
+                                    ],
+                                    stops: [0.0, 1.0],
+                                  ),
+                                ),
+                                baseColor:
+                                    const Color.fromARGB(255, 200, 198, 198),
+                                initHandlerDecoration:
+                                    TimePickerHandlerDecoration(
+                                  color: AppColors.grey,
+                                  shape: BoxShape.circle,
+                                  radius: 12.0,
+                                  icon: const Icon(
+                                    Icons.circle,
+                                    size: 20.0,
+                                    color: AppColors.yellow,
+                                  ),
+                                ),
+                                endHandlerDecoration:
+                                    TimePickerHandlerDecoration(
+                                  color: AppColors.grey,
+                                  shape: BoxShape.circle,
+                                  radius: 12.0,
+                                  icon: const Icon(
+                                    Icons.circle,
+                                    size: 20.0,
+                                    color: AppColors.blue,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          baseColor: const Color.fromARGB(255, 200, 198, 198),
-                          initHandlerDecoration: TimePickerHandlerDecoration(
-                            color: AppColors.grey,
-                            shape: BoxShape.circle,
-                            radius: 12.0,
-                            icon: const Icon(
-                              Icons.circle,
-                              size: 20.0,
-                              color: AppColors.yellow,
-                            ),
-                          ),
-                          endHandlerDecoration: TimePickerHandlerDecoration(
-                            color: AppColors.grey,
-                            shape: BoxShape.circle,
-                            radius: 12.0,
-                            icon: const Icon(
-                              Icons.circle,
-                              size: 20.0,
-                              color: AppColors.blue,
-                            ),
-                          ),
-                        ),
-                        child: const CircleAvatar(
-                          backgroundImage: AssetImage(AppImages.clock),
-                        )),
+                        ],
+                      ),
+                    ),
                   ),
                   SizedBox(
                     height: 2.h,

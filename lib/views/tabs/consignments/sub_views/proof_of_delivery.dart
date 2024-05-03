@@ -1,8 +1,4 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:coldxpress/export.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 
 enum DeliveryType { full, partial, none }
 
@@ -19,108 +15,99 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     penColor: AppColors.black,
     exportBackgroundColor: AppColors.white,
   );
-
-  DeliveryType selectedDeliveryType =
-      DeliveryType.full; // Default delivery type
+  bool showSignature = false;
+  DeliveryType selectedDeliveryType = DeliveryType.full;
   void _showSignaturePopup(BuildContext context) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
       builder: (BuildContext context) {
-        return Container(
-          height: double.infinity,
-          width: 85.w,
-          child: RotationTransition(
-            turns: AlwaysStoppedAnimation(90 / 360),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      child: Text(
-                        "Cancel",
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(color: AppColors.blue),
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          backgroundColor: Colors.white,
+          child: Transform.rotate(
+            angle: 90 * 3.14159 / 180,
+            child: Container(
+              height: 47.h,
+              width: 80.w,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CupertinoButton(
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    Text(
-                      "Signature",
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineLarge
-                          ?.copyWith(color: AppColors.black),
-                    ),
-                    TextButton(
-                      child: Text(
-                        "Done",
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(color: AppColors.blue),
+                      Text(
+                        "Signature",
+                        style: Theme.of(context).textTheme.headlineMedium,
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    height: 25.h,
-                    width: 95.w, // Adjust width as needed
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.navyBlue),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-
-                    child: Signature(
-                      controller: controller,
-                      width: 75.w,
+                      CupertinoButton(
+                        child: const Text(
+                          "Done",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            showSignature = true;
+                            Navigator.pop(context);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  Center(
+                    child: Container(
                       height: 24.h,
-                      backgroundColor: Colors.transparent,
+                      width: 90.w,
+                      alignment: Alignment.center,
+                      child: Signature(
+                        controller: controller,
+                        width: 85.w,
+                        height: 20.h,
+                        backgroundColor: Colors.transparent,
+                      ),
                     ),
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextButton(
-                      child: Text(
-                        "Clear",
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(color: AppColors.blue),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Center(
+                        child: Divider(
+                          height: 1,
+                          thickness: 2,
+                          color: AppColors.grey,
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          controller.clear();
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                      CupertinoButton(
+                        child: const Text(
+                          "Clear",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            controller.clear();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-      ),
-      clipBehavior: Clip.antiAliasWithSaveLayer,
     );
   }
 
@@ -305,7 +292,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             SizedBox(
                               width: 2.w,
                             ),
-                            Text('Full Delivery'),
+                            const Text('Full Delivery'),
                           ],
                         ),
                       ),
@@ -320,7 +307,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             SizedBox(
                               width: 2.w,
                             ),
-                            Text('Partial Delivery'),
+                            const Text('Partial Delivery'),
                           ],
                         ),
                       ),
@@ -335,7 +322,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                               SizedBox(
                                 width: 2.w,
                               ),
-                              Text('No Delivery'),
+                              const Text('No Delivery'),
                             ],
                           )),
                     ],
@@ -494,56 +481,99 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                           width: 90.w,
                           child: GestureDetector(
                             onTap: () {
-                              _showSignaturePopup(
-                                  context); // Show the popup when tapped
+                              if (!showSignature) {
+                                _showSignaturePopup(context);
+                              }
                             },
                             child: Stack(
                               children: [
-                                if (controller.isEmpty)
-                                  Positioned(
-                                    left: 4.w,
-                                    right: 4.w,
-                                    top: 2.h,
-                                    bottom: 2.h,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        SizedBox(
-                                          width: 50.sp,
-                                          height: 50.sp,
-                                          child: Image.asset(
-                                            AppImages.handWithPen,
+                                if (controller.isEmpty && !showSignature)
+                                  Container(
+                                    height: 25.h,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      border:
+                                          Border.all(color: AppColors.navyBlue),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(5.sp),
+                                      ),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 1.h,
+                                      horizontal: 2.w,
+                                    ),
+                                    child: Positioned(
+                                      left: 4.w,
+                                      right: 4.w,
+                                      top: 2.h,
+                                      bottom: 2.h,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 50.sp,
+                                            height: 50.sp,
+                                            child: Image.asset(
+                                              AppImages.handWithPen,
+                                            ),
                                           ),
+                                          Text(
+                                            AppText.tapHereToSign,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w700),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                if (showSignature)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border:
+                                          Border.all(color: AppColors.navyBlue),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(5.sp),
+                                      ),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 1.h,
+                                      horizontal: 2.w,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Signature(
+                                          controller: controller,
+                                          width: 90.w,
+                                          height: 20.h,
+                                          backgroundColor: Colors.transparent,
                                         ),
-                                        Text(
-                                          AppText.tapHereToSign,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.w700),
-                                        )
+                                        const Divider(
+                                          height: 1,
+                                          thickness: 2,
+                                          color: AppColors.grey,
+                                        ),
+                                        CupertinoButton(
+                                          child: const Text(
+                                            "Redo",
+                                            style:
+                                                TextStyle(color: Colors.blue),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              controller.clear();
+                                              showSignature = false;
+                                              _showSignaturePopup(context);
+                                            });
+                                          },
+                                        ),
                                       ],
                                     ),
                                   ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: AppColors.navyBlue),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(5.sp),
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 1.h, horizontal: 2.w),
-                                  child: Signature(
-                                    controller: controller,
-                                    width: 90.w,
-                                    height: 20.h,
-                                    backgroundColor: Colors.transparent,
-                                  ),
-                                ),
                               ],
                             ),
                           ),
@@ -558,7 +588,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                 width: 50.w,
                                 child: CustomButton(
                                   label: "Next",
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.podphotos);
+                                  },
                                   backgroundColor: AppColors.grey,
                                   borderColor: AppColors.grey,
                                 )),
@@ -717,56 +749,99 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                           width: 90.w,
                           child: GestureDetector(
                             onTap: () {
-                              _showSignaturePopup(
-                                  context); // Show the popup when tapped
+                              if (!showSignature) {
+                                _showSignaturePopup(context);
+                              }
                             },
                             child: Stack(
                               children: [
-                                if (controller.isEmpty)
-                                  Positioned(
-                                    left: 4.w,
-                                    right: 4.w,
-                                    top: 2.h,
-                                    bottom: 2.h,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        SizedBox(
-                                          width: 50.sp,
-                                          height: 50.sp,
-                                          child: Image.asset(
-                                            AppImages.handWithPen,
+                                if (controller.isEmpty && !showSignature)
+                                  Container(
+                                    height: 25.h,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      border:
+                                          Border.all(color: AppColors.navyBlue),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(5.sp),
+                                      ),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 1.h,
+                                      horizontal: 2.w,
+                                    ),
+                                    child: Positioned(
+                                      left: 4.w,
+                                      right: 4.w,
+                                      top: 2.h,
+                                      bottom: 2.h,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 50.sp,
+                                            height: 50.sp,
+                                            child: Image.asset(
+                                              AppImages.handWithPen,
+                                            ),
                                           ),
+                                          Text(
+                                            AppText.tapHereToSign,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w700),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                if (showSignature)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border:
+                                          Border.all(color: AppColors.navyBlue),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(5.sp),
+                                      ),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 1.h,
+                                      horizontal: 2.w,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Signature(
+                                          controller: controller,
+                                          width: 90.w,
+                                          height: 20.h,
+                                          backgroundColor: Colors.transparent,
                                         ),
-                                        Text(
-                                          AppText.tapHereToSign,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.w700),
-                                        )
+                                        const Divider(
+                                          height: 1,
+                                          thickness: 2,
+                                          color: AppColors.grey,
+                                        ),
+                                        CupertinoButton(
+                                          child: const Text(
+                                            "Redo",
+                                            style:
+                                                TextStyle(color: Colors.blue),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              controller.clear();
+                                              showSignature = false;
+                                              _showSignaturePopup(context);
+                                            });
+                                          },
+                                        ),
                                       ],
                                     ),
                                   ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: AppColors.navyBlue),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(5.sp),
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 1.h, horizontal: 2.w),
-                                  child: Signature(
-                                    controller: controller,
-                                    width: 90.w,
-                                    height: 20.h,
-                                    backgroundColor: Colors.transparent,
-                                  ),
-                                ),
                               ],
                             ),
                           ),
