@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:coldxpress/export.dart';
 
 class EditTime extends StatefulWidget {
@@ -9,11 +8,13 @@ class EditTime extends StatefulWidget {
 }
 
 class _EditTimeState extends State<EditTime> {
-  final SignatureController controller = SignatureController(
-    penStrokeWidth: 3,
-    penColor: AppColors.black,
-    exportBackgroundColor: AppColors.white,
-  );
+  late TimeProvider _timeProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timeProvider = Provider.of<TimeProvider>(context);
+  }
 
   PickedTime _startTime = PickedTime(h: 6, m: 30);
   PickedTime _endTime = PickedTime(h: 19, m: 30);
@@ -297,7 +298,15 @@ class _EditTimeState extends State<EditTime> {
                           )),
                       Container(
                           width: 30.w,
-                          child: CustomButton(label: "Save", onPressed: () {})),
+                          child: CustomButton(
+                              label: "Save",
+                              onPressed: () {
+                                var timeProvider = Provider.of<TimeProvider>(
+                                    context,
+                                    listen: false);
+                                timeProvider.updateTimes(_startTime, _endTime);
+                                Navigator.pop(context);
+                              })),
                     ],
                   )
                 ],
@@ -307,5 +316,19 @@ class _EditTimeState extends State<EditTime> {
         ),
       ),
     );
+  }
+}
+
+class TimeProvider extends ChangeNotifier {
+  PickedTime _startTime = PickedTime(h: 6, m: 30);
+  PickedTime _endTime = PickedTime(h: 19, m: 30);
+
+  PickedTime get startTime => _startTime;
+  PickedTime get endTime => _endTime;
+
+  void updateTimes(PickedTime startTime, PickedTime endTime) {
+    _startTime = startTime;
+    _endTime = endTime;
+    notifyListeners();
   }
 }

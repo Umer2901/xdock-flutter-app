@@ -178,4 +178,5 @@ class AppText {
   static const String reorder = 'Reorder';
   static const String cancel = 'Cancel';
   static const String save = 'Save';
+  
 }

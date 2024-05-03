@@ -1,4 +1,5 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,6 +28,10 @@ class MyApp extends StatelessWidget {
           ),
           ChangeNotifierProvider<LocationProvider>(
             create: (_) => LocationProvider(),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => TimeProvider(),
+            child: EditTime(),
           ),
           ChangeNotifierProvider<BottomNavProvider>(
             create: (_) => BottomNavProvider(),

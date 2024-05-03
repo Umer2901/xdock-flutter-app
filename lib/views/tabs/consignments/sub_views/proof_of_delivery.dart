@@ -1,4 +1,5 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 
 enum DeliveryType { full, partial, none }
 
@@ -17,6 +18,39 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   );
   bool showSignature = false;
   DeliveryType selectedDeliveryType = DeliveryType.full;
+  int palletValue = 0;
+  int cartonsValue = 0;
+
+  void updatePalletValue(int value) {
+    setState(() {
+      palletValue = value;
+    });
+  }
+
+  void updateCartonsValue(int value) {
+    setState(() {
+      cartonsValue = value;
+    });
+  }
+
+  final TextEditingController serviceTimeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      serviceTimeController.text =
+          '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    serviceTimeController.text =
+        '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
+  }
+
   void _showSignaturePopup(BuildContext context) {
     showDialog(
       context: context,
@@ -349,15 +383,21 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                               heading: AppText.cartons,
                               icon: SvgPicture.asset(AppSvgs.pallet),
                               hintText: '0',
-                              initialValue: 0,
+                              initialValue: cartonsValue,
                               totalPallet: 5,
+                              onValueChanged: (value) {
+                                updateCartonsValue(value);
+                              },
                             ),
-                            const PalletContainer(
+                            PalletContainer(
                               name: 'pallets',
                               heading: AppText.pallets,
                               hintText: '0',
-                              initialValue: 0,
+                              initialValue: palletValue,
                               totalPallet: 5,
+                              onValueChanged: (value) {
+                                updatePalletValue(value);
+                              },
                             ),
                           ],
                         ),
@@ -403,6 +443,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                           name: 'serviceTime',
                           keyboardType: TextInputType.number,
                           readOnly: true,
+                          hintText:
+                              '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
+                          controller: serviceTimeController,
                           onTap: () {
                             Get.toNamed(AppRoutes.Stopwatch);
                           },
@@ -502,33 +545,392 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                       vertical: 1.h,
                                       horizontal: 2.w,
                                     ),
-                                    child: Positioned(
-                                      left: 4.w,
-                                      right: 4.w,
-                                      top: 2.h,
-                                      bottom: 2.h,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          SizedBox(
-                                            width: 50.sp,
-                                            height: 50.sp,
-                                            child: Image.asset(
-                                              AppImages.handWithPen,
-                                            ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 50.sp,
+                                          height: 50.sp,
+                                          child: Image.asset(
+                                            AppImages.handWithPen,
                                           ),
-                                          Text(
-                                            AppText.tapHereToSign,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                    fontWeight:
-                                                        FontWeight.w700),
-                                          )
-                                        ],
+                                        ),
+                                        Text(
+                                          AppText.tapHereToSign,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                  fontWeight: FontWeight.w700),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                if (showSignature)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border:
+                                          Border.all(color: AppColors.navyBlue),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(5.sp),
                                       ),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 1.h,
+                                      horizontal: 2.w,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Signature(
+                                          controller: controller,
+                                          width: 90.w,
+                                          height: 20.h,
+                                          backgroundColor: Colors.transparent,
+                                        ),
+                                        const Divider(
+                                          height: 1,
+                                          thickness: 2,
+                                          color: AppColors.grey,
+                                        ),
+                                        CupertinoButton(
+                                          child: const Text(
+                                            "Redo",
+                                            style:
+                                                TextStyle(color: Colors.blue),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              controller.clear();
+                                              showSignature = false;
+                                              _showSignaturePopup(context);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SizedBox(
+                                width: 50.w,
+                                child: CustomButton(
+                                  label: "Next",
+                                  onPressed: () {
+                                    if (selectedDeliveryType ==
+                                            DeliveryType.full &&
+                                        (palletValue < 5 || cartonsValue < 5)) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            icon: SizedBox(
+                                              height: 20.w,
+                                              width: 20.w,
+                                              child: const Image(
+                                                image: AssetImage(
+                                                    AppImages.brakeWarning),
+                                              ),
+                                            ),
+                                            title: Text(
+                                              "You are missing 2 cartons. Please fix this mistake or change to “Partial Delivery”.",
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            titlePadding: EdgeInsets.symmetric(
+                                              vertical: 1.h,
+                                              horizontal: 2.w,
+                                            ),
+                                            iconPadding: EdgeInsets.symmetric(
+                                                vertical: 1.h),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.sp),
+                                            ),
+                                            backgroundColor: AppColors.white,
+                                            actions: <Widget>[
+                                              SizedBox(height: 2.h),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  CustomButton(
+                                                    height: 5.h,
+                                                    width: 30.w,
+                                                    label: 'Edit',
+                                                    backgroundColor:
+                                                        AppColors.white,
+                                                    borderColor:
+                                                        AppColors.yellow,
+                                                    foregroundColor:
+                                                        AppColors.black,
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    } else {
+                                      Get.toNamed(AppRoutes.podphotos);
+                                    }
+                                  },
+                                  backgroundColor: AppColors.grey,
+                                  borderColor: AppColors.grey,
+                                )),
+                          ],
+                        ),
+                      ],
+                    ),
+                  if (selectedDeliveryType == DeliveryType.partial)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppText.howManyDelivered,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            PalletContainer(
+                              name: 'cartons',
+                              heading: AppText.cartons,
+                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              hintText: '0',
+                              initialValue: 0,
+                              totalPallet: 5,
+                            ),
+                            const PalletContainer(
+                              name: 'pallets',
+                              heading: AppText.pallets,
+                              hintText: '0',
+                              initialValue: 0,
+                              totalPallet: 5,
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          "Reason for partial delivery",
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Stack(
+                          children: [
+                            Container(
+                              height: 15.h,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.navyBlue),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(5.sp),
+                                ),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 1.h, horizontal: 2.w),
+                              child: const CustomTextField(
+                                borderColor: AppColors.white,
+                                name: 'receiverLastName',
+                                hintText:
+                                    "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.deliveryTemperature,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomTextField(
+                          name: 'temp',
+                          hintText: AppText.temperature,
+                          keyboardType: TextInputType.number,
+                          suffixIcon: Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 2.h, horizontal: 2.w),
+                            child: Text(
+                              AppText.celsius,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.serviceTime,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomTextField(
+                          name: 'serviceTime',
+                          keyboardType: TextInputType.number,
+                          readOnly: true,
+                          hintText:
+                              '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
+                          controller: serviceTimeController,
+                          onTap: () {
+                            Get.toNamed(AppRoutes.Stopwatch);
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => EditTime(),
+                            //   ),
+                            // );
+                          },
+                          suffixIcon: Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 2.h, horizontal: 2.w),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  AppText.editHours,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: AppColors.black.withOpacity(0.5),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 2.h,
+                                  color: AppColors.black.withOpacity(0.5),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomTextField(
+                          name: 'lengthOfDelivery',
+                          hintText: AppText.lengthOfDelivery,
+                          keyboardType: TextInputType.number,
+                          suffixIcon: Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 2.h, horizontal: 2.w),
+                            child: Text(
+                              AppText.minutes,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.receiverConfirmation,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        const CustomTextField(
+                          name: 'receiverFirstName',
+                          hintText: AppText.receiverFirstName,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        const CustomTextField(
+                          name: 'receiverLastName',
+                          hintText: AppText.receiverLastName,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        SizedBox(
+                          width: 90.w,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (!showSignature) {
+                                _showSignaturePopup(context);
+                              }
+                            },
+                            child: Stack(
+                              children: [
+                                if (controller.isEmpty && !showSignature)
+                                  Container(
+                                    height: 25.h,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      border:
+                                          Border.all(color: AppColors.navyBlue),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(5.sp),
+                                      ),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 1.h,
+                                      horizontal: 2.w,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 50.sp,
+                                          height: 50.sp,
+                                          child: Image.asset(
+                                            AppImages.handWithPen,
+                                          ),
+                                        ),
+                                        Text(
+                                          AppText.tapHereToSign,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                  fontWeight: FontWeight.w700),
+                                        )
+                                      ],
                                     ),
                                   ),
                                 if (showSignature)
@@ -591,272 +993,6 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   onPressed: () {
                                     Get.toNamed(AppRoutes.podphotos);
                                   },
-                                  backgroundColor: AppColors.grey,
-                                  borderColor: AppColors.grey,
-                                )),
-                          ],
-                        ),
-                      ],
-                    ),
-                  if (selectedDeliveryType == DeliveryType.partial)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppText.howManyDelivered,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            PalletContainer(
-                              name: 'cartons',
-                              heading: AppText.cartons,
-                              icon: SvgPicture.asset(AppSvgs.pallet),
-                              hintText: '0',
-                              initialValue: 0,
-                              totalPallet: 5,
-                            ),
-                            const PalletContainer(
-                              name: 'pallets',
-                              heading: AppText.pallets,
-                              hintText: '0',
-                              initialValue: 0,
-                              totalPallet: 5,
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 3.h,
-                        ),
-                        Text(
-                          AppText.deliveryTemperature,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        CustomTextField(
-                          name: 'temp',
-                          hintText: AppText.temperature,
-                          keyboardType: TextInputType.number,
-                          suffixIcon: Padding(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 2.h, horizontal: 2.w),
-                            child: Text(
-                              AppText.celsius,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 3.h,
-                        ),
-                        Text(
-                          AppText.serviceTime,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        CustomTextField(
-                          name: 'serviceTime',
-                          keyboardType: TextInputType.number,
-                          readOnly: true,
-                          onTap: () {
-                            Get.toNamed(AppRoutes.Stopwatch);
-                          },
-                          suffixIcon: Padding(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 2.h, horizontal: 2.w),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  AppText.editHours,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: AppColors.black.withOpacity(0.5),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 2.h,
-                                  color: AppColors.black.withOpacity(0.5),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        CustomTextField(
-                          name: 'lengthOfDelivery',
-                          hintText: AppText.lengthOfDelivery,
-                          keyboardType: TextInputType.number,
-                          suffixIcon: Padding(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 2.h, horizontal: 2.w),
-                            child: Text(
-                              AppText.minutes,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 3.h,
-                        ),
-                        Text(
-                          AppText.receiverConfirmation,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        const CustomTextField(
-                          name: 'receiverFirstName',
-                          hintText: AppText.receiverFirstName,
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        const CustomTextField(
-                          name: 'receiverLastName',
-                          hintText: AppText.receiverLastName,
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        SizedBox(
-                          width: 90.w,
-                          child: GestureDetector(
-                            onTap: () {
-                              if (!showSignature) {
-                                _showSignaturePopup(context);
-                              }
-                            },
-                            child: Stack(
-                              children: [
-                                if (controller.isEmpty && !showSignature)
-                                  Container(
-                                    height: 25.h,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      border:
-                                          Border.all(color: AppColors.navyBlue),
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(5.sp),
-                                      ),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 1.h,
-                                      horizontal: 2.w,
-                                    ),
-                                    child: Positioned(
-                                      left: 4.w,
-                                      right: 4.w,
-                                      top: 2.h,
-                                      bottom: 2.h,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          SizedBox(
-                                            width: 50.sp,
-                                            height: 50.sp,
-                                            child: Image.asset(
-                                              AppImages.handWithPen,
-                                            ),
-                                          ),
-                                          Text(
-                                            AppText.tapHereToSign,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                    fontWeight:
-                                                        FontWeight.w700),
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                if (showSignature)
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      border:
-                                          Border.all(color: AppColors.navyBlue),
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(5.sp),
-                                      ),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 1.h,
-                                      horizontal: 2.w,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Signature(
-                                          controller: controller,
-                                          width: 90.w,
-                                          height: 20.h,
-                                          backgroundColor: Colors.transparent,
-                                        ),
-                                        const Divider(
-                                          height: 1,
-                                          thickness: 2,
-                                          color: AppColors.grey,
-                                        ),
-                                        CupertinoButton(
-                                          child: const Text(
-                                            "Redo",
-                                            style:
-                                                TextStyle(color: Colors.blue),
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              controller.clear();
-                                              showSignature = false;
-                                              _showSignaturePopup(context);
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            SizedBox(
-                                width: 50.w,
-                                child: CustomButton(
-                                  label: "Next",
-                                  onPressed: () {},
                                   backgroundColor: AppColors.grey,
                                   borderColor: AppColors.grey,
                                 )),
