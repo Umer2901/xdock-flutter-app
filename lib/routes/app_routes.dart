@@ -16,6 +16,6 @@ abstract class AppRoutes {
   static const String singleConsigment = '/singleConsigment';
   static const String proofOfDelivery = '/proofOfDelivery';
   static const String consigmentReorder = '/consigmentReorder';
- // static const String Stopwatch = '/StopwatchWidget';
+  static const String Stopwatch = '/StopwatchWidget';
   static const String  podphotos = '/ProofOfDeliveryPhotos';
 }

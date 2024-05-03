@@ -12,6 +12,7 @@ class ProofOfDeliveryView extends StatefulWidget {
 }
 
 class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
+  
   final SignatureController controller = SignatureController(
     penStrokeWidth: 3,
     penColor: AppColors.black,
@@ -33,20 +34,27 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
       cartonsValue = value;
     });
   }
-  final TextEditingController serviceTimeController = TextEditingController();
+final TextEditingController serviceTimeController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance!.addPostFrameCallback((_) {
     serviceTimeController.text =
         '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
-  }
+  });
+}
 
-  @override
-  void dispose() {
-    serviceTimeController.dispose();
-    super.dispose();
-  }
+
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+  serviceTimeController.text =
+      '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
+}
+
+
+ 
  void _showSignaturePopup(BuildContext context) {
     showDialog(
       context: context,
@@ -442,15 +450,10 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
   keyboardType: TextInputType.number,
   readOnly: true,
   hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
-        
+        controller:  serviceTimeController,
   onTap: () {
-    
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditTime(),
-      ),
-    );
+    Get.toNamed(AppRoutes.Stopwatch);
+   
   },
   suffixIcon: Padding(
     padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
@@ -776,20 +779,20 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
       SizedBox(
         height: 1.h,
       ),
-    CustomTextField(
+   CustomTextField(
   name: 'serviceTime',
   keyboardType: TextInputType.number,
   readOnly: true,
   hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
-        
+        controller:  serviceTimeController,
   onTap: () {
-    
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditTime(),
-      ),
-    );
+    Get.toNamed(AppRoutes.Stopwatch);
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => EditTime(),
+    //   ),
+    // );
   },
   suffixIcon: Padding(
     padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
@@ -814,6 +817,7 @@ DeliveryType selectedDeliveryType = DeliveryType.full;
     ),
   ),
 ),
+
       SizedBox(
         height: 1.h,
       ),
