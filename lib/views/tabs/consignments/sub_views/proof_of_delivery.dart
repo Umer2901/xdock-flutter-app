@@ -25,8 +25,8 @@ final TextEditingController serviceTimeController = TextEditingController();
 void initState() {
   super.initState();
   WidgetsBinding.instance!.addPostFrameCallback((_) {
-    serviceTimeController.text =
-        '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
+   serviceTimeController.text = '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
+
   });
 }
 
@@ -34,8 +34,7 @@ void initState() {
 @override
 void didChangeDependencies() {
   super.didChangeDependencies();
-  serviceTimeController.text =
-      '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
+  serviceTimeController.text = '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
 }
 
  
@@ -208,8 +207,8 @@ void didChangeDependencies() {
   fillColor: AppColors.white,
   value: Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType,
   onChanged: (newValue) {
-    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-        .updateSelectedDeliveryType(newValue!);
+    context.read<ProofOfDeliveryProvider>().updateSelectedDeliveryType(newValue!);
+
   },
   items: [
     DropdownMenuItem(
