@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 
-enum DeliveryType { full, partial, none }
 
 class ProofOfDeliveryView extends StatefulWidget {
   const ProofOfDeliveryView({Key? key}) : super(key: key);
@@ -12,28 +11,14 @@ class ProofOfDeliveryView extends StatefulWidget {
 }
 
 class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
-  
   final SignatureController controller = SignatureController(
     penStrokeWidth: 3,
     penColor: AppColors.black,
     exportBackgroundColor: AppColors.white,
   );
- bool showSignature = false; 
-DeliveryType selectedDeliveryType = DeliveryType.full; 
-  int palletValue = 0;
-  int cartonsValue = 0;
+  
+ 
 
-  void updatePalletValue(int value) {
-    setState(() {
-      palletValue = value;
-    });
-  }
-
-  void updateCartonsValue(int value) {
-    setState(() {
-      cartonsValue = value;
-    });
-  }
 final TextEditingController serviceTimeController = TextEditingController();
 
 @override
@@ -53,104 +38,13 @@ void didChangeDependencies() {
       '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}';
 }
 
+ 
 
- 
- void _showSignaturePopup(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          backgroundColor: Colors.white,
-          child: Transform.rotate(
-            angle: 90 * 3.14159 / 180,
-            child: Container(
-              height: 47.h,
-              width: 80.w,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      CupertinoButton(
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                      Text(
-                        "Signature",
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      CupertinoButton(
-                        child: const Text(
-                          "Done",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            showSignature = true; 
-                            Navigator.pop(context);
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  Center(
-                    child: Container(
-                      height: 24.h,
-                      width: 90.w,
-                      alignment: Alignment.center,
-                      child: Signature(
-                        controller: controller,
-                        width: 85.w,
-                        height: 20.h,
-                        backgroundColor: Colors.transparent,
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Center(
-                        child: Divider(
-                          height: 1,
-                          thickness: 2,
-                          color: AppColors.grey,
-                        ),
-                      ),
-                      CupertinoButton(
-                        child: const Text(
-                          "Clear",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            controller.clear();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
- 
+
+
   @override
   Widget build(BuildContext context) {
+      var provider = Provider.of<ProofOfDeliveryProvider>(context);
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -308,71 +202,69 @@ void didChangeDependencies() {
                   SizedBox(
                     height: 1.h,
                   ),
-                  CustomDropdown(
-                    name: 'deliveryType',
-                    hintText: 'Please Select',
-                    fillColor: AppColors.white,
-                    value: selectedDeliveryType,
-                    onChanged: (newValue) {
-                      setState(() {
-                        selectedDeliveryType = newValue!;
-                      });
-                    },
-                    items: [
-                     DropdownMenuItem(
-                        value: DeliveryType.full,
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.green,
-                              radius: 3.sp,
-                            ),
-                            SizedBox(
-                              width: 2.w,
-                            ),
-                            const Text('Full Delivery'),
-                            
-                          ],
-                        ),
-                      ),
-                       DropdownMenuItem(
-                        value: DeliveryType.partial,
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: AppColors.yellow,
-                              radius: 3.sp,
-                            ),
-                            SizedBox(
-                              width: 2.w,
-                            ),
-                            const Text('Partial Delivery'),
-                            
-                          ],
-                        ),
-                      ),
-                       DropdownMenuItem(
-                        value: DeliveryType.none,
-                        child:  Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: AppColors.red,
-                              radius: 3.sp,
-                            ),
-                            SizedBox(
-                              width: 2.w,
-                            ),
-                            const Text('No Delivery'),
-                            
-                          ],
-                       )),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                 if (selectedDeliveryType == DeliveryType.full)
-  Column(
+                 CustomDropdown(
+  name: 'deliveryType',
+  hintText: 'Please Select',
+  fillColor: AppColors.white,
+  value: Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType,
+  onChanged: (newValue) {
+    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+        .updateSelectedDeliveryType(newValue!);
+  },
+  items: [
+    DropdownMenuItem(
+      value: DeliveryType.full,
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.green,
+            radius: 3.sp,
+          ),
+          SizedBox(
+            width: 2.w,
+          ),
+          const Text('Full Delivery'),
+        ],
+      ),
+    ),
+    DropdownMenuItem(
+      value: DeliveryType.partial,
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.yellow,
+            radius: 3.sp,
+          ),
+          SizedBox(
+            width: 2.w,
+          ),
+          const Text('Partial Delivery'),
+        ],
+      ),
+    ),
+    DropdownMenuItem(
+      value: DeliveryType.none,
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.red,
+            radius: 3.sp,
+          ),
+          SizedBox(
+            width: 2.w,
+          ),
+          const Text('No Delivery'),
+        ],
+      ),
+    ),
+  ],
+),
+SizedBox(
+  height: 2.h,
+),
+
+  if (Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType == DeliveryType.full)
+     Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
@@ -386,28 +278,32 @@ void didChangeDependencies() {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           PalletContainer(
-                              name: 'cartons',
-                              heading: AppText.cartons,
-                              icon: SvgPicture.asset(AppSvgs.pallet),
-                              hintText: '0',
-                              initialValue: cartonsValue, 
-                              totalPallet: 5,
-                              onValueChanged: (value) {
-                               
-                                updateCartonsValue(value);
-                              },
-                            ),
-           PalletContainer(
-                              name: 'pallets',
-                              heading: AppText.pallets,
-                              hintText: '0',
-                              initialValue: palletValue,
-                              totalPallet: 5,
-                              onValueChanged: (value) {
-                                
-                                updatePalletValue(value);
-                              },
-                            ),
+            name: 'cartons',
+            heading: AppText.cartons,
+            icon: SvgPicture.asset(AppSvgs.pallet),
+            hintText: '0',
+            initialValue:
+                Provider.of<ProofOfDeliveryProvider>(context).cartonsValue,
+            totalPallet: 5,
+            onValueChanged: (value) {
+              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                  .updateCartonsValue(value);
+            },
+          ),
+          PalletContainer(
+            name: 'pallets',
+            heading: AppText.pallets,
+            hintText: '0',
+            initialValue:
+                Provider.of<ProofOfDeliveryProvider>(context).palletValue,
+            totalPallet: 5,
+            onValueChanged: (value) {
+              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                  .updatePalletValue(value);
+            },
+          ),
+        
+    
         ],
       ),
       SizedBox(
@@ -434,6 +330,10 @@ void didChangeDependencies() {
                 ),
           ),
         ),
+         onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(temperature: value);
+  },
       ),
       SizedBox(
         height: 3.h,
@@ -477,6 +377,10 @@ void didChangeDependencies() {
       ],
     ),
   ),
+     onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(serviceTime: value);
+  },
 ),
 
       SizedBox(
@@ -496,6 +400,10 @@ void didChangeDependencies() {
                 ),
           ),
         ),
+           onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(lengthOfDelivery: value);
+  },
       ),
       SizedBox(
         height: 3.h,
@@ -507,110 +415,120 @@ void didChangeDependencies() {
       SizedBox(
         height: 1.h,
       ),
-      const CustomTextField(
+       CustomTextField(
         name: 'receiverFirstName',
         hintText: AppText.receiverFirstName,
+           onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(receiverFirstName: value);
+  },
       ),
       SizedBox(
         height: 1.h,
       ),
-      const CustomTextField(
+       CustomTextField(
         name: 'receiverLastName',
         hintText: AppText.receiverLastName,
+           onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(receiverLastName: value);
+  },
       ),
       SizedBox(
         height: 1.h,
       ),
-       SizedBox(
-  width: 90.w,
-  child: GestureDetector(
-    onTap: () {
-      if (!showSignature) { 
-        _showSignaturePopup(context);
-      }
-    },
-    child: Stack(
-      children: [
-        if (controller.isEmpty && !showSignature)
-          
-          Container(
-            height: 25.h,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.navyBlue),
-              borderRadius: BorderRadius.all(
-                Radius.circular(5.sp),
-              ),
-            ),
-            padding: EdgeInsets.symmetric(
-              vertical: 1.h,
-              horizontal: 2.w,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 50.sp,
-                  height: 50.sp,
-                  child: Image.asset(
-                    AppImages.handWithPen,
+Consumer<ProofOfDeliveryProvider>(
+  builder: (context, provider, _) {
+    return SizedBox(
+      width: 90.w,
+      child: GestureDetector(
+        onTap: () {
+          if (!provider.showSignature) {
+            provider.setShowSignature(true);
+            provider.showSignaturePopup(context, controller);
+          }
+        },
+        child: Stack(
+          children: [
+            if (controller.isEmpty && !provider.showSignature)
+              Container(
+                height: 25.h,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.navyBlue),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.sp),
                   ),
                 ),
-                Text(
-                  AppText.tapHereToSign,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                )
-              ],
-            ),
-          ),
-        if (showSignature)
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.navyBlue),
-              borderRadius: BorderRadius.all(
-                Radius.circular(5.sp),
+                padding: EdgeInsets.symmetric(
+                  vertical: 1.h,
+                  horizontal: 2.w,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 50.sp,
+                      height: 50.sp,
+                      child: Image.asset(
+                        AppImages.handWithPen,
+                      ),
+                    ),
+                    Text(
+                      AppText.tapHereToSign,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    )
+                  ],
+                ),
               ),
-            ),
-            padding: EdgeInsets.symmetric(
-              vertical: 1.h,
-              horizontal: 2.w,
-            ),
-            child: Column(
-              children: [
-                Signature(
-                  controller: controller,
-                  width: 90.w,
-                  height: 20.h,
-                  backgroundColor: Colors.transparent,
-                ),
-                const Divider(
-                  height: 1,
-                  thickness: 2,
-                  color: AppColors.grey,
-                ),
-                CupertinoButton(
-                  child: const Text(
-                    "Redo",
-                    style: TextStyle(color: Colors.blue),
+            if (provider.showSignature)
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.navyBlue),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.sp),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      controller.clear();
-                      showSignature = false; 
-                      _showSignaturePopup(context);
-                    });
-                  },
                 ),
-              ],
-            ),
-          ),
-      ],
-    ),
-  ),
+                padding: EdgeInsets.symmetric(
+                  vertical: 1.h,
+                  horizontal: 2.w,
+                ),
+                child: Column(
+                  children: [
+                    Signature(
+                      controller: controller,
+                      width: 90.w,
+                      height: 20.h,
+                      backgroundColor: Colors.transparent,
+                    ),
+                    const Divider(
+                      height: 1,
+                      thickness: 2,
+                      color: AppColors.grey,
+                    ),
+                    CupertinoButton(
+                      child: const Text(
+                        "Redo",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      onPressed: () {
+                        provider.clearSignatureAndShowPopup(context, controller);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  },
 ),
+
+     
       SizedBox(
         height: 1.h,
       ),
@@ -620,8 +538,8 @@ void didChangeDependencies() {
           SizedBox(
             width: 50.w,
             child: CustomButton(label: "Next",onPressed: () {
-  if (selectedDeliveryType == DeliveryType.full &&
-      (palletValue < 5 || cartonsValue < 5)) { 
+  if (provider.selectedDeliveryType == DeliveryType.full &&
+      (provider.palletValue < 5 || provider.cartonsValue < 5)) { 
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -674,6 +592,8 @@ void didChangeDependencies() {
         },
       );
   } else {
+     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+        .saveData();
     Get.toNamed(AppRoutes.podphotos);
   }
 },backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
@@ -682,7 +602,7 @@ void didChangeDependencies() {
     ],
   ),
 
-               if (selectedDeliveryType == DeliveryType.partial)
+               if (provider.selectedDeliveryType == DeliveryType.partial)
                   Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -702,14 +622,21 @@ void didChangeDependencies() {
             icon: SvgPicture.asset(AppSvgs.pallet),
             hintText: '0',
             initialValue: 0,
-            totalPallet: 5,
+            totalPallet: 5, onValueChanged: (value) {
+              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                  .updateCartonsValue(value);
+            },
           ),
-          const PalletContainer(
+           PalletContainer(
             name: 'pallets',
             heading: AppText.pallets,
             hintText: '0',
             initialValue: 0,
             totalPallet: 5,
+             onValueChanged: (value) {
+              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                  .updatePalletValue(value);
+            },
           ),
         ],
       ),
@@ -736,11 +663,18 @@ void didChangeDependencies() {
             ),
             padding: EdgeInsets.symmetric(
                 vertical: 1.h, horizontal: 2.w),
-            child: const CustomTextField(
+            child: CustomTextField(
               borderColor: AppColors.white,
-      name: 'receiverLastName',
-      hintText: "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
-            ),
+        name: 'Reasonpartaial',
+        hintText: "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
+        keyboardType: TextInputType.number,
+    
+         onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(reasonpartialdelivery: value);
+  },
+      ),
+            
           ),
         ],
       ),
@@ -768,6 +702,10 @@ void didChangeDependencies() {
                 ),
           ),
         ),
+         onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(temperature: value);
+  },
       ),
       SizedBox(
         height: 3.h,
@@ -779,7 +717,7 @@ void didChangeDependencies() {
       SizedBox(
         height: 1.h,
       ),
-   CustomTextField(
+     CustomTextField(
   name: 'serviceTime',
   keyboardType: TextInputType.number,
   readOnly: true,
@@ -787,12 +725,7 @@ void didChangeDependencies() {
         controller:  serviceTimeController,
   onTap: () {
     Get.toNamed(AppRoutes.Stopwatch);
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => EditTime(),
-    //   ),
-    // );
+   
   },
   suffixIcon: Padding(
     padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
@@ -816,6 +749,10 @@ void didChangeDependencies() {
       ],
     ),
   ),
+     onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(serviceTime: value);
+  },
 ),
 
       SizedBox(
@@ -835,6 +772,10 @@ void didChangeDependencies() {
                 ),
           ),
         ),
+           onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(lengthOfDelivery: value);
+  },
       ),
       SizedBox(
         height: 3.h,
@@ -846,111 +787,118 @@ void didChangeDependencies() {
       SizedBox(
         height: 1.h,
       ),
-      const CustomTextField(
+       CustomTextField(
         name: 'receiverFirstName',
         hintText: AppText.receiverFirstName,
+           onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(receiverFirstName: value);
+  },
       ),
       SizedBox(
         height: 1.h,
       ),
-      const CustomTextField(
+       CustomTextField(
         name: 'receiverLastName',
         hintText: AppText.receiverLastName,
+           onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(receiverLastName: value);
+  },
       ),
       SizedBox(
         height: 1.h,
       ),
-   SizedBox(
-  width: 90.w,
-  child: GestureDetector(
-    onTap: () {
-      if (!showSignature) { 
-        _showSignaturePopup(context);
-      }
-    },
-    child: Stack(
-      children: [
-        if (controller.isEmpty && !showSignature)
-          
-          Container(
-            height: 25.h,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.navyBlue),
-              borderRadius: BorderRadius.all(
-                Radius.circular(5.sp),
-              ),
-            ),
-            padding: EdgeInsets.symmetric(
-              vertical: 1.h,
-              horizontal: 2.w,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 50.sp,
-                  height: 50.sp,
-                  child: Image.asset(
-                    AppImages.handWithPen,
+Consumer<ProofOfDeliveryProvider>(
+  builder: (context, provider, _) {
+    return SizedBox(
+      width: 90.w,
+      child: GestureDetector(
+        onTap: () {
+          if (!provider.showSignature) {
+            provider.setShowSignature(true);
+            provider.showSignaturePopup(context, controller);
+          }
+        },
+        child: Stack(
+          children: [
+            if (controller.isEmpty && !provider.showSignature)
+              Container(
+                height: 25.h,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.navyBlue),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.sp),
                   ),
                 ),
-                Text(
-                  AppText.tapHereToSign,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                )
-              ],
-            ),
-          ),
-        if (showSignature)
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.navyBlue),
-              borderRadius: BorderRadius.all(
-                Radius.circular(5.sp),
+                padding: EdgeInsets.symmetric(
+                  vertical: 1.h,
+                  horizontal: 2.w,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 50.sp,
+                      height: 50.sp,
+                      child: Image.asset(
+                        AppImages.handWithPen,
+                      ),
+                    ),
+                    Text(
+                      AppText.tapHereToSign,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    )
+                  ],
+                ),
               ),
-            ),
-            padding: EdgeInsets.symmetric(
-              vertical: 1.h,
-              horizontal: 2.w,
-            ),
-            child: Column(
-              children: [
-                Signature(
-                  controller: controller,
-                  width: 90.w,
-                  height: 20.h,
-                  backgroundColor: Colors.transparent,
-                ),
-                const Divider(
-                  height: 1,
-                  thickness: 2,
-                  color: AppColors.grey,
-                ),
-                CupertinoButton(
-                  child: const Text(
-                    "Redo",
-                    style: TextStyle(color: Colors.blue),
+            if (provider.showSignature)
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.navyBlue),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.sp),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      controller.clear();
-                      showSignature = false; 
-                      _showSignaturePopup(context);
-                    });
-                  },
                 ),
-              ],
-            ),
-          ),
-      ],
-    ),
-  ),
+                padding: EdgeInsets.symmetric(
+                  vertical: 1.h,
+                  horizontal: 2.w,
+                ),
+                child: Column(
+                  children: [
+                    Signature(
+                      controller: controller,
+                      width: 90.w,
+                      height: 20.h,
+                      backgroundColor: Colors.transparent,
+                    ),
+                    const Divider(
+                      height: 1,
+                      thickness: 2,
+                      color: AppColors.grey,
+                    ),
+                    CupertinoButton(
+                      child: const Text(
+                        "Redo",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      onPressed: () {
+                        provider.clearSignatureAndShowPopup(context, controller);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  },
 ),
-
       SizedBox(
         height: 1.h,
       ),
@@ -959,12 +907,17 @@ void didChangeDependencies() {
         children: [
           SizedBox(
             width: 50.w,
-            child: CustomButton(label: "Next", onPressed: (){ Get.toNamed(AppRoutes.podphotos);},backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
+            child: CustomButton(label: "Next", onPressed: (){
+              Provider.of<ProofOfDeliveryProvider>(context, listen: false).saveData();
+              Get.toNamed(AppRoutes.podphotos,
+            
+            
+            );},backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
         ],
       ),
     ],
   ),
-                 if (selectedDeliveryType == DeliveryType.none)
+                 if (provider.selectedDeliveryType == DeliveryType.none)
                    Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -985,6 +938,7 @@ void didChangeDependencies() {
             hintText: '0',
             initialValue: 0,
             totalPallet: 5,
+            isErrorState: true,
           ),
           const PalletContainer(
             name: 'pallets',
@@ -992,6 +946,7 @@ void didChangeDependencies() {
             hintText: '0',
             initialValue: 0,
             totalPallet: 5,
+            isErrorState: true,
           ),
         ],
       ),
@@ -1012,38 +967,49 @@ void didChangeDependencies() {
       SizedBox(
         height: 3.h,
       ),
-   const CustomContainer(
-  title: 'Wrong Address',
-  description: 'Address is wrong or the location has closed',
-),
- SizedBox(
-        height: 3.h,
-      ),
-   const CustomContainer(
-  title: 'Receiver Not Open',
-  description: 'The receiver is unable to receive goods',
-),
-SizedBox(
-        height: 3.h,
-      ),
-   const CustomContainer(
-  title: 'Temperature Issue',
+  Consumer<ProofOfDeliveryProvider>(
+        builder: (context, provider, _) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              
+           
+              CustomContainer(
+                title: 'Wrong Address',
+                description: 'Address is wrong or the location has closed',
+              ),
+              SizedBox(
+      height: 3.h,
+    ),
+              CustomContainer(
+                title: 'Receiver Not Open',
+                description: 'The receiver is unable to receive goods',
+              ),
+              SizedBox(
+      height: 3.h,
+    ),
+              CustomContainer(
+     title: 'Temperature issue',
   description: 'The stock is not the correct temperature',
-),
- SizedBox(
-        height: 3.h,
-      ),
-   const CustomContainer(
-  title: 'Damaged Goods',
+    ),
+    SizedBox(
+      height: 3.h,
+    ),
+    CustomContainer(
+     title: 'Damaged Goods',
   description: 'The packaging or goods have been damaged',
-),
- SizedBox(
-        height: 3.h,
-      ),
-   const CustomContainer(
-  title: 'Other Rejection',
-  description: 'The customer refused the goods ',
-),
+    ),
+    SizedBox(
+      height: 3.h,
+    ),
+     CustomContainer(
+      title: 'Other Rejection',
+      description: 'The customer refused the goods ',
+    )
+
+            ]);}),
+
+
  
     
       SizedBox(
@@ -1074,11 +1040,17 @@ Text(
             ),
             padding: EdgeInsets.symmetric(
                 vertical: 1.h, horizontal: 2.w),
-            child: const CustomTextField(
+            child:  CustomTextField(
               borderColor: AppColors.white,
-      name: 'receiverLastName',
-      hintText: "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
-            ),
+        name: 'Order rejection',
+        hintText: "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
+        keyboardType: TextInputType.number,
+    
+         onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(orderRejectionReason: value);
+  },
+      ),
           ),
         ],
       ),
@@ -1090,7 +1062,11 @@ Text(
         children: [
           SizedBox(
             width: 50.w,
-            child: CustomButton(label: "Submit POD", onPressed: (){},backgroundColor: AppColors.red,borderColor: AppColors.red,)),
+            child: CustomButton(label: "Submit POD", onPressed: (){
+Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+        .saveData();
+
+            },backgroundColor: AppColors.red,borderColor: AppColors.red,)),
         ],
       ),
     ],
@@ -1107,6 +1083,7 @@ Text(
     );
   }
 }
+
  class CustomContainer extends StatefulWidget {
   final String title;
   final String description;
@@ -1126,10 +1103,19 @@ class _CustomContainerState extends State<CustomContainer> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+     final provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+     return GestureDetector(
       onTap: () {
         setState(() {
           isChecked = !isChecked;
+          if (isChecked) {
+            provider.updateOrderRejectionReason(widget.title); 
+           
+
+          } else {
+             provider.updateOrderRejectionReason('');
+          }
+
         });
       },
       child: Container(
