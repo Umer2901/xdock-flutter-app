@@ -29,4 +29,9 @@ class AppHost {
       '$hostURL/api/driver/return_pallet/v6';
   static const String storeInboundPallet =
       '$hostURL/api/driver/return_pallet/v6/store';
+
+  static const String reorderConsignments =
+      '$hostURL/api/driver/runSheet/v6/reOrder';
+  static const String consignmentDetail =
+      '$hostURL/api/driver/consignments/v6/';
 }

@@ -15,16 +15,24 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
   final StreamController<dynamic> _consignmentStreamController =
       StreamController<dynamic>();
   final ScrollController _scrollController = ScrollController();
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     fetchConsignment();
+    _timer = Timer.periodic(
+      const Duration(seconds: 30),
+      (timer) {
+        fetchConsignment();
+      },
+    );
   }
 
   @override
   void dispose() {
     _consignmentStreamController.close();
+    _timer.cancel();
     super.dispose();
   }
 
@@ -98,7 +106,6 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
           child: StreamBuilder(
               stream: _consignmentStreamController.stream,
               builder: (context, snapshot) {
-                int index = 1;
                 if (snapshot.hasData) {
                   return Column(
                     children: [
@@ -268,12 +275,21 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                   ['consignments']) ...{
                         GestureDetector(
                           onTap: () {
-                            Get.toNamed(AppRoutes.singleConsigment);
+                            Get.toNamed(
+                              AppRoutes.singleConsigment,
+                              arguments: snapshot.data['data']['2024-04-04']
+                                  ['consignments'][snapshot.data['data']
+                                      ['2024-04-04']['consignments']
+                                  .indexOf(consignment)]['id'],
+                            );
                           },
                           child: CustomMyConsigmentContainer(
                             consignment: consignment,
                             isLoading: false,
-                            index: index++,
+                            index: snapshot.data['data']['2024-04-04']
+                                ['consignments'][snapshot.data['data']
+                                    ['2024-04-04']['consignments']
+                                .indexOf(consignment)]['sort'],
                           ),
                         ),
                       },
