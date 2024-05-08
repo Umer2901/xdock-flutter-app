@@ -20,7 +20,14 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   String _orderRejectionReason = '';
   Uint8List? _signatureData;
  List<String> _selectedOrderRejectionReasons = [];
-
+ bool _isTempValid = false;
+ bool _isServiceTimeValid = false;
+ bool _isLengthOfDeliveryValid = false;
+ bool _isReceiverFirstNameValid = false;
+ bool _isReceiverLastNameValid = false;
+ bool _isReasonPartialValid = false;
+ bool _isReasonNoneValid = false;
+  
 
   DeliveryType get selectedDeliveryType => _selectedDeliveryType;
   int get palletValue => _palletValue;
@@ -34,6 +41,13 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   String get reasonpartialdelivery => _reasonpartialdelivery;
   String get orderRejectionReason => _orderRejectionReason;
   List<String> get selectedOrderRejectionReasons => _selectedOrderRejectionReasons;
+  bool get isTempValid => _isTempValid;
+  bool get isServiceTimeValid => _isServiceTimeValid;
+  bool get isLengthOfDeliveryValid => _isLengthOfDeliveryValid;
+  bool get isReceiverFirstNameValid => _isReceiverFirstNameValid;
+  bool get isReceiverLastNameValid => _isReceiverLastNameValid;
+  bool get isReasonPartialValid => _isReasonPartialValid;
+  bool get isReasonNoneValid => _isReasonNoneValid;
 
  
 
@@ -128,6 +142,8 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     );
   }
 
+  
+  
   void updateDeliveryFormData({
     DeliveryType? selectedDeliveryType,
     int? palletValue,
@@ -177,6 +193,41 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     }
     notifyListeners();
   }
+
+void updateTempValidity(bool isValid) {
+    _isTempValid = isValid;
+    notifyListeners();
+  }
+
+  void updateServiceTimeValidity(bool isValid) {
+    _isServiceTimeValid = isValid;
+    notifyListeners();
+  }
+
+  void updateLengthOfDeliveryValidity(bool isValid) {
+    _isLengthOfDeliveryValid = isValid;
+    notifyListeners();
+  }
+
+  void updateReceiverFirstNameValidity(bool isValid) {
+    _isReceiverFirstNameValid = isValid;
+    notifyListeners();
+  }
+
+  void updateReceiverLastNameValidity(bool isValid) {
+    _isReceiverLastNameValid = isValid;
+    notifyListeners();
+  }
+
+  void updateisReasonPartialValidity(bool isValid) {
+    _isReasonPartialValid = isValid;
+    notifyListeners();
+  }
+   void updateisReasonNoneValidity(bool isValid) {
+    _isReasonNoneValid = isValid;
+    notifyListeners();
+  }
+
 
   void updateSelectedDeliveryType(DeliveryType type) {
     _selectedDeliveryType = type;

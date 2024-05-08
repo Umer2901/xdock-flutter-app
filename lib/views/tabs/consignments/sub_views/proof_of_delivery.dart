@@ -17,7 +17,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     exportBackgroundColor: AppColors.white,
   );
   
- 
+
 
 final TextEditingController serviceTimeController = TextEditingController();
 
@@ -330,11 +330,12 @@ SizedBox(
                 ),
           ),
         ),
-         onChanged: (value) {
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(temperature: value);
+        onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateTempValidity(value!.isNotEmpty);
+    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+      .updateDeliveryFormData(temperature: value);
   },
-      ),
+),
       SizedBox(
         height: 3.h,
       ),
@@ -378,6 +379,7 @@ SizedBox(
     ),
   ),
      onChanged: (value) {
+        Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateServiceTimeValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(serviceTime: value);
   },
@@ -401,6 +403,7 @@ SizedBox(
           ),
         ),
            onChanged: (value) {
+             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateLengthOfDeliveryValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(lengthOfDelivery: value);
   },
@@ -419,6 +422,7 @@ SizedBox(
         name: 'receiverFirstName',
         hintText: AppText.receiverFirstName,
            onChanged: (value) {
+             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverFirstNameValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(receiverFirstName: value);
   },
@@ -430,6 +434,7 @@ SizedBox(
         name: 'receiverLastName',
         hintText: AppText.receiverLastName,
            onChanged: (value) {
+           Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverLastNameValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(receiverLastName: value);
   },
@@ -535,70 +540,97 @@ Consumer<ProofOfDeliveryProvider>(
       Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          SizedBox(
-            width: 50.w,
-            child: CustomButton(label: "Next",onPressed: () {
-  if (provider.selectedDeliveryType == DeliveryType.full &&
-      (provider.palletValue < 5 || provider.cartonsValue < 5)) { 
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            icon: SizedBox(
-              height: 20.w,
-              width: 20.w,
-              child: const Image(
-                image: AssetImage(AppImages.brakeWarning),
-              ),
-            ),
-            title: Text(
-              "You are missing 2 cartons. Please fix this mistake or change to “Partial Delivery”.",
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.w700),
-              textAlign: TextAlign.center,
-            ),
-            titlePadding: EdgeInsets.symmetric(
-              vertical: 1.h,
-              horizontal: 2.w,
-            ),
-            iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.sp),
-            ),
-            backgroundColor: AppColors.white,
-            actions: <Widget>[
-              SizedBox(height: 2.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  CustomButton(
-                    height: 5.h,
-                    width: 30.w,
-                    label: 'Edit',
+         SizedBox(
+          width: 50.w,
+          child: Consumer<ProofOfDeliveryProvider>(
+            builder: (context, provider, _) => CustomButton(
+              label: "Next",
+              onPressed: () {
+                if (provider.isTempValid &&
+                    provider.isServiceTimeValid &&
+                    provider.isLengthOfDeliveryValid &&
+                    provider.isReceiverFirstNameValid &&
+                    provider.isReceiverLastNameValid) {
+                  if (provider.selectedDeliveryType == DeliveryType.full &&
+                      (provider.palletValue < 5 || provider.cartonsValue < 5)) {
+           showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    icon: SizedBox(
+                      height: 20.w,
+                      width: 20.w,
+                      child: const Image(
+                        image: AssetImage(AppImages.brakeWarning),
+                      ),
+                    ),
+                    title: Text(
+                      "You are missing 2 cartons. Please fix this mistake or change to “Partial Delivery”.",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center,
+                    ),
+                    titlePadding: EdgeInsets.symmetric(
+                      vertical: 1.h,
+                      horizontal: 2.w,
+                    ),
+                    iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.sp),
+                    ),
                     backgroundColor: AppColors.white,
-                    borderColor: AppColors.yellow,
-                    foregroundColor: AppColors.black,
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  
-                ],
-              ),
-            ],
+                    actions: <Widget>[
+                      SizedBox(height: 2.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          CustomButton(
+                            height: 5.h,
+                            width: 30.w,
+                            label: 'Edit',
+                            backgroundColor: AppColors.white,
+                            borderColor: AppColors.yellow,
+                            foregroundColor: AppColors.black,
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
           );
-        },
-      );
-  } else {
-     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-        .saveData();
-    Get.toNamed(AppRoutes.podphotos);
-  }
-},backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
-        ],
+        } else {
+          Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+              .saveData();
+          Get.toNamed(AppRoutes.podphotos);
+        }
+      }
+    },
+      backgroundColor: provider.isTempValid &&
+                      provider.isServiceTimeValid &&
+                      provider.isLengthOfDeliveryValid &&
+                      provider.isReceiverFirstNameValid &&
+                      provider.isReceiverLastNameValid
+                  ? AppColors.blue // Blue when all fields are filled
+                  : AppColors.grey, // Grey when not all fields are filled
+              borderColor: provider.isTempValid &&
+                      provider.isServiceTimeValid &&
+                      provider.isLengthOfDeliveryValid &&
+                      provider.isReceiverFirstNameValid &&
+                      provider.isReceiverLastNameValid
+                  ? AppColors.blue // Blue when all fields are filled
+                  : AppColors.grey, // Grey when not all fields are filled
+  ),
+),
+
+       
+        )  ],
       ),
+    
     ],
   ),
 
@@ -670,6 +702,8 @@ Consumer<ProofOfDeliveryProvider>(
         keyboardType: TextInputType.number,
     
          onChanged: (value) {
+           Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateisReasonPartialValidity(value!.isNotEmpty);
+   
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(reasonpartialdelivery: value);
   },
@@ -702,11 +736,12 @@ Consumer<ProofOfDeliveryProvider>(
                 ),
           ),
         ),
-         onChanged: (value) {
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(temperature: value);
+        onChanged: (value) {
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateTempValidity(value!.isNotEmpty);
+    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+      .updateDeliveryFormData(temperature: value);
   },
-      ),
+),
       SizedBox(
         height: 3.h,
       ),
@@ -750,6 +785,7 @@ Consumer<ProofOfDeliveryProvider>(
     ),
   ),
      onChanged: (value) {
+        Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateServiceTimeValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(serviceTime: value);
   },
@@ -773,6 +809,7 @@ Consumer<ProofOfDeliveryProvider>(
           ),
         ),
            onChanged: (value) {
+             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateLengthOfDeliveryValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(lengthOfDelivery: value);
   },
@@ -791,6 +828,7 @@ Consumer<ProofOfDeliveryProvider>(
         name: 'receiverFirstName',
         hintText: AppText.receiverFirstName,
            onChanged: (value) {
+             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverFirstNameValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(receiverFirstName: value);
   },
@@ -802,6 +840,7 @@ Consumer<ProofOfDeliveryProvider>(
         name: 'receiverLastName',
         hintText: AppText.receiverLastName,
            onChanged: (value) {
+           Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverLastNameValidity(value!.isNotEmpty);
    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
     .updateDeliveryFormData(receiverLastName: value);
   },
@@ -908,13 +947,39 @@ Consumer<ProofOfDeliveryProvider>(
           SizedBox(
             width: 50.w,
             child: CustomButton(label: "Next", onPressed: (){
+              if (provider.isReasonPartialValid &&
+                provider.isTempValid &&
+                    provider.isServiceTimeValid &&
+                    provider.isLengthOfDeliveryValid &&
+                    provider.isReceiverFirstNameValid &&
+                    provider.isReceiverLastNameValid
+                    ) {
               Provider.of<ProofOfDeliveryProvider>(context, listen: false).saveData();
               Get.toNamed(AppRoutes.podphotos,
             
             
-            );},backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
+            );}},
+            
+            backgroundColor: provider.isReasonPartialValid &&
+                      provider.isTempValid &&
+                      provider.isServiceTimeValid &&
+                      provider.isLengthOfDeliveryValid &&
+                      provider.isReceiverFirstNameValid &&
+                      provider.isReceiverLastNameValid
+                  ? AppColors.blue 
+                  : AppColors.grey, 
+              borderColor:  provider.isReasonPartialValid &&
+                      provider.isTempValid &&
+                      provider.isServiceTimeValid &&
+                      provider.isLengthOfDeliveryValid &&
+                      provider.isReceiverFirstNameValid &&
+                      provider.isReceiverLastNameValid
+                  ? AppColors.blue 
+                  : AppColors.grey, 
+            ))
         ],
       ),
+
     ],
   ),
                  if (provider.selectedDeliveryType == DeliveryType.none)
