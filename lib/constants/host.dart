@@ -29,4 +29,10 @@ class AppHost {
       '$hostURL/api/driver/return_pallet/v6';
   static const String storeInboundPallet =
       '$hostURL/api/driver/return_pallet/v6/store';
+        static const String podfull = 
+        '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250955';
+         static const String podpartial = 
+        '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250956';
+         static const String podnone = 
+        '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250955';
 }

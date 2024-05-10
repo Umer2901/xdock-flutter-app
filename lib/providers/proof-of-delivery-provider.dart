@@ -18,6 +18,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   String _receiverLastName = ''; 
   String _reasonpartialdelivery = ''; 
   String _orderRejectionReason = '';
+  String _otherinfo = '';
   Uint8List? _signatureData;
  List<String> _selectedOrderRejectionReasons = [];
  bool _isTempValid = false;
@@ -27,6 +28,12 @@ class ProofOfDeliveryProvider with ChangeNotifier {
  bool _isReceiverLastNameValid = false;
  bool _isReasonPartialValid = false;
  bool _isReasonNoneValid = false;
+   List<XFile> _images = [];
+  Map<String, String> _base64Images = {};
+  Map<String, String> _pictureSources = {};
+
+ 
+
   
 
   DeliveryType get selectedDeliveryType => _selectedDeliveryType;
@@ -40,6 +47,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   String get receiverLastName => _receiverLastName; 
   String get reasonpartialdelivery => _reasonpartialdelivery;
   String get orderRejectionReason => _orderRejectionReason;
+  String get otherinfo => _otherinfo;
   List<String> get selectedOrderRejectionReasons => _selectedOrderRejectionReasons;
   bool get isTempValid => _isTempValid;
   bool get isServiceTimeValid => _isServiceTimeValid;
@@ -48,6 +56,9 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   bool get isReceiverLastNameValid => _isReceiverLastNameValid;
   bool get isReasonPartialValid => _isReasonPartialValid;
   bool get isReasonNoneValid => _isReasonNoneValid;
+  List<XFile> get images => _images;
+  Map<String, String> get base64Images => _base64Images;
+  Map<String, String> get pictureSources => _pictureSources;
 
  
 
@@ -156,6 +167,8 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     String? receiverLastName,
     String? reasonpartialdelivery,
     String? orderRejectionReason,
+    String? otherinfo,
+
 
   }) {
     if (selectedDeliveryType != null) {
@@ -190,6 +203,9 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     }
      if (orderRejectionReason != null) {
       _orderRejectionReason = orderRejectionReason;
+    }
+    if ( otherinfo != null) {
+      _otherinfo =  otherinfo;
     }
     notifyListeners();
   }
@@ -265,59 +281,59 @@ void updateTempValidity(bool isValid) {
     notifyListeners();
   }
 
-   void saveData() {
-  
-   String deliveryType;
-  switch (_selectedDeliveryType) {
-    case DeliveryType.full:
-      deliveryType = 'full';
-      break;
-    case DeliveryType.partial:
-      deliveryType = 'partial';
-      break;
-    case DeliveryType.none:
-      deliveryType = 'none';
-      break;
-  }
- if (_selectedDeliveryType == DeliveryType.full) {
-    print('Selected Delivery Type: $deliveryType');
-    print('Pallet Value: $_palletValue');
-    print('Cartons Value: $_cartonsValue');
-    print('Temperature: $_temperature');
-    print('Service Time: $_serviceTime');
-    print('Length of Delivery: $_lengthOfDelivery');
-    print('Receiver First Name: $_receiverFirstName');
-    print('Receiver Last Name: $_receiverLastName');
-    print('Signature Data: $_signatureData');
- }
-     if (_selectedDeliveryType == DeliveryType.partial) {
-    print('Selected Delivery Type: $deliveryType');
-    print('Pallet Value: $_palletValue');
-    print('Cartons Value: $_cartonsValue');
-    print('Temperature: $_temperature');
-    print('Service Time: $_serviceTime');
-    print('Length of Delivery: $_lengthOfDelivery');
-    print('Receiver First Name: $_receiverFirstName');
-    print('Receiver Last Name: $_receiverLastName');
-    print('Signature Data: $_signatureData');
-    print('Partial Delivery Reason: $_reasonpartialdelivery');
-  }
-    if (_selectedDeliveryType == DeliveryType.none) {
-    print('Order rejection  Reason: $_orderRejectionReason');
-     print('Order rejection:');
-    _selectedOrderRejectionReasons.forEach((reason) {
-      print(reason);
-    });
- 
-
-    
-    
-  }
-  }
+  void clearFormData() {
+  _selectedDeliveryType = DeliveryType.full;
+  _palletValue = 0;
+  _cartonsValue = 0;
+  _showSignature = false;
+  _temperature = '';
+  _serviceTime = '';
+  _lengthOfDelivery = '';
+  _receiverFirstName = '';
+  _receiverLastName = '';
+  _reasonpartialdelivery = '';
+  _orderRejectionReason = '';
+  _otherinfo = '';
+  _selectedOrderRejectionReasons.clear();
+  _isTempValid = false;
+  _isServiceTimeValid = false;
+  _isLengthOfDeliveryValid = false;
+  _isReceiverFirstNameValid = false;
+  _isReceiverLastNameValid = false;
+  _isReasonPartialValid = false;
+  _isReasonNoneValid = false;
+  _images.clear();
+  _base64Images.clear();
+  _pictureSources.clear();
+  notifyListeners();
+}
 
 
-  void setShowSignature(bool value) {
+    addImage({
+    required XFile image,
+    required String base64String,
+    required String source,
+  }) {
+    _images.add(image);
+    _base64Images
+        .addEntries({'picture${_images.length}': base64String}.entries);
+    _pictureSources.addEntries({'picture${_images.length}': source}.entries);
+    notifyListeners();
+  }
+
+    removeImage({
+    required XFile image,
+  }) {
+    _images.remove(image);
+    int index = _images.indexOf(image);
+    _base64Images.remove('picture${index + 1}');
+    _pictureSources.remove('picture${index + 1}');
+    notifyListeners();
+  }
+
+    void setShowSignature(bool value) {
     _showSignature = value;
     notifyListeners();
   }
 }
+ 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
@@ -24,7 +26,7 @@ final TextEditingController serviceTimeController = TextEditingController();
 @override
 void initState() {
   super.initState();
-  WidgetsBinding.instance!.addPostFrameCallback((_) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
    serviceTimeController.text = '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
 
   });
@@ -36,7 +38,7 @@ void didChangeDependencies() {
   super.didChangeDependencies();
   serviceTimeController.text = '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
 }
-
+bool isLoading =false;
  
 
 
@@ -44,6 +46,301 @@ void didChangeDependencies() {
   @override
   Widget build(BuildContext context) {
       var provider = Provider.of<ProofOfDeliveryProvider>(context);
+  //       Future<void> postData() async {
+  //   Map<String, dynamic> requestBody = {
+  //     'pod_type': provider.selectedDeliveryType.toString(),
+  //     'palletValue': provider.palletValue,
+  //     'cartonsValue': provider.cartonsValue,
+  //     'showSignature': provider.showSignature,
+  //     'temperature': provider.temperature,
+  //     'serviceTime': provider.serviceTime,
+  //     'lengthOfDelivery': provider.lengthOfDelivery,
+  //     'receiverFirstName': provider.receiverFirstName,
+  //     'receiverLastName': provider.receiverLastName,
+  //     'reasonpartialdelivery': provider.reasonpartialdelivery,
+  //     // 'orderRejectionReason': _orderRejectionReason,
+  //     // 'selectedOrderRejectionReasons': _selectedOrderRejectionReasons,
+  //     // 'isTempValid': _isTempValid,
+  //     // 'isServiceTimeValid': _isServiceTimeValid,
+  //     // 'isLengthOfDeliveryValid': _isLengthOfDeliveryValid,
+  //     // 'isReceiverFirstNameValid': _isReceiverFirstNameValid,
+  //     // 'isReceiverLastNameValid': _isReceiverLastNameValid,
+  //     // 'isReasonPartialValid': _isReasonPartialValid,
+  //     // 'isReasonNoneValid': _isReasonNoneValid,
+  //   };
+  //   setState(() {
+  //     isLoading = true;
+  //   });
+  //   AuthenticationState state =
+  //       BlocProvider.of<AuthenticationCubit>(context).state;
+  //   if (state is Authenticated) {
+  //     try {
+  //       await http
+  //           .post(
+  //         Uri.parse(AppHost.podfull),
+  //         headers: <String, String>{
+  //           'Authorization': 'Bearer ${state.token}',
+  //           'Content-Type': 'application/json',
+  //           'Accept': 'application/json',
+  //         },
+  //         body: jsonEncode(requestBody),
+  //       )
+  //           .then((response) {
+  //         if (response.statusCode == 200) {
+  //           setState(() {
+  //             isLoading = false;
+  //           });
+  //           showDialog(
+  //             context: context,
+  //             builder: (BuildContext context) {
+  //               return AlertDialog(
+  //                 icon: SizedBox(
+  //                   height: 20.w,
+  //                   width: 20.w,
+  //                   child: const Image(
+  //                     image: AssetImage(AppImages.checkmark),
+  //                     color: Colors.green,
+  //                   ),
+  //                 ),
+  //                 title: Text(
+  //                   'Your Outbound pallets have been submitted successfully',
+  //                   style: Theme.of(context)
+  //                       .textTheme
+  //                       .bodyLarge
+  //                       ?.copyWith(fontWeight: FontWeight.w700),
+  //                   textAlign: TextAlign.center,
+  //                 ),
+  //                 titlePadding: EdgeInsets.symmetric(
+  //                   vertical: 1.h,
+  //                   horizontal: 2.w,
+  //                 ),
+  //                 iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(10.sp),
+  //                 ),
+  //                 backgroundColor: AppColors.white,
+  //                 actions: <Widget>[
+  //                   Center(
+  //                     child: CustomButton(
+  //                       height: 5.h,
+  //                       width: 30.w,
+  //                       label: 'CLOSE',
+  //                       backgroundColor: AppColors.blue,
+  //                       borderColor: AppColors.blue,
+  //                       foregroundColor: AppColors.white,
+  //                       onPressed: () async {
+  //                         context.read<OutboundProvider>().restoreToDefault();
+  //                         Get.offAllNamed(AppRoutes.dashboard);
+  //                       },
+  //                     ),
+  //                   ),
+  //                 ],
+  //               );
+  //             },
+  //           );
+  //         } else {
+  //           setState(() {
+  //             isLoading = false;
+  //           });
+  //           final Map<String, dynamic> responseData =
+  //               json.decode(response.body);
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             SnackBar(
+  //               content: Row(
+  //                 children: [
+  //                   const Icon(
+  //                     Icons.error_outline_rounded,
+  //                     color: AppColors.red,
+  //                   ),
+  //                   SizedBox(width: 2.w),
+  //                   Expanded(
+  //                     child: Text(
+  //                       responseData['message'].trim(),
+  //                       style: Theme.of(context)
+  //                           .textTheme
+  //                           .bodyMedium
+  //                           ?.copyWith(color: AppColors.red),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(0),
+  //               ),
+  //               duration: const Duration(seconds: 2),
+  //               behavior: SnackBarBehavior.floating,
+  //               backgroundColor: AppColors.lightRed,
+  //               margin: EdgeInsets.only(bottom: 2.h),
+  //             ),
+  //           );
+  //         }
+  //       });
+  //     } catch (e) {
+  //       setState(() {
+  //         isLoading = false;
+  //       });
+  //       debugPrint(e.toString());
+  //     }
+  //   }
+  // }
+Future<void> postData() async {
+  setState(() {
+    isLoading = true;
+  });
+  AuthenticationState state =
+      BlocProvider.of<AuthenticationCubit>(context).state;
+  if (state is Authenticated) {
+    try {
+      Map<String, dynamic> requestBody;
+      String url;
+      switch (provider.selectedDeliveryType) {
+        case DeliveryType.full:
+          requestBody = {
+            //'pod_type': provider.selectedDeliveryType.toString(),
+            'pod_type': 'full',
+            'palletValue': provider.palletValue,
+            'cartonsValue': provider.cartonsValue,
+            'showSignature': provider.showSignature,
+            'temperature': provider.temperature,
+            'serviceTime': provider.serviceTime,
+            'lengthOfDelivery': provider.lengthOfDelivery,
+            'receiverFirstName': provider.receiverFirstName,
+            'receiverLastName': provider.receiverLastName,
+            'images': provider.base64Images.values.toList(),
+          };
+          url = AppHost.podfull;
+          break;
+        case DeliveryType.partial:
+          requestBody = {
+            'pod_type': 'partial',
+            'palletValue': provider.palletValue,
+            'cartonsValue': provider.cartonsValue,
+            'showSignature': provider.showSignature,
+            'temperature': provider.temperature,
+            'serviceTime': provider.serviceTime,
+            'lengthOfDelivery': provider.lengthOfDelivery,
+            'receiverFirstName': provider.receiverFirstName,
+            'receiverLastName': provider.receiverLastName,
+            'reasonpartialdelivery': provider.reasonpartialdelivery,
+            'images': provider.base64Images.values.toList(),
+          };
+          url = AppHost.podpartial;
+          break;
+        case DeliveryType.none:
+          requestBody = {
+            'pod_type': 'none',
+            "orderrejectionreason": provider.orderRejectionReason,
+            "rejectionreason": provider.selectedOrderRejectionReasons,
+          };
+          url = AppHost.podnone;
+          
+          break;
+      }
+      
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Authorization': 'Bearer ${state.token}',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  icon: SizedBox(
+                    height: 20.w,
+                    width: 20.w,
+                    child: const Image(
+                      image: AssetImage(AppImages.checkmark),
+                      color: Colors.green,
+                    ),
+                  ),
+                  title: Text(
+                    'Your Outbound pallets have been submitted successfully',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                  titlePadding: EdgeInsets.symmetric(
+                    vertical: 1.h,
+                    horizontal: 2.w,
+                  ),
+                  iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.sp),
+                  ),
+                  backgroundColor: AppColors.white,
+                  actions: <Widget>[
+                    Center(
+                      child: CustomButton(
+                        height: 5.h,
+                        width: 30.w,
+                        label: 'CLOSE',
+                        backgroundColor: AppColors.blue,
+                        borderColor: AppColors.blue,
+                        foregroundColor: AppColors.white,
+                        onPressed: () async {
+                          context.read<OutboundProvider>().restoreToDefault();
+                          Get.offAllNamed(AppRoutes.dashboard);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          }  else {
+            setState(() {
+              isLoading = false;
+            });
+            final Map<String, dynamic> responseData =
+                json.decode(response.body);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.red,
+                    ),
+                    SizedBox(width: 2.w),
+                    Expanded(
+                      child: Text(
+                        responseData['message'].trim(),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: AppColors.red),
+                      ),
+                    ),
+                  ],
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(0),
+                ),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: AppColors.lightRed,
+                margin: EdgeInsets.only(bottom: 2.h),
+              ),
+            );
+          }
+      } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      debugPrint(e.toString());
+    }
+  }
+}
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -603,9 +900,12 @@ Consumer<ProofOfDeliveryProvider>(
                 },
           );
         } else {
-          Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-              .saveData();
-          Get.toNamed(AppRoutes.podphotos);
+          // Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+          //     .saveData();
+          //    // postData();
+             Get.toNamed(AppRoutes.podphotos);
+            
+        
         }
       }
     },
@@ -614,15 +914,15 @@ Consumer<ProofOfDeliveryProvider>(
                       provider.isLengthOfDeliveryValid &&
                       provider.isReceiverFirstNameValid &&
                       provider.isReceiverLastNameValid
-                  ? AppColors.blue // Blue when all fields are filled
-                  : AppColors.grey, // Grey when not all fields are filled
+                  ? AppColors.blue 
+                  : AppColors.grey, 
               borderColor: provider.isTempValid &&
                       provider.isServiceTimeValid &&
                       provider.isLengthOfDeliveryValid &&
                       provider.isReceiverFirstNameValid &&
                       provider.isReceiverLastNameValid
-                  ? AppColors.blue // Blue when all fields are filled
-                  : AppColors.grey, // Grey when not all fields are filled
+                  ? AppColors.blue 
+                  : AppColors.grey,
   ),
 ),
 
@@ -953,11 +1253,11 @@ Consumer<ProofOfDeliveryProvider>(
                     provider.isReceiverFirstNameValid &&
                     provider.isReceiverLastNameValid
                     ) {
-              Provider.of<ProofOfDeliveryProvider>(context, listen: false).saveData();
-              Get.toNamed(AppRoutes.podphotos,
-            
-            
-            );}},
+              // Provider.of<ProofOfDeliveryProvider>(context, listen: false).saveData();
+              // postData();
+              Get.toNamed(AppRoutes.podphotos)
+              
+              ;}},
             
             backgroundColor: provider.isReasonPartialValid &&
                       provider.isTempValid &&
@@ -1127,8 +1427,8 @@ Text(
           SizedBox(
             width: 50.w,
             child: CustomButton(label: "Submit POD", onPressed: (){
-Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-        .saveData();
+// Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+//         .saveData();
 
             },backgroundColor: AppColors.red,borderColor: AppColors.red,)),
         ],

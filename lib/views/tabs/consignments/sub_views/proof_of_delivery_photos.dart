@@ -1,18 +1,181 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
+import 'package:http/http.dart' as http;
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 class ProofOfDeliveryPhotos extends StatefulWidget {
   const ProofOfDeliveryPhotos({super.key});
 
   @override
   State<ProofOfDeliveryPhotos> createState() => _ProofOfDeliveryPhotosState();
 }
-
+bool isLoading = false;
 class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<ProofOfDeliveryProvider>(context);
+    
+Future<void> postData() async {
+  setState(() {
+    isLoading = true;
+  });
+  AuthenticationState state =
+      BlocProvider.of<AuthenticationCubit>(context).state;
+  if (state is Authenticated) {
+    try {
+      Map<String, dynamic> requestBody;
+      String url;
+      switch (provider.selectedDeliveryType) {
+        case DeliveryType.full:
+          requestBody = {
+            //'pod_type': provider.selectedDeliveryType.toString(),
+            'pod_type': 'full',
+            'palletValue': provider.palletValue,
+            'cartonsValue': provider.cartonsValue,
+            'showSignature': provider.showSignature,
+            'temperature': provider.temperature,
+            'serviceTime': provider.serviceTime,
+            'lengthOfDelivery': provider.lengthOfDelivery,
+            'receiverFirstName': provider.receiverFirstName,
+            'receiverLastName': provider.receiverLastName,
+            'images': provider.base64Images.values.toList(),
+            "otherinfo": provider.otherinfo,
+          };
+          url = AppHost.podfull;
+          break;
+        case DeliveryType.partial:
+          requestBody = {
+            'pod_type': 'partial',
+            'palletValue': provider.palletValue,
+            'cartonsValue': provider.cartonsValue,
+            'showSignature': provider.showSignature,
+            'temperature': provider.temperature,
+            'serviceTime': provider.serviceTime,
+            'lengthOfDelivery': provider.lengthOfDelivery,
+            'receiverFirstName': provider.receiverFirstName,
+            'receiverLastName': provider.receiverLastName,
+            'reasonpartialdelivery': provider.reasonpartialdelivery,
+            'images': provider.base64Images.values.toList(),
+            "otherinfo": provider.otherinfo,
+          };
+          url = AppHost.podpartial;
+          break;
+        case DeliveryType.none:
+          requestBody = {
+            'pod_type': 'none',
+            "orderrejectionreason": provider.orderRejectionReason,
+            "rejectionreason": provider.selectedOrderRejectionReasons,
+          };
+          url = AppHost.podnone;
+          
+          break;
+      }
+       print('Request Body: $requestBody');
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Authorization': 'Bearer ${state.token}',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  icon: SizedBox(
+                    height: 20.w,
+                    width: 20.w,
+                    child: const Image(
+                      image: AssetImage(AppImages.checkmark),
+                      color: Colors.green,
+                    ),
+                  ),
+                  title: Text(
+                    'Your Outbound pallets have been submitted successfully',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                  titlePadding: EdgeInsets.symmetric(
+                    vertical: 1.h,
+                    horizontal: 2.w,
+                  ),
+                  iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.sp),
+                  ),
+                  backgroundColor: AppColors.white,
+                  actions: <Widget>[
+                    Center(
+                      child: CustomButton(
+                        height: 5.h,
+                        width: 30.w,
+                        label: 'CLOSE',
+                        backgroundColor: AppColors.blue,
+                        borderColor: AppColors.blue,
+                        foregroundColor: AppColors.white,
+                        onPressed: () async {
+                          context.read<ProofOfDeliveryProvider>().clearFormData();
+                          Get.offAllNamed(AppRoutes.dashboard);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          }  else {
+            setState(() {
+              isLoading = false;
+            });
+            final Map<String, dynamic> responseData =
+                json.decode(response.body);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.red,
+                    ),
+                    SizedBox(width: 2.w),
+                    Expanded(
+                      child: Text(
+                        responseData['message'].trim(),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: AppColors.red),
+                      ),
+                    ),
+                  ],
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(0),
+                ),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: AppColors.lightRed,
+                margin: EdgeInsets.only(bottom: 2.h),
+              ),
+            );
+          }
+      } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      debugPrint(e.toString());
+    }
+  }
+}
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -179,49 +342,50 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                         height: 1.h,
                       ),
                       GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            backgroundColor: AppColors.white,
-                            context: context,
-                            builder: (BuildContext context) {
-                              return Wrap(
-                                children: <Widget>[
-                                  ListTile(
-                                    leading: const Icon(Icons.camera_alt),
-                                    title: Text(
-                                      'Take Photo',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    onTap: () async {
-                                      Navigator.pop(context);
-                                      await _takePhoto();
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.image),
-                                    title: Text(
-                                      'Pick Image',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    onTap: () async {
-                                      Navigator.pop(context);
-                                      await _pickImage();
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                        onTap: () async{
+                          // showModalBottomSheet(
+                          //   backgroundColor: AppColors.white,
+                          //   context: context,
+                          //   builder: (BuildContext context) {
+                          //     return Wrap(
+                          //       children: <Widget>[
+                          //         ListTile(
+                          //           leading: const Icon(Icons.camera_alt),
+                          //           title: Text(
+                          //             'Take Photo',
+                          //             style: Theme.of(context)
+                          //                 .textTheme
+                          //                 .bodyMedium
+                          //                 ?.copyWith(
+                          //                   fontWeight: FontWeight.w600,
+                          //                 ),
+                          //           ),
+                          //           onTap: () async {
+                          //             Navigator.pop(context);
+                          //             await _takePhoto();
+                          //           },
+                          //         ),
+                          //         ListTile(
+                          //           leading: const Icon(Icons.image),
+                          //           title: Text(
+                          //             'Pick Image',
+                          //             style: Theme.of(context)
+                          //                 .textTheme
+                          //                 .bodyMedium
+                          //                 ?.copyWith(
+                          //                   fontWeight: FontWeight.w600,
+                          //                 ),
+                          //           ),
+                          //           onTap: () async {
+                          //             Navigator.pop(context);
+                          //             await _pickImage();
+                          //           },
+                          //         ),
+                          //       ],
+                          //     );
+                          //   },
+                          // );
+                         await _takePhoto();
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -271,7 +435,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: context
-                                    .read<InboundProvider>()
+                                    .read<ProofOfDeliveryProvider>()
                                     .images
                                     .map(
                                       (image) => Padding(
@@ -293,7 +457,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                                             onTap: () {
                                               setState(() {
                                                 context
-                                                    .read<InboundProvider>()
+                                                    .read<ProofOfDeliveryProvider>()
                                                     .removeImage(image: image);
                                               });
                                             },
@@ -336,10 +500,15 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
             ),
             padding: EdgeInsets.symmetric(
                 vertical: 1.h, horizontal: 2.w),
-            child: const CustomTextField(
+            child: CustomTextField(
               borderColor: AppColors.white,
       name: 'Textform',
       hintText: "Enter Text",
+      onChanged: (value) {
+    
+   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+    .updateDeliveryFormData(otherinfo: value);
+  },
             ),
           ),
         ],
@@ -350,11 +519,28 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          SizedBox(
-            width: 50.w,
-            child: CustomButton(label: "Submit POD", onPressed: (){
-               dialogBox(1);
-            },backgroundColor: AppColors.grey,borderColor: AppColors.grey,)),
+       SizedBox(
+  width: 50.w,
+  child: CustomButton(
+    label: "Submit POD",
+    onPressed: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
+        ? () {
+            postData();
+          }
+        : (){},
+    backgroundColor: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
+        ? AppColors.blue
+        : AppColors.grey, 
+    borderColor: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
+        ? AppColors.blue
+        : AppColors.grey,
+  ),
+),
+
+
+
+
+
         ],
       ),
       ]))))));
@@ -370,7 +556,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       if (image != null) {
         Uint8List bytes = await image.readAsBytes();
         setState(() {
-          context.read<InboundProvider>().addImage(
+          context.read<ProofOfDeliveryProvider>().addImage(
                 image: image,
                 base64String:
                     'data:image/jpeg;base64,${base64Encode(bytes).toString()}',
@@ -383,80 +569,6 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     }
   }
 
-   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    try {
-      final XFile? image = await picker.pickImage(
-        imageQuality: 10,
-        source: ImageSource.gallery,
-      );
-
-      if (image != null) {
-        Uint8List bytes = await image.readAsBytes();
-        setState(() {
-          context.read<InboundProvider>().addImage(
-                image: image,
-                base64String:
-                    'data:image/jpeg;base64,${base64Encode(bytes).toString()}',
-                source: 'By Gallery',
-              );
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking image from gallery: $e');
-    }
-  }
-  void dialogBox(int index) {
-    {
-      showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  icon: SizedBox(
-                    height: 20.w,
-                    width: 20.w,
-                    child: const Image(
-                      image: AssetImage(AppImages.checkmark),
-                      color: Colors.green,
-                    ),
-                  ),
-                  title: Text(
-                    'Your Outbound pallets have been submitted successfully',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                    textAlign: TextAlign.center,
-                  ),
-                  titlePadding: EdgeInsets.symmetric(
-                    vertical: 1.h,
-                    horizontal: 2.w,
-                  ),
-                  iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.sp),
-                  ),
-                  backgroundColor: AppColors.white,
-                  actions: <Widget>[
-                    Center(
-                      child: CustomButton(
-                        height: 5.h,
-                        width: 30.w,
-                        label: 'CLOSE',
-                        backgroundColor: AppColors.blue,
-                        borderColor: AppColors.blue,
-                        foregroundColor: AppColors.white,
-                        onPressed: () async {
-                          context.read<OutboundProvider>().restoreToDefault();
-                          Get.offAllNamed(AppRoutes.dashboard);
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            );
-    }
-  }
-
+   
+ 
 }
