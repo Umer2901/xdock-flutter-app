@@ -272,7 +272,7 @@ void updateTempValidity(bool isValid) {
     showSignaturePopup(context, controller);
   }
 
-    void updateOrderRejectionReason(String reason) {
+   void updateOrderRejectionReason(String reason) {
     if (_selectedOrderRejectionReasons.contains(reason)) {
       _selectedOrderRejectionReasons.remove(reason);
     } else {
@@ -280,6 +280,14 @@ void updateTempValidity(bool isValid) {
     }
     notifyListeners();
   }
+
+   void clearOrderRejectionReasons() {
+    _selectedOrderRejectionReasons.clear();
+    notifyListeners();
+  }
+
+ 
+  
 
   void clearFormData() {
   _selectedDeliveryType = DeliveryType.full;

@@ -29,10 +29,18 @@ class AppHost {
       '$hostURL/api/driver/return_pallet/v6';
   static const String storeInboundPallet =
       '$hostURL/api/driver/return_pallet/v6/store';
-        static const String podfull = 
+  static const String podfull = 
         '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250955';
-         static const String podpartial = 
+  static const String podpartial = 
         '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250956';
-         static const String podnone = 
-        '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250955';
+  static const String notopen = 
+        '$hostURL/api/driver/runSheet/v6/podErrorRecord/2289768';
+  static const String wrongaddress = 
+        '$hostURL/api/driver/runSheet/v6/podErrorRecord/2250957';
+  static const String temperateissue = 
+        '$hostURL/api/driver/runSheet/v6/podErrorRecord/2333339';
+  static const String damagegoods = 
+        '$hostURL/api/driver/runSheet/v6/podErrorRecord/2330398';
+  static const String otherrejection = 
+        '$hostURL/api/driver/runSheet/v6/podErrorRecord/2330399';
 }
