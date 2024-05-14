@@ -16,6 +16,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
       StreamController<dynamic>();
   late Timer _timer;
   List<dynamic>? _consignments;
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +27,38 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
         fetchConsignment();
       },
     );
+  }
+
+  Future<void> reorder(var data) async {
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
+    if (state is Authenticated) {
+      try {
+        final response = await http.post(
+          Uri.parse(AppHost.reorderConsignments),
+          body: jsonEncode(data),
+          headers: <String, String>{
+            'Authorization': 'Bearer ${state.token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        );
+        if (response.statusCode == 200) {
+          final dynamic data = json.decode(response.body);
+          if (data['status'] == 'success') {
+            _consignmentStreamController.add(data);
+          } else {
+            _consignmentStreamController.addError(data['message']);
+          }
+        } else {
+          _consignmentStreamController.addError('Failed to fetch data');
+        }
+      } catch (e) {
+        if (!_consignmentStreamController.isClosed) {
+          _consignmentStreamController.addError(e.toString());
+        }
+      }
+    }
   }
 
   @override
@@ -48,7 +81,6 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
             'Accept': 'application/json',
           },
         );
-        print(response.body);
         if (response.statusCode == 200) {
           final dynamic data = json.decode(response.body);
           if (data['status'] == 'success') {
@@ -109,8 +141,9 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                 radius: 9.w,
                 backgroundColor: AppColors.greyWhite,
                 child: SvgPicture.asset(
-                  AppSvgs.pallet,
+                  AppSvgs.reorderBlack,
                   width: 10.w,
+                  color: AppColors.blue,
                 ),
               ),
               Padding(
@@ -150,7 +183,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                         children: [
                           if (_consignments != null)
                             ReorderableListView(
-                              physics: NeverScrollableScrollPhysics(),
+                              physics: const NeverScrollableScrollPhysics(),
                               shrinkWrap: true,
                               onReorder: (oldIndex, newIndex) {
                                 setState(() {
@@ -161,6 +194,11 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                                       _consignments!.removeAt(oldIndex);
                                   _consignments!.insert(newIndex, item);
                                 });
+                                List<int> consignmentIds = [];
+                                for (var consignment in _consignments!) {
+                                  consignmentIds.add(consignment['id']);
+                                }
+                                reorder({'2024-04-04': consignmentIds});
                               },
                               children: List.generate(
                                 _consignments!.length,
@@ -169,6 +207,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                                   return CustomConsignmentContainer(
                                     key: ValueKey(consignment['id']),
                                     consignment: consignment,
+                                    icon: const Icon(Icons.drag_handle),
                                   );
                                 },
                               ),
@@ -274,6 +313,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                               for (int i = 0; i < 10; i++) ...{
                                 const CustomConsignmentContainer(
                                   isLoading: true,
+                                  icon: Icon(Icons.drag_handle),
                                 ),
                               }
                             ],

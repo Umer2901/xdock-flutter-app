@@ -635,6 +635,7 @@ class DetailContainer extends StatelessWidget {
                       Container(
                           height: 5.h,
                           width: 5.h,
+                          padding: EdgeInsets.all(2.5.w),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? AppColors.lightBlue
@@ -644,13 +645,10 @@ class DetailContainer extends StatelessWidget {
                           child: isSelected
                               ? SvgPicture.asset(
                                   AppSvgs.checkList,
-                                  fit: BoxFit.scaleDown,
                                 )
-                              : SizedBox(
-                                  child: SvgPicture.asset(
+                              : SvgPicture.asset(
                                   AppSvgs.pallet,
-                                  fit: BoxFit.scaleDown,
-                                ))),
+                                )),
                       SizedBox(width: 3.w),
                       Text(
                         title,

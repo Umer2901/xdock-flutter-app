@@ -175,8 +175,7 @@ class AppText {
   static const String receiverConfirmation = 'Receiver Confirmation';
   static const String receiverFirstName = 'Receiver First Name';
   static const String receiverLastName = 'Receiver Last Name';
-  static const String reorder = 'Rreorder';
+  static const String reorder = 'Reorder';
   static const String cancel = 'Cancel';
   static const String save = 'Save';
-  
 }

@@ -93,19 +93,19 @@ class CustomElevatedButton extends StatelessWidget {
           ),
           // Bottom shadow
           Positioned(
-            left: 0,
-            right: 0,
+            left: 20,
+            right: 20,
             bottom: 0,
             height: 10,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(35.sp),
+                borderRadius: BorderRadius.circular(55.sp),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.3),
+                    color: AppColors.black.withOpacity(0.1),
                     spreadRadius: 0,
-                    blurRadius: 10,
-                    offset: const Offset(0, 10),
+                    blurRadius: 5,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
@@ -115,17 +115,17 @@ class CustomElevatedButton extends StatelessWidget {
           Positioned(
             top: 0,
             right: 0,
-            bottom: 10,
+            bottom: 5,
             width: 10,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(35.sp),
+                borderRadius: BorderRadius.circular(55.sp),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.3),
+                    color: AppColors.black.withOpacity(0.1),
                     spreadRadius: 0,
-                    blurRadius: 10,
-                    offset: const Offset(10, 0),
+                    blurRadius: 5,
+                    offset: const Offset(5, 0),
                   ),
                 ],
               ),

@@ -30,6 +30,7 @@ export 'views/tabs/consignment_map.dart';
 export 'views/tabs/consignments/my_consigments.dart';
 export 'views/tabs/consignments/sub_views/single_consigment.dart';
 export 'views/tabs/consignments/sub_views/consigment_reorder.dart';
+export 'views/tabs/consignments/sub_views/consigment_group.dart';
 
 // Constant Exports
 export 'constants/colors.dart';
@@ -67,7 +68,7 @@ export 'package:google_maps_flutter/google_maps_flutter.dart';
 export 'package:signature/signature.dart';
 export 'package:intl/intl.dart' hide TextDirection;
 export 'package:shared_preferences/shared_preferences.dart';
-export  'package:progressive_time_picker/progressive_time_picker.dart';
+export 'package:progressive_time_picker/progressive_time_picker.dart';
 export 'package:form_builder_validators/form_builder_validators.dart';
 export 'package:image_picker/image_picker.dart';
 export 'package:fluttertoast/fluttertoast.dart';
@@ -81,6 +82,7 @@ export 'providers/pre_start_provider.dart';
 export 'providers/outbound_provider.dart';
 export 'providers/inbound_provider.dart';
 export 'providers/location_provider.dart';
+export 'providers/bottom_nav_provider.dart';
 
 // Bloc Exports
 export 'package:flutter_bloc/flutter_bloc.dart' hide Transition;
