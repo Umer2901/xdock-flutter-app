@@ -1,6 +1,7 @@
 class AppHost {
   static const String hostURL = 'https://staging.xdock.com.au';
 
+
   static const String login = '$hostURL/api/staff/v2/token';
   static const String logout = '$hostURL/api/staff/v2/logout';
 
@@ -29,6 +30,11 @@ class AppHost {
       '$hostURL/api/driver/return_pallet/v6';
   static const String storeInboundPallet =
       '$hostURL/api/driver/return_pallet/v6/store';
+
+  static const String reorderConsignments =
+      '$hostURL/api/driver/runSheet/v6/reOrder';
+  static const String consignmentDetail =
+      '$hostURL/api/driver/consignments/v6/';
   static const String podfull = 
         '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250955';
   static const String podpartial = 
