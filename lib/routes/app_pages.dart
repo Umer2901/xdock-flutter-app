@@ -64,6 +64,7 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.proofOfDelivery,
       page: () => const ProofOfDeliveryView(),
+      arguments: Get.arguments,
     ),
     GetPage(
       name: AppRoutes.consigmentReorder,
@@ -72,6 +73,7 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.Stopwatch,
       page: () => const EditTime(),
+      
     ),
     GetPage(
       name: AppRoutes.podphotos,

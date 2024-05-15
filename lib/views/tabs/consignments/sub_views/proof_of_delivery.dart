@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
-
 
 class ProofOfDeliveryView extends StatefulWidget {
   const ProofOfDeliveryView({Key? key}) : super(key: key);
@@ -18,31 +23,85 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     penColor: AppColors.black,
     exportBackgroundColor: AppColors.white,
   );
-  
 
+  final StreamController<dynamic> _consignmentStreamController =
+      StreamController<dynamic>();
 
-final TextEditingController serviceTimeController = TextEditingController();
+  final TextEditingController serviceTimeController = TextEditingController();
 
-@override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-   serviceTimeController.text = '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
+  late Timer _timer;
 
-  });
-}
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+    _timer = Timer.periodic(
+      const Duration(seconds: 30),
+      (timer) {
+        fetchData();
+      },
+    );
 
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      serviceTimeController.text =
+          '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
+      
+    });
+  }
+  @override
+  void dispose() {
+    _consignmentStreamController.close();
+    _timer.cancel();
+    super.dispose();
+  }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    serviceTimeController.text =
+        '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
+  }
 
-@override
-void didChangeDependencies() {
-  super.didChangeDependencies();
-  serviceTimeController.text = '${context.read<TimeProvider>().startTime.h}:${context.read<TimeProvider>().startTime.m} - ${context.read<TimeProvider>().endTime.h}:${context.read<TimeProvider>().endTime.m}';
-}
-bool isLoading =false;
- 
+  bool isLoading = false;
 
-
-
+  Future<void> fetchData() async {
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
+    if (state is Authenticated) {
+      try {
+        final response = await http.get(
+          Uri.parse('${AppHost.consignmentDetail}${Get.arguments}'),
+          headers: <String, String>{
+            'Authorization': 'Bearer ${state.token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        );
+        if (!_consignmentStreamController.isClosed) {
+          if (response.statusCode == 200) {
+            final dynamic data = json.decode(response.body);
+            _consignmentStreamController.add(data);
+          } else {
+            print(
+                'Failed to fetch data. Status code: ${response.statusCode}');
+            _consignmentStreamController.addError('Failed to fetch data');
+          }
+        } else {
+          print('Stream controller is closed. Status code: ${response.statusCode}');
+        }
+      } catch (e, stackTrace) {
+        print('Error fetching data: $e');
+        print('Stack trace: $stackTrace');
+        if (!_consignmentStreamController.isClosed) {
+          _consignmentStreamController.addError('Error fetching data');
+        } else {
+          print('Stream controller is closed. Skipping error addition.');
+        }
+      }
+    } else {
+      print('User is not authenticated');
+      // Handle unauthenticated state if needed
+    }
+  }
   @override
   Widget build(BuildContext context) {
       var provider = Provider.of<ProofOfDeliveryProvider>(context);
@@ -61,37 +120,11 @@ bool isLoading =false;
 
       switch (provider.selectedDeliveryType) {
         case DeliveryType.full:
-          requestBody = {
-            //'pod_type': provider.selectedDeliveryType.toString(),
-            'pod_type': 'full',
-            'palletValue': provider.palletValue,
-            'cartonsValue': provider.cartonsValue,
-            'showSignature': provider.showSignature,
-            'temperature': provider.temperature,
-            'serviceTime': provider.serviceTime,
-            'lengthOfDelivery': provider.lengthOfDelivery,
-            'receiverFirstName': provider.receiverFirstName,
-            'receiverLastName': provider.receiverLastName,
-            'images': provider.base64Images.values.toList(),
-            "otherinfo": provider.otherinfo,
-          };
+          requestBody = provider.toMap();
           url = AppHost.podfull;
           break;
         case DeliveryType.partial:
-          requestBody = {
-            'pod_type': 'partial',
-            'palletValue': provider.palletValue,
-            'cartonsValue': provider.cartonsValue,
-            'showSignature': provider.showSignature,
-            'temperature': provider.temperature,
-            'serviceTime': provider.serviceTime,
-            'lengthOfDelivery': provider.lengthOfDelivery,
-            'receiverFirstName': provider.receiverFirstName,
-            'receiverLastName': provider.receiverLastName,
-            'reasonpartialdelivery': provider.reasonpartialdelivery,
-            'images': provider.base64Images.values.toList(),
-            "otherinfo": provider.otherinfo,
-          };
+          requestBody = provider.partialtoMap();
           url = AppHost.podpartial;
           break;
         case DeliveryType.none:
@@ -101,39 +134,23 @@ bool isLoading =false;
     print('Rejection Reason: $rejectionReason');
     switch (rejectionReason) {
       case "Temperature issue":
-        requestBody = {
-          'pod_type': 'none',
-          'temperature_issue': true,
-        };
+        requestBody = provider.nonetoMap();
         url = AppHost.temperateissue;
         break;
       case "Wrong Address":
-        requestBody = {
-          'pod_type': 'none',
-          'wrong_address': true,
-        };
+        requestBody =requestBody = provider.nonetoMap();
         url = AppHost.wrongaddress;
         break;
       case "Damaged Goods":
-        requestBody = {
-          'pod_type': 'none',
-          'damage_goods': true,
-        };
+        requestBody = requestBody = provider.nonetoMap();
         url = AppHost.damagegoods;
         break;
       case "Receiver Not Open":
-        requestBody = {
-          'pod_type': 'none',
-          'receiver_not': true,
-        };
+        requestBody = requestBody = provider.nonetoMap();
         url = AppHost.notopen;
         break;
       case "Other Rejection":
-        requestBody = {
-          'pod_type': 'none',
-          'other_rejection': true,
-          'reason': provider.orderRejectionReason,
-        };
+        requestBody = requestBody = provider.nonetoMap();
         url = AppHost.otherrejection;
         break;
       default:
@@ -263,7 +280,7 @@ bool isLoading =false;
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {fetchData();},
             icon: Icon(
               Icons.more_horiz,
               size: 20.sp,
@@ -281,111 +298,189 @@ bool isLoading =false;
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: SingleChildScrollView(
             child: Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    surfaceTintColor: Colors.transparent,
-                    centerTitle: true,
-                    leading: const SizedBox.shrink(),
-                    title: IntrinsicHeight(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'ID: 123456',
-                            style: Theme.of(context).textTheme.headlineSmall,
+              child: StreamBuilder(
+                stream: _consignmentStreamController.stream,
+                builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      print(snapshot.data); 
+                      var id = snapshot.data['data']['id'];
+                      var ref = snapshot.data['data']['customer_reference'];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppBar(
+                        backgroundColor: Colors.transparent,
+                        surfaceTintColor: Colors.transparent,
+                        centerTitle: true,
+                        leading: const SizedBox.shrink(),
+                        title: IntrinsicHeight(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                                  Text(
+                    'ID: $id',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  VerticalDivider(
+                    color: AppColors.black.withOpacity(0.5),
+                    thickness: 2,
+                  ),
+                  Text(
+                    'REF: $ref',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                            ],
                           ),
-                          VerticalDivider(
-                            color: AppColors.black.withOpacity(0.5),
-                            thickness: 2,
-                          ),
-                          Text(
-                            'REF: 1234',
-                            style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        actions: [
+                          InkWell(
+                            onTap: () {},
+                            child: Container(
+                              width: 13.5.w,
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: BorderRadius.circular(50.sp),
+                                  border: Border.all()),
+                              child: SvgPicture.asset(
+                                AppSvgs.journey,
+                                color: AppColors.blue,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    actions: [
-                      InkWell(
-                        onTap: () {},
-                        child: Container(
-                          width: 13.5.w,
-                          height: 6.h,
-                          decoration: BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(50.sp),
-                              border: Border.all()),
-                          child: SvgPicture.asset(
-                            AppSvgs.journey,
-                            color: AppColors.blue,
-                          ),
-                        ),
+                      SizedBox(
+                        height: 2.h,
                       ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        height: 8.h,
-                        width: 18.w,
-                        decoration: BoxDecoration(
-                          color: AppColors.darkGrey,
-                          borderRadius: BorderRadius.circular(8.sp),
-                        ),
-                        child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 2.w,
-                              vertical: 1.h,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            height: 8.h,
+                            width: 18.w,
+                            decoration: BoxDecoration(
+                              color: AppColors.darkGrey,
+                              borderRadius: BorderRadius.circular(8.sp),
                             ),
-                            child: SizedBox(
-                                width: 16.w,
-                                height: 7.h,
-                                child: Image.asset(AppImages.cardboard))),
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 2.w,
+                                  vertical: 1.h,
+                                ),
+                                child: SizedBox(
+                                    width: 16.w,
+                                    height: 7.h,
+                                    child: Image.asset(AppImages.cardboard))),
+                          ),
+                          SizedBox(
+                            width: 54.w,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Ritchies IGA',
+                                  style: Theme.of(context).textTheme.headlineMedium,
+                                ),
+                                Text(
+                                  'Recipient: Drew Moran 830 Wellington road, Rowville',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {},
+                            child: Container(
+                              width: 13.5.w,
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                color: AppColors.black.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(50.sp),
+                              ),
+                              child: Icon(
+                                Icons.call,
+                                color: AppColors.white,
+                                size: 4.h,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(
-                        width: 54.w,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        height: 2.h,
+                      ),
+                      const Divider(),
+                      SizedBox(
+                        height: 2.h,
+                      ),
+                      Text(
+                        AppText.selectDeliveryType,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      SizedBox(
+                        height: 1.h,
+                      ),
+                     CustomDropdown(
+                    name: 'deliveryType',
+                    hintText: 'Please Select',
+                    fillColor: AppColors.white,
+                    value: Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType,
+                    onChanged: (newValue) {
+                      context.read<ProofOfDeliveryProvider>().updateSelectedDeliveryType(newValue!);
+                  
+                    },
+                    items: [
+                      DropdownMenuItem(
+                        value: DeliveryType.full,
+                        child: Row(
                           children: [
-                            Text(
-                              'Ritchies IGA',
-                              style: Theme.of(context).textTheme.headlineMedium,
+                            CircleAvatar(
+                              backgroundColor: Colors.green,
+                              radius: 3.sp,
                             ),
-                            Text(
-                              'Recipient: Drew Moran 830 Wellington road, Rowville',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                            SizedBox(
+                              width: 2.w,
                             ),
+                            const Text('Full Delivery'),
                           ],
                         ),
                       ),
-                      InkWell(
-                        onTap: () {},
-                        child: Container(
-                          width: 13.5.w,
-                          height: 6.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.black.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(50.sp),
-                          ),
-                          child: Icon(
-                            Icons.call,
-                            color: AppColors.white,
-                            size: 4.h,
-                          ),
+                      DropdownMenuItem(
+                        value: DeliveryType.partial,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: AppColors.yellow,
+                              radius: 3.sp,
+                            ),
+                            SizedBox(
+                              width: 2.w,
+                            ),
+                            const Text('Partial Delivery'),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: DeliveryType.none,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: AppColors.red,
+                              radius: 3.sp,
+                            ),
+                            SizedBox(
+                              width: 2.w,
+                            ),
+                            const Text('No Delivery'),
+                          ],
                         ),
                       ),
                     ],
@@ -393,917 +488,855 @@ bool isLoading =false;
                   SizedBox(
                     height: 2.h,
                   ),
-                  const Divider(),
-                  SizedBox(
-                    height: 2.h,
+                  
+                    if (Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType == DeliveryType.full)
+                       Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppText.howManyDelivered,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            PalletContainer(
+                              name: 'cartons',
+                              heading: AppText.cartons,
+                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              hintText: '0',
+                              initialValue:
+                    Provider.of<ProofOfDeliveryProvider>(context).cartonsValue,
+                              totalPallet: 5,
+                              onValueChanged: (value) {
+                  Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateCartonsValue(value);
+                              },
+                            ),
+                            PalletContainer(
+                              name: 'pallets',
+                              heading: AppText.pallets,
+                              hintText: '0',
+                              initialValue:
+                    Provider.of<ProofOfDeliveryProvider>(context).palletValue,
+                              totalPallet: 5,
+                              onValueChanged: (value) {
+                  Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updatePalletValue(value);
+                              },
+                            ),
+                          
+                      
+                          ],
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.deliveryTemperature,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomTextField(
+                          name: 'temp',
+                          hintText: AppText.temperature,
+                          keyboardType: TextInputType.number,
+                          suffixIcon: Padding(
+                            padding:
+                  EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+                            child: Text(
+                              AppText.celsius,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                            ),
+                          ),
+                          onChanged: (value) {
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateTempValidity(value!.isNotEmpty);
+                      Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                        .updateDeliveryFormData(temperature: value);
+                    },
                   ),
-                  Text(
-                    AppText.selectDeliveryType,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  SizedBox(
-                    height: 1.h,
-                  ),
-                 CustomDropdown(
-  name: 'deliveryType',
-  hintText: 'Please Select',
-  fillColor: AppColors.white,
-  value: Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType,
-  onChanged: (newValue) {
-    context.read<ProofOfDeliveryProvider>().updateSelectedDeliveryType(newValue!);
-
-  },
-  items: [
-    DropdownMenuItem(
-      value: DeliveryType.full,
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.green,
-            radius: 3.sp,
-          ),
-          SizedBox(
-            width: 2.w,
-          ),
-          const Text('Full Delivery'),
-        ],
-      ),
-    ),
-    DropdownMenuItem(
-      value: DeliveryType.partial,
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: AppColors.yellow,
-            radius: 3.sp,
-          ),
-          SizedBox(
-            width: 2.w,
-          ),
-          const Text('Partial Delivery'),
-        ],
-      ),
-    ),
-    DropdownMenuItem(
-      value: DeliveryType.none,
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: AppColors.red,
-            radius: 3.sp,
-          ),
-          SizedBox(
-            width: 2.w,
-          ),
-          const Text('No Delivery'),
-        ],
-      ),
-    ),
-  ],
-),
-SizedBox(
-  height: 2.h,
-),
-
-  if (Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType == DeliveryType.full)
-     Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        AppText.howManyDelivered,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          PalletContainer(
-            name: 'cartons',
-            heading: AppText.cartons,
-            icon: SvgPicture.asset(AppSvgs.pallet),
-            hintText: '0',
-            initialValue:
-                Provider.of<ProofOfDeliveryProvider>(context).cartonsValue,
-            totalPallet: 5,
-            onValueChanged: (value) {
-              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-                  .updateCartonsValue(value);
-            },
-          ),
-          PalletContainer(
-            name: 'pallets',
-            heading: AppText.pallets,
-            hintText: '0',
-            initialValue:
-                Provider.of<ProofOfDeliveryProvider>(context).palletValue,
-            totalPallet: 5,
-            onValueChanged: (value) {
-              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-                  .updatePalletValue(value);
-            },
-          ),
-        
-    
-        ],
-      ),
-      SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        AppText.deliveryTemperature,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-      CustomTextField(
-        name: 'temp',
-        hintText: AppText.temperature,
-        keyboardType: TextInputType.number,
-        suffixIcon: Padding(
-          padding:
-              EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-          child: Text(
-            AppText.celsius,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-        ),
-        onChanged: (value) {
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateTempValidity(value!.isNotEmpty);
-    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-      .updateDeliveryFormData(temperature: value);
-  },
-),
-      SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        AppText.serviceTime,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-     CustomTextField(
-  name: 'serviceTime',
-  keyboardType: TextInputType.number,
-  readOnly: true,
-  hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
-        controller:  serviceTimeController,
-  onTap: () {
-    Get.toNamed(AppRoutes.Stopwatch);
-   
-  },
-  suffixIcon: Padding(
-    padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-         Text(
-          AppText.editHours,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.black.withOpacity(0.5),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-       
-        Icon(
-          Icons.arrow_forward_ios,
-          size: 2.h,
-          color: AppColors.black.withOpacity(0.5),
-        )
-      ],
-    ),
-  ),
-     onChanged: (value) {
-        Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateServiceTimeValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(serviceTime: value);
-  },
-),
-
-      SizedBox(
-        height: 1.h,
-      ),
-      CustomTextField(
-        name: 'lengthOfDelivery',
-        hintText: AppText.lengthOfDelivery,
-        keyboardType: TextInputType.number,
-        suffixIcon: Padding(
-          padding:
-              EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-          child: Text(
-            AppText.minutes,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-        ),
-           onChanged: (value) {
-             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateLengthOfDeliveryValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(lengthOfDelivery: value);
-  },
-      ),
-      SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        AppText.receiverConfirmation,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-       CustomTextField(
-        name: 'receiverFirstName',
-        hintText: AppText.receiverFirstName,
-           onChanged: (value) {
-             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverFirstNameValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(receiverFirstName: value);
-  },
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-       CustomTextField(
-        name: 'receiverLastName',
-        hintText: AppText.receiverLastName,
-           onChanged: (value) {
-           Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverLastNameValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(receiverLastName: value);
-  },
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-Consumer<ProofOfDeliveryProvider>(
-  builder: (context, provider, _) {
-    return SizedBox(
-      width: 90.w,
-      child: GestureDetector(
-        onTap: () {
-          if (!provider.showSignature) {
-            provider.setShowSignature(true);
-            provider.showSignaturePopup(context, controller);
-          }
-        },
-        child: Stack(
-          children: [
-            if (controller.isEmpty && !provider.showSignature)
-              Container(
-                height: 25.h,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.navyBlue),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(5.sp),
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: 1.h,
-                  horizontal: 2.w,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 50.sp,
-                      height: 50.sp,
-                      child: Image.asset(
-                        AppImages.handWithPen,
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.serviceTime,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                       CustomTextField(
+                    name: 'serviceTime',
+                    keyboardType: TextInputType.number,
+                    readOnly: true,
+                    hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
+                          controller:  serviceTimeController,
+                    onTap: () {
+                      Get.toNamed(AppRoutes.Stopwatch);
+                     
+                    },
+                    suffixIcon: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                           Text(
+                            AppText.editHours,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.black.withOpacity(0.5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                         
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 2.h,
+                            color: AppColors.black.withOpacity(0.5),
+                          )
+                        ],
                       ),
                     ),
-                    Text(
-                      AppText.tapHereToSign,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    )
-                  ],
-                ),
-              ),
-            if (provider.showSignature)
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.navyBlue),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(5.sp),
+                       onChanged: (value) {
+                          Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateServiceTimeValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(serviceTime: value);
+                    },
                   ),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: 1.h,
-                  horizontal: 2.w,
-                ),
-                child: Column(
-                  children: [
-                    Signature(
-                      controller: controller,
-                      width: 90.w,
-                      height: 20.h,
-                      backgroundColor: Colors.transparent,
+                  
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomTextField(
+                          name: 'lengthOfDelivery',
+                          hintText: AppText.lengthOfDelivery,
+                          keyboardType: TextInputType.number,
+                          suffixIcon: Padding(
+                            padding:
+                  EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+                            child: Text(
+                              AppText.minutes,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
                     ),
-                    const Divider(
-                      height: 1,
-                      thickness: 2,
-                      color: AppColors.grey,
-                    ),
-                    CupertinoButton(
-                      child: const Text(
-                        "Redo",
-                        style: TextStyle(color: Colors.blue),
+                            ),
+                          ),
+                             onChanged: (value) {
+                               Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateLengthOfDeliveryValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(lengthOfDelivery: value);
+                    },
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.receiverConfirmation,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                         CustomTextField(
+                          name: 'receiverFirstName',
+                          hintText: AppText.receiverFirstName,
+                             onChanged: (value) {
+                               Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverFirstNameValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(receiverFirstName: value);
+                    },
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                         CustomTextField(
+                          name: 'receiverLastName',
+                          hintText: AppText.receiverLastName,
+                             onChanged: (value) {
+                             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverLastNameValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(receiverLastName: value);
+                    },
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                  Consumer<ProofOfDeliveryProvider>(
+                    builder: (context, provider, _) {
+                      return SizedBox(
+                        width: 90.w,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!provider.showSignature) {
+                              provider.setShowSignature(true);
+                              provider.showSignaturePopup(context, controller);
+                            }
+                          },
+                          child: Stack(
+                            children: [
+                              if (controller.isEmpty && !provider.showSignature)
+                  Container(
+                    height: 25.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.navyBlue),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(5.sp),
                       ),
-                      onPressed: () {
-                        provider.clearSignatureAndShowPopup(context, controller);
-                      },
                     ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  },
-),
-
-     
-      SizedBox(
-        height: 1.h,
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-         SizedBox(
-          width: 50.w,
-          child: Consumer<ProofOfDeliveryProvider>(
-            builder: (context, provider, _) => CustomButton(
-              label: "Next",
-              onPressed: () {
-                if (provider.isTempValid &&
-                    provider.isServiceTimeValid &&
-                    provider.isLengthOfDeliveryValid &&
-                    provider.isReceiverFirstNameValid &&
-                    provider.isReceiverLastNameValid) {
-                  if (provider.selectedDeliveryType == DeliveryType.full &&
-                      (provider.palletValue < 5 || provider.cartonsValue < 5)) {
-           showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    icon: SizedBox(
-                      height: 20.w,
-                      width: 20.w,
-                      child: const Image(
-                        image: AssetImage(AppImages.brakeWarning),
-                      ),
-                    ),
-                    title: Text(
-                      "You are missing 2 cartons. Please fix this mistake or change to “Partial Delivery”.",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                      textAlign: TextAlign.center,
-                    ),
-                    titlePadding: EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                       vertical: 1.h,
                       horizontal: 2.w,
                     ),
-                    iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.sp),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 50.sp,
+                          height: 50.sp,
+                          child: Image.asset(
+                            AppImages.handWithPen,
+                          ),
+                        ),
+                        Text(
+                          AppText.tapHereToSign,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        )
+                      ],
                     ),
-                    backgroundColor: AppColors.white,
-                    actions: <Widget>[
-                      SizedBox(height: 2.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          CustomButton(
-                            height: 5.h,
-                            width: 30.w,
-                            label: 'Edit',
-                            backgroundColor: AppColors.white,
-                            borderColor: AppColors.yellow,
-                            foregroundColor: AppColors.black,
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
+                  ),
+                              if (provider.showSignature)
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.navyBlue),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(5.sp),
+                      ),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 1.h,
+                      horizontal: 2.w,
+                    ),
+                    child: Column(
+                      children: [
+                        Signature(
+                          controller: controller,
+                          width: 90.w,
+                          height: 20.h,
+                          backgroundColor: Colors.transparent,
+                        ),
+                        const Divider(
+                          height: 1,
+                          thickness: 2,
+                          color: AppColors.grey,
+                        ),
+                        CupertinoButton(
+                          child: const Text(
+                            "Redo",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                          onPressed: () {
+                            provider.clearSignatureAndShowPopup(context, controller);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  
+                       
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                           SizedBox(
+                            width: 50.w,
+                            child: Consumer<ProofOfDeliveryProvider>(
+                              builder: (context, provider, _) => CustomButton(
+                  label: "Next",
+                  onPressed: () {
+                    if (provider.isTempValid &&
+                        provider.isServiceTimeValid &&
+                        provider.isLengthOfDeliveryValid &&
+                        provider.isReceiverFirstNameValid &&
+                        provider.isReceiverLastNameValid) {
+                      if (provider.selectedDeliveryType == DeliveryType.full &&
+                          (provider.palletValue < 5 || provider.cartonsValue < 5)) {
+                             showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        icon: SizedBox(
+                          height: 20.w,
+                          width: 20.w,
+                          child: const Image(
+                            image: AssetImage(AppImages.brakeWarning),
+                          ),
+                        ),
+                        title: Text(
+                          "You are missing 2 cartons. Please fix this mistake or change to “Partial Delivery”.",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          textAlign: TextAlign.center,
+                        ),
+                        titlePadding: EdgeInsets.symmetric(
+                          vertical: 1.h,
+                          horizontal: 2.w,
+                        ),
+                        iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.sp),
+                        ),
+                        backgroundColor: AppColors.white,
+                        actions: <Widget>[
+                          SizedBox(height: 2.h),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              CustomButton(
+                                height: 5.h,
+                                width: 30.w,
+                                label: 'Edit',
+                                backgroundColor: AppColors.white,
+                                borderColor: AppColors.yellow,
+                                foregroundColor: AppColors.black,
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
-                  );
-                },
-          );
-        } else {
-          // Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-          //     .saveData();
-          //    // postData();
-             Get.toNamed(AppRoutes.podphotos);
-            
-        
-        }
-      }
-    },
-      backgroundColor: provider.isTempValid &&
-                      provider.isServiceTimeValid &&
-                      provider.isLengthOfDeliveryValid &&
-                      provider.isReceiverFirstNameValid &&
-                      provider.isReceiverLastNameValid
-                  ? AppColors.blue 
-                  : AppColors.grey, 
-              borderColor: provider.isTempValid &&
-                      provider.isServiceTimeValid &&
-                      provider.isLengthOfDeliveryValid &&
-                      provider.isReceiverFirstNameValid &&
-                      provider.isReceiverLastNameValid
-                  ? AppColors.blue 
-                  : AppColors.grey,
-  ),
-),
-
-       
-        )  ],
-      ),
-    
-    ],
-  ),
-
-               if (provider.selectedDeliveryType == DeliveryType.partial)
-                  Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        AppText.howManyDelivered,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          PalletContainer(
-            name: 'cartons',
-            heading: AppText.cartons,
-            icon: SvgPicture.asset(AppSvgs.pallet),
-            hintText: '0',
-            initialValue: 0,
-            totalPallet: 5, onValueChanged: (value) {
-              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-                  .updateCartonsValue(value);
-            },
-          ),
-           PalletContainer(
-            name: 'pallets',
-            heading: AppText.pallets,
-            hintText: '0',
-            initialValue: 0,
-            totalPallet: 5,
-             onValueChanged: (value) {
-              Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-                  .updatePalletValue(value);
-            },
-          ),
-        ],
-      ),
-         SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        "Reason for partial delivery",
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-
-      SizedBox(
-        height: 1.h,
-      ),
-      Stack(
-        children: [
-          Container(
-            height: 15.h,
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.navyBlue),
-              borderRadius: BorderRadius.all(
-                Radius.circular(5.sp),
-              ),
-            ),
-            padding: EdgeInsets.symmetric(
-                vertical: 1.h, horizontal: 2.w),
-            child: CustomTextField(
-              borderColor: AppColors.white,
-        name: 'Reasonpartaial',
-        hintText: "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
-       
-    
-         onChanged: (value) {
-           Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateisReasonPartialValidity(value!.isNotEmpty);
-   
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(reasonpartialdelivery: value);
-  },
-      ),
-            
-          ),
-        ],
-      ),
-      SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        AppText.deliveryTemperature,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-      CustomTextField(
-        name: 'temp',
-        hintText: AppText.temperature,
-        keyboardType: TextInputType.number,
-        suffixIcon: Padding(
-          padding:
-              EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-          child: Text(
-            AppText.celsius,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-        ),
-        onChanged: (value) {
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateTempValidity(value!.isNotEmpty);
-    Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-      .updateDeliveryFormData(temperature: value);
-  },
-),
-      SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        AppText.serviceTime,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-     CustomTextField(
-  name: 'serviceTime',
-  keyboardType: TextInputType.number,
-  readOnly: true,
-  hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
-        controller:  serviceTimeController,
-  onTap: () {
-    Get.toNamed(AppRoutes.Stopwatch);
-   
-  },
-  suffixIcon: Padding(
-    padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-         Text(
-          AppText.editHours,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.black.withOpacity(0.5),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-       
-        Icon(
-          Icons.arrow_forward_ios,
-          size: 2.h,
-          color: AppColors.black.withOpacity(0.5),
-        )
-      ],
-    ),
-  ),
-     onChanged: (value) {
-        Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateServiceTimeValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(serviceTime: value);
-  },
-),
-
-      SizedBox(
-        height: 1.h,
-      ),
-      CustomTextField(
-        name: 'lengthOfDelivery',
-        hintText: AppText.lengthOfDelivery,
-        keyboardType: TextInputType.number,
-        suffixIcon: Padding(
-          padding:
-              EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-          child: Text(
-            AppText.minutes,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-        ),
-           onChanged: (value) {
-             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateLengthOfDeliveryValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(lengthOfDelivery: value);
-  },
-      ),
-      SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        AppText.receiverConfirmation,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-       CustomTextField(
-        name: 'receiverFirstName',
-        hintText: AppText.receiverFirstName,
-           onChanged: (value) {
-             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverFirstNameValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(receiverFirstName: value);
-  },
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-       CustomTextField(
-        name: 'receiverLastName',
-        hintText: AppText.receiverLastName,
-           onChanged: (value) {
-           Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverLastNameValidity(value!.isNotEmpty);
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(receiverLastName: value);
-  },
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-Consumer<ProofOfDeliveryProvider>(
-  builder: (context, provider, _) {
-    return SizedBox(
-      width: 90.w,
-      child: GestureDetector(
-        onTap: () {
-          if (!provider.showSignature) {
-            provider.setShowSignature(true);
-            provider.showSignaturePopup(context, controller);
-          }
-        },
-        child: Stack(
-          children: [
-            if (controller.isEmpty && !provider.showSignature)
-              Container(
-                height: 25.h,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.navyBlue),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(5.sp),
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: 1.h,
-                  horizontal: 2.w,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 50.sp,
-                      height: 50.sp,
-                      child: Image.asset(
-                        AppImages.handWithPen,
-                      ),
-                    ),
-                    Text(
-                      AppText.tapHereToSign,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    )
-                  ],
-                ),
-              ),
-            if (provider.showSignature)
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.navyBlue),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(5.sp),
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: 1.h,
-                  horizontal: 2.w,
-                ),
-                child: Column(
-                  children: [
-                    Signature(
-                      controller: controller,
-                      width: 90.w,
-                      height: 20.h,
-                      backgroundColor: Colors.transparent,
-                    ),
-                    const Divider(
-                      height: 1,
-                      thickness: 2,
-                      color: AppColors.grey,
-                    ),
-                    CupertinoButton(
-                      child: const Text(
-                        "Redo",
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                      onPressed: () {
-                        provider.clearSignatureAndShowPopup(context, controller);
+                      );
+                    },
+                            );
+                          } else {
+                            // Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                            //     .saveData();
+                            //    // postData();
+                               Get.toNamed(AppRoutes.podphotos);
+                              
+                          
+                          }
+                        }
                       },
+                        backgroundColor: provider.isTempValid &&
+                          provider.isServiceTimeValid &&
+                          provider.isLengthOfDeliveryValid &&
+                          provider.isReceiverFirstNameValid &&
+                          provider.isReceiverLastNameValid
+                      ? AppColors.blue 
+                      : AppColors.grey, 
+                  borderColor: provider.isTempValid &&
+                          provider.isServiceTimeValid &&
+                          provider.isLengthOfDeliveryValid &&
+                          provider.isReceiverFirstNameValid &&
+                          provider.isReceiverLastNameValid
+                      ? AppColors.blue 
+                      : AppColors.grey,
                     ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  },
-),
-      SizedBox(
-        height: 1.h,
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          SizedBox(
-            width: 50.w,
-            child: CustomButton(label: "Next", onPressed: (){
-              if (provider.isReasonPartialValid &&
-                provider.isTempValid &&
-                    provider.isServiceTimeValid &&
-                    provider.isLengthOfDeliveryValid &&
-                    provider.isReceiverFirstNameValid &&
-                    provider.isReceiverLastNameValid
-                    ) {
-              // Provider.of<ProofOfDeliveryProvider>(context, listen: false).saveData();
-              // postData();
-              Get.toNamed(AppRoutes.podphotos)
-              
-              ;}},
-            
-            backgroundColor: provider.isReasonPartialValid &&
-                      provider.isTempValid &&
-                      provider.isServiceTimeValid &&
-                      provider.isLengthOfDeliveryValid &&
-                      provider.isReceiverFirstNameValid &&
-                      provider.isReceiverLastNameValid
-                  ? AppColors.blue 
-                  : AppColors.grey, 
-              borderColor:  provider.isReasonPartialValid &&
-                      provider.isTempValid &&
-                      provider.isServiceTimeValid &&
-                      provider.isLengthOfDeliveryValid &&
-                      provider.isReceiverFirstNameValid &&
-                      provider.isReceiverLastNameValid
-                  ? AppColors.blue 
-                  : AppColors.grey, 
-            ))
-        ],
-      ),
+                  ),
+                  
+                         
+                          )  ],
+                        ),
+                      
+                      ],
+                    ),
+                  
+                   if (provider.selectedDeliveryType == DeliveryType.partial)
+                      Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppText.howManyDelivered,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            PalletContainer(
+                              name: 'cartons',
+                              heading: AppText.cartons,
+                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              hintText: '0',
+                              initialValue: 0,
+                              totalPallet: 5, onValueChanged: (value) {
+                  Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateCartonsValue(value);
+                              },
+                            ),
+                             PalletContainer(
+                              name: 'pallets',
+                              heading: AppText.pallets,
+                              hintText: '0',
+                              initialValue: 0,
+                              totalPallet: 5,
+                               onValueChanged: (value) {
+                  Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updatePalletValue(value);
+                              },
+                            ),
+                          ],
+                        ),
+                           SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          "Reason for partial delivery",
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                  
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Stack(
+                          children: [
+                            Container(
+                              height: 15.h,
+                              decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.navyBlue),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.sp),
+                  ),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                    vertical: 1.h, horizontal: 2.w),
+                              child: CustomTextField(
+                  borderColor: AppColors.white,
+                          name: 'Reasonpartaial',
+                          hintText: "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
+                         
+                      
+                           onChanged: (value) {
+                             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateisReasonPartialValidity(value!.isNotEmpty);
+                     
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(reasonpartialdelivery: value);
+                    },
+                        ),
+                              
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.deliveryTemperature,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomTextField(
+                          name: 'temp',
+                          hintText: AppText.temperature,
+                          keyboardType: TextInputType.number,
+                          suffixIcon: Padding(
+                            padding:
+                  EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+                            child: Text(
+                              AppText.celsius,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                            ),
+                          ),
+                          onChanged: (value) {
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateTempValidity(value!.isNotEmpty);
+                      Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                        .updateDeliveryFormData(temperature: value);
+                    },
+                  ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.serviceTime,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                       CustomTextField(
+                    name: 'serviceTime',
+                    keyboardType: TextInputType.number,
+                    readOnly: true,
+                    hintText:  '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
+                          controller:  serviceTimeController,
+                    onTap: () {
+                      Get.toNamed(AppRoutes.Stopwatch);
+                     
+                    },
+                    suffixIcon: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                           Text(
+                            AppText.editHours,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.black.withOpacity(0.5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                         
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 2.h,
+                            color: AppColors.black.withOpacity(0.5),
+                          )
+                        ],
+                      ),
+                    ),
+                       onChanged: (value) {
+                          Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateServiceTimeValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(serviceTime: value);
+                    },
+                  ),
+                  
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomTextField(
+                          name: 'lengthOfDelivery',
+                          hintText: AppText.lengthOfDelivery,
+                          keyboardType: TextInputType.number,
+                          suffixIcon: Padding(
+                            padding:
+                  EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
+                            child: Text(
+                              AppText.minutes,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                            ),
+                          ),
+                             onChanged: (value) {
+                               Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateLengthOfDeliveryValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(lengthOfDelivery: value);
+                    },
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          AppText.receiverConfirmation,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                         CustomTextField(
+                          name: 'receiverFirstName',
+                          hintText: AppText.receiverFirstName,
+                             onChanged: (value) {
+                               Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverFirstNameValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(receiverFirstName: value);
+                    },
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                         CustomTextField(
+                          name: 'receiverLastName',
+                          hintText: AppText.receiverLastName,
+                             onChanged: (value) {
+                             Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateReceiverLastNameValidity(value!.isNotEmpty);
+                     Provider.of<ProofOfDeliveryProvider>(context, listen: false)
+                      .updateDeliveryFormData(receiverLastName: value);
+                    },
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                  Consumer<ProofOfDeliveryProvider>(
+                    builder: (context, provider, _) {
+                      return SizedBox(
+                        width: 90.w,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!provider.showSignature) {
+                              provider.setShowSignature(true);
+                              provider.showSignaturePopup(context, controller);
+                            }
+                          },
+                          child: Stack(
+                            children: [
+                              if (controller.isEmpty && !provider.showSignature)
+                  Container(
+                    height: 25.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.navyBlue),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(5.sp),
+                      ),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 1.h,
+                      horizontal: 2.w,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 50.sp,
+                          height: 50.sp,
+                          child: Image.asset(
+                            AppImages.handWithPen,
+                          ),
+                        ),
+                        Text(
+                          AppText.tapHereToSign,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        )
+                      ],
+                    ),
+                  ),
+                              if (provider.showSignature)
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.navyBlue),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(5.sp),
+                      ),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 1.h,
+                      horizontal: 2.w,
+                    ),
+                    child: Column(
+                      children: [
+                        Signature(
+                          controller: controller,
+                          width: 90.w,
+                          height: 20.h,
+                          backgroundColor: Colors.transparent,
+                        ),
+                        const Divider(
+                          height: 1,
+                          thickness: 2,
+                          color: AppColors.grey,
+                        ),
+                        CupertinoButton(
+                          child: const Text(
+                            "Redo",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                          onPressed: () {
+                            provider.clearSignatureAndShowPopup(context, controller);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SizedBox(
+                              width: 50.w,
+                              child: CustomButton(label: "Next", onPressed: (){
+                  if (provider.isReasonPartialValid &&
+                    provider.isTempValid &&
+                        provider.isServiceTimeValid &&
+                        provider.isLengthOfDeliveryValid &&
+                        provider.isReceiverFirstNameValid &&
+                        provider.isReceiverLastNameValid
+                        ) {
+                  // Provider.of<ProofOfDeliveryProvider>(context, listen: false).saveData();
+                  // postData();
+                  Get.toNamed(AppRoutes.podphotos)
+                  
+                  ;}},
+                              
+                              backgroundColor: provider.isReasonPartialValid &&
+                          provider.isTempValid &&
+                          provider.isServiceTimeValid &&
+                          provider.isLengthOfDeliveryValid &&
+                          provider.isReceiverFirstNameValid &&
+                          provider.isReceiverLastNameValid
+                      ? AppColors.blue 
+                      : AppColors.grey, 
+                  borderColor:  provider.isReasonPartialValid &&
+                          provider.isTempValid &&
+                          provider.isServiceTimeValid &&
+                          provider.isLengthOfDeliveryValid &&
+                          provider.isReceiverFirstNameValid &&
+                          provider.isReceiverLastNameValid
+                      ? AppColors.blue 
+                      : AppColors.grey, 
+                              ))
+                          ],
+                        ),
+                  
+                      ],
+                    ),
+                     if (provider.selectedDeliveryType == DeliveryType.none)
+                       Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppText.howManyDelivered,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            PalletContainer(
+                              name: 'cartons',
+                              heading: AppText.cartons,
+                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              hintText: '0',
+                              initialValue: 0,
+                              totalPallet: 5,
+                              isErrorState: true,
+                            ),
+                            const PalletContainer(
+                              name: 'pallets',
+                              heading: AppText.pallets,
+                              hintText: '0',
+                              initialValue: 0,
+                              totalPallet: 5,
+                              isErrorState: true,
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Text(
+                          "Reason for non delivery",
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                         Text(
+                          "Select a reason the delivery could not be completed. If you are unsure if you can complete the delivery please open the chat and message our admin staff.",
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                    Consumer<ProofOfDeliveryProvider>(
+                          builder: (context, provider, _) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                  
+                             
+                  CustomContainer(
+                    title: 'Wrong Address',
+                    description: 'Address is wrong or the location has closed',
+                  ),
+                  SizedBox(
+                        height: 3.h,
+                      ),
+                  CustomContainer(
+                    title: 'Receiver Not Open',
+                    description: 'The receiver is unable to receive goods',
+                  ),
+                  SizedBox(
+                        height: 3.h,
+                      ),
+                  CustomContainer(
+                       title: 'Temperature issue',
+                    description: 'The stock is not the correct temperature',
+                      ),
+                      SizedBox(
+                        height: 3.h,
+                      ),
+                      CustomContainer(
+                       title: 'Damaged Goods',
+                    description: 'The packaging or goods have been damaged',
+                      ),
+                      SizedBox(
+                        height: 3.h,
+                      ),
+                       CustomContainer(
+                        title: 'Other Rejection',
+                        description: 'The customer refused the goods ',
+                      )
+                  
+                              ]);}),
+                  
+                  
+                   
+                      
+                  
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SizedBox(
+                              width: 50.w,
+                              child: CustomButton(label: "Submit POD", onPressed: (){
+                      postData();
+                  
+                              },backgroundColor: AppColors.red,borderColor: AppColors.red,)),
+                          ],
+                        ),
+                      ],
+                    ),
+                     
+                               SizedBox(
+                          height: 1.h,
+                        ),   ],
+                  );
+                }
+                
+                else  {
 
-    ],
-  ),
-                 if (provider.selectedDeliveryType == DeliveryType.none)
-                   Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        AppText.howManyDelivered,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          PalletContainer(
-            name: 'cartons',
-            heading: AppText.cartons,
-            icon: SvgPicture.asset(AppSvgs.pallet),
-            hintText: '0',
-            initialValue: 0,
-            totalPallet: 5,
-            isErrorState: true,
-          ),
-          const PalletContainer(
-            name: 'pallets',
-            heading: AppText.pallets,
-            hintText: '0',
-            initialValue: 0,
-            totalPallet: 5,
-            isErrorState: true,
-          ),
-        ],
-      ),
-      SizedBox(
-        height: 3.h,
-      ),
-      Text(
-        "Reason for non delivery",
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      SizedBox(
-        height: 1.h,
-      ),
-       Text(
-        "Select a reason the delivery could not be completed. If you are unsure if you can complete the delivery please open the chat and message our admin staff.",
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
-      SizedBox(
-        height: 3.h,
-      ),
-  Consumer<ProofOfDeliveryProvider>(
-        builder: (context, provider, _) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              
-           
-              CustomContainer(
-                title: 'Wrong Address',
-                description: 'Address is wrong or the location has closed',
-              ),
-              SizedBox(
-      height: 3.h,
-    ),
-              CustomContainer(
-                title: 'Receiver Not Open',
-                description: 'The receiver is unable to receive goods',
-              ),
-              SizedBox(
-      height: 3.h,
-    ),
-              CustomContainer(
-     title: 'Temperature issue',
-  description: 'The stock is not the correct temperature',
-    ),
-    SizedBox(
-      height: 3.h,
-    ),
-    CustomContainer(
-     title: 'Damaged Goods',
-  description: 'The packaging or goods have been damaged',
-    ),
-    SizedBox(
-      height: 3.h,
-    ),
-     CustomContainer(
-      title: 'Other Rejection',
-      description: 'The customer refused the goods ',
-    )
-
-            ]);}),
-
-
- 
-    
-
-      SizedBox(
-        height: 1.h,
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          SizedBox(
-            width: 50.w,
-            child: CustomButton(label: "Submit POD", onPressed: (){
-    postData();
-
-            },backgroundColor: AppColors.red,borderColor: AppColors.red,)),
-        ],
-      ),
-    ],
-  ),
-   
-             SizedBox(
-        height: 1.h,
-      ),   ],
-              ),
+                  
+      return CircularProgressIndicator();
+    } 
+             
+                  }),
             ),
           ),
         ),

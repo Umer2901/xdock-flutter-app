@@ -1,4 +1,4 @@
-
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:coldxpress/export.dart';
@@ -20,6 +20,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   String _orderRejectionReason = '';
   String _otherinfo = '';
   Uint8List? _signatureData;
+  
  List<String> _selectedOrderRejectionReasons = [];
  bool _isTempValid = false;
  bool _isServiceTimeValid = false;
@@ -31,6 +32,26 @@ class ProofOfDeliveryProvider with ChangeNotifier {
    List<XFile> _images = [];
   Map<String, String> _base64Images = {};
   Map<String, String> _pictureSources = {};
+  // int _space = 0;
+  // int _weigth = 0;
+  // String _signature = '';
+  // String _comments = '';
+  // String _serviceWindow = '';
+  // DateTime _serviceTimeStart = DateTime.now();
+  // DateTime _serviceTimeEnd = DateTime.now();
+  // int _addressId = 0;
+  // int _pickupAddressId = 0;
+  // int _podType = 0;
+  // String _customerReference = '';
+  // double _latitude = 0.0;
+  // double _longitude = 0.0;
+  // List<int> _consignments = [];
+  // Map<String, dynamic> _device = {};
+  // String _appVersion = '';
+  // int _driverId = 0;
+  // DateTime _dateDelivered = DateTime.now();
+  // List<String> _platforms = [];
+  // String _currentAppVersion = '';
 
  
 
@@ -59,6 +80,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   List<XFile> get images => _images;
   Map<String, String> get base64Images => _base64Images;
   Map<String, String> get pictureSources => _pictureSources;
+  
 
  
 
@@ -286,8 +308,77 @@ void updateTempValidity(bool isValid) {
     notifyListeners();
   }
 
- 
+  Map<String, dynamic> toMap() {
+      String? signatureBase64;
+  if (_signatureData != null && _signatureData!.isNotEmpty) {
+    signatureBase64 = base64Encode(_signatureData!);
+  }
   
+    return {
+   //   'pod_type': _selectedDeliveryType == DeliveryType.full ? 'full' : 'partial',
+
+      'pod_type': "full",
+      'pallet': _palletValue,
+      'carton': _cartonsValue,
+      'signature': signatureBase64,
+    //  'signature': _showSignature,
+      'temperature': _temperature,
+      'serviceTime': _serviceTime,
+      'lengthOfDelivery': _lengthOfDelivery,
+      'first_name': _receiverFirstName,
+      'last_name': _receiverLastName,
+      //'reasonpartialdelivery': _reasonpartialdelivery,
+      //'orderRejectionReason': _orderRejectionReason,
+      'comments': _otherinfo,
+    //  'selectedOrderRejectionReasons': _selectedOrderRejectionReasons,
+    };
+  }
+    Map<String, dynamic> partialtoMap() {
+      String? signatureBase64;
+  if (_signatureData != null && _signatureData!.isNotEmpty) {
+    signatureBase64 = base64Encode(_signatureData!);
+  }
+  
+    return {
+      'pod_type': "partial",
+      'pallet': _palletValue,
+      'carton': _cartonsValue,
+      'signature': signatureBase64,
+    //  'signature': _showSignature,
+      'temperature': _temperature,
+      'serviceTime': _serviceTime,
+      'lengthOfDelivery': _lengthOfDelivery,
+      'first_name': _receiverFirstName,
+      'last_name': _receiverLastName,
+      'reasonpartialdelivery': _reasonpartialdelivery,
+      //'orderRejectionReason': _orderRejectionReason,
+      'comments': _otherinfo,
+    //  'selectedOrderRejectionReasons': _selectedOrderRejectionReasons,
+    };
+  }
+     Map<String, dynamic> nonetoMap() {
+      String? signatureBase64;
+  if (_signatureData != null && _signatureData!.isNotEmpty) {
+    signatureBase64 = base64Encode(_signatureData!);
+  }
+  
+    return {
+      'pod_type': "none",
+      'pallet': "",
+      'carton':"",
+      'signature': "",
+    //  'signature': _showSignature,
+      'temperature':"",
+      'serviceTime': "",
+      'lengthOfDelivery': "",
+      'first_name': "",
+      'last_name': "",
+      'reasonpartialdelivery': "",
+      'rejection_reason': _selectedOrderRejectionReasons.isEmpty ? "" : _selectedOrderRejectionReasons[0],
+      'comments': _orderRejectionReason,
+    //  'selectedOrderRejectionReasons': _selectedOrderRejectionReasons,
+    };
+  }
 
   void clearFormData() {
   _selectedDeliveryType = DeliveryType.full;
@@ -344,4 +435,3 @@ void updateTempValidity(bool isValid) {
     notifyListeners();
   }
 }
- 

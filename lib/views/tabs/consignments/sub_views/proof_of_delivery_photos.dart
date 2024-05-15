@@ -31,37 +31,11 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 
       switch (provider.selectedDeliveryType) {
         case DeliveryType.full:
-          requestBody = {
-            //'pod_type': provider.selectedDeliveryType.toString(),
-            'pod_type': 'full',
-            'palletValue': provider.palletValue,
-            'cartonsValue': provider.cartonsValue,
-            'showSignature': provider.showSignature,
-            'temperature': provider.temperature,
-            'serviceTime': provider.serviceTime,
-            'lengthOfDelivery': provider.lengthOfDelivery,
-            'receiverFirstName': provider.receiverFirstName,
-            'receiverLastName': provider.receiverLastName,
-            'images': provider.base64Images.values.toList(),
-            "otherinfo": provider.otherinfo,
-          };
+          requestBody = provider.toMap();
           url = AppHost.podfull;
           break;
         case DeliveryType.partial:
-          requestBody = {
-            'pod_type': 'partial',
-            'palletValue': provider.palletValue,
-            'cartonsValue': provider.cartonsValue,
-            'showSignature': provider.showSignature,
-            'temperature': provider.temperature,
-            'serviceTime': provider.serviceTime,
-            'lengthOfDelivery': provider.lengthOfDelivery,
-            'receiverFirstName': provider.receiverFirstName,
-            'receiverLastName': provider.receiverLastName,
-            'reasonpartialdelivery': provider.reasonpartialdelivery,
-            'images': provider.base64Images.values.toList(),
-            "otherinfo": provider.otherinfo,
-          };
+          requestBody = provider.partialtoMap();
           url = AppHost.podpartial;
           break;
         case DeliveryType.none:
@@ -71,39 +45,23 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     print('Rejection Reason: $rejectionReason');
     switch (rejectionReason) {
       case "Temperature issue":
-        requestBody = {
-          'pod_type': 'none',
-          'temperature_issue': true,
-        };
+        requestBody = provider.nonetoMap();
         url = AppHost.temperateissue;
         break;
       case "Wrong Address":
-        requestBody = {
-          'pod_type': 'none',
-          'wrong_address': true,
-        };
+        requestBody =requestBody = provider.nonetoMap();
         url = AppHost.wrongaddress;
         break;
       case "Damaged Goods":
-        requestBody = {
-          'pod_type': 'none',
-          'damage_goods': true,
-        };
+        requestBody = requestBody = provider.nonetoMap();
         url = AppHost.damagegoods;
         break;
       case "Receiver Not Open":
-        requestBody = {
-          'pod_type': 'none',
-          'receiver_not': true,
-        };
+        requestBody = requestBody = provider.nonetoMap();
         url = AppHost.notopen;
         break;
       case "Other Rejection":
-        requestBody = {
-          'pod_type': 'none',
-          'other_rejection': true,
-          'reason': provider.orderRejectionReason,
-        };
+        requestBody = requestBody = provider.nonetoMap();
         url = AppHost.otherrejection;
         break;
       default:
