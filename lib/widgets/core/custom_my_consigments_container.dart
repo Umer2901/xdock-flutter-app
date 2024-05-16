@@ -291,7 +291,7 @@ class _CustomMyConsigmentContainerState
                                 backgroundColor: AppColors.belowMidGreyTwo,
                                 radius: 8.w,
                                 child: SvgPicture.asset(
-                                  AppSvgs.pallet,
+                                  AppSvgs.boundpallets,
                                   height: 3.h,
                                 ),
                               ),

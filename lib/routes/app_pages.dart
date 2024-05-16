@@ -42,7 +42,7 @@ class AppPages extends AppRoutes {
     ),
     GetPage(
       name: AppRoutes.preStartChecklist,
-      page: () => const PreStartChecklistView(),
+      page: () => const PreStartCheckListView(),
     ),
     GetPage(
       name: AppRoutes.consignmentMap,

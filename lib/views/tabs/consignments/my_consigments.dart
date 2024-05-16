@@ -378,16 +378,18 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                                   )
                                                 : i == 1
                                                     ? SvgPicture.asset(
-                                                        AppSvgs.pallet,
+                                                        AppSvgs.boundpallets,
                                                         width: 10.w,
                                                       )
                                                     : i == 2
                                                         ? SvgPicture.asset(
-                                                            AppSvgs.pallet,
+                                                            AppSvgs
+                                                                .boundpallets,
                                                             width: 10.w,
                                                           )
                                                         : SvgPicture.asset(
-                                                            AppSvgs.pallet,
+                                                            AppSvgs
+                                                                .boundpallets,
                                                             width: 10.w,
                                                           ),
                                           ),

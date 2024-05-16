@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:coldxpress/export.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -15,15 +18,49 @@ class _SplashViewState extends State<SplashView> {
   }
 
   config() async {
-    context.read<LocationProvider>().getCurrentLocation();
-    BlocProvider.of<AuthenticationCubit>(context).check();
+    onStart();
+    await context.read<DatabaseProvider>().initDatabase().whenComplete(() {
+      context.read<LocationProvider>().getCurrentLocation();
+      BlocProvider.of<AuthenticationCubit>(context).check();
+    });
+  }
+
+  void onStart() {
+    Connectivity().onConnectivityChanged.listen((event) async {
+      try {
+        if (event.contains(ConnectivityResult.wifi) ||
+            event.contains(ConnectivityResult.mobile)) {
+          await InternetAddress.lookup('google.com').then((result) {
+            if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {}
+          });
+        }
+      } on SocketException catch (e) {
+        throw Exception('No Internet ($e)');
+      } catch (e) {
+        throw Exception('Something went wrong! ($e)');
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthenticationCubit, AuthenticationState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is Authenticated) {
+          await PreCheckDatabase(context.read<DatabaseProvider>().database)
+              .read(state.token)
+              .then((submissions) async {
+            if (submissions.isEmpty) {
+              try {
+                await PrecheckStatusService(
+                  context.read<DatabaseProvider>().database,
+                ).fetchAndStore(state.token);
+              } catch (e) {
+                debugPrint("Not Connected to Network");
+              }
+            }
+          });
+
           Get.offAndToNamed(AppRoutes.dashboard);
         } else {
           Get.offAndToNamed(AppRoutes.welcome);

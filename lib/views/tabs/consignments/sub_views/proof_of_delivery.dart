@@ -381,7 +381,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             PalletContainer(
                               name: 'cartons',
                               heading: AppText.cartons,
-                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              icon: SvgPicture.asset(AppSvgs.boundpallets),
                               hintText: '0',
                               initialValue: cartonsValue,
                               totalPallet: 5,
@@ -716,7 +716,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             PalletContainer(
                               name: 'cartons',
                               heading: AppText.cartons,
-                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              icon: SvgPicture.asset(AppSvgs.boundpallets),
                               hintText: '0',
                               initialValue: 0,
                               totalPallet: 5,
@@ -1017,7 +1017,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             PalletContainer(
                               name: 'cartons',
                               heading: AppText.cartons,
-                              icon: SvgPicture.asset(AppSvgs.pallet),
+                              icon: SvgPicture.asset(AppSvgs.boundpallets),
                               hintText: '0',
                               initialValue: 0,
                               totalPallet: 5,

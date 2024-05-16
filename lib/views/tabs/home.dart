@@ -12,7 +12,7 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  final StreamController<dynamic> _dataStreamController =
+  final StreamController<dynamic> _staffStreamController =
       StreamController<dynamic>();
   final StreamController<dynamic> _requireStreamController =
       StreamController<dynamic>();
@@ -26,13 +26,13 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void initState() {
     super.initState();
-    fetchData();
+    staffData();
     checkRequires();
     fetchConsignment();
     _timer = Timer.periodic(
       const Duration(seconds: 30),
       (timer) {
-        fetchData();
+        staffData();
         checkRequires();
         fetchConsignment();
       },
@@ -41,38 +41,21 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   void dispose() {
-    _dataStreamController.close();
+    _staffStreamController.close();
     _requireStreamController.close();
     _consignmentStreamController.close();
     _timer.cancel();
     super.dispose();
   }
 
-  Future<void> fetchData() async {
+  Future<void> staffData() async {
     AuthenticationState state =
         BlocProvider.of<AuthenticationCubit>(context).state;
     if (state is Authenticated) {
-      try {
-        final response = await http.get(
-          Uri.parse(AppHost.loginStaffData),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
-
-        if (response.statusCode == 200) {
-          final dynamic data = json.decode(response.body);
-          _dataStreamController.add(data);
-        } else {
-          _dataStreamController.addError('Failed to fetch data');
-        }
-      } catch (e) {
-        if (!_dataStreamController.isClosed) {
-          _dataStreamController.addError(e.toString());
-        }
-      }
+      List<Map<String, dynamic>> data =
+          await UserDatabase(context.read<DatabaseProvider>().database)
+              .read(state.token);
+      _staffStreamController.add(data.first);
     }
   }
 
@@ -80,27 +63,10 @@ class _HomeTabState extends State<HomeTab> {
     AuthenticationState state =
         BlocProvider.of<AuthenticationCubit>(context).state;
     if (state is Authenticated) {
-      try {
-        final response = await http.get(
-          Uri.parse(AppHost.checkSubmissions),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
-
-        if (response.statusCode == 200) {
-          final dynamic data = json.decode(response.body);
-          _requireStreamController.add(data);
-        } else {
-          _requireStreamController.addError('Failed to fetch data');
-        }
-      } catch (e) {
-        if (!_requireStreamController.isClosed) {
-          _requireStreamController.addError(e.toString());
-        }
-      }
+      List<Map<String, dynamic>> data =
+          await PreCheckDatabase(context.read<DatabaseProvider>().database)
+              .read(state.token);
+      _requireStreamController.add(data);
     }
   }
 
@@ -117,7 +83,6 @@ class _HomeTabState extends State<HomeTab> {
             'Accept': 'application/json',
           },
         );
-        print(response.body);
         if (response.statusCode == 200) {
           final dynamic data = json.decode(response.body);
           if (data['status'] == 'success') {
@@ -139,7 +104,7 @@ class _HomeTabState extends State<HomeTab> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<dynamic>(
-      stream: _dataStreamController.stream,
+      stream: _staffStreamController.stream,
       builder: (context, snapshot) {
         return Scaffold(
           body: Builder(builder: (BuildContext context) {
@@ -163,7 +128,7 @@ class _HomeTabState extends State<HomeTab> {
                               SizedBox(
                                 width: 80.w,
                                 child: Text(
-                                  '${AppText.goodMorning} ${snapshot.data['data']['name']}!',
+                                  '${AppText.goodMorning} ${snapshot.data['name']}!',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -172,7 +137,7 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                               ),
                               Text(
-                                snapshot.data['data'].containsKey(
+                                snapshot.data.containsKey(
                                             DateFormat('yyyy-MM-dd')
                                                 .format(DateTime.now())) ==
                                         false
@@ -235,63 +200,47 @@ class _HomeTabState extends State<HomeTab> {
                     StreamBuilder(
                       stream: _requireStreamController.stream,
                       builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return Column(children: [
-                            // if (snapshot.data['checklist'] == 0)
-                            DetailContainer(
-                              title: AppText.preStartCheckReq,
-                              subtitle: AppText.preStartSubtext,
-                              isSelected: true,
-                              onPressed: () {
-                                Get.toNamed(AppRoutes.preStartChecklist);
-                              },
-                              isLoading: false,
-                            ),
-                            // if (snapshot.data['outbound'] == 0)
-                            DetailContainer(
-                              title: AppText.outboundPalletsReq,
-                              subtitle: AppText.outboundPalletSubtext,
-                              isSelected: false,
-                              onPressed: () {
-                                Get.toNamed(AppRoutes.outboundPallet);
-                              },
-                              isLoading: false,
-                            ),
-                            // if (snapshot.data['inbound'] == 0)
-                            DetailContainer(
-                              title: AppText.inboundPalletsReq,
-                              subtitle: AppText.inboundPalletSubtext,
-                              isSelected: false,
-                              onPressed: () {
-                                Get.toNamed(AppRoutes.inboundPallet);
-                              },
-                              isLoading: false,
-                            ),
-                          ]);
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const SizedBox();
                         } else {
-                          return Column(children: [
-                            DetailContainer(
-                              title: AppText.preStartCheckReq,
-                              subtitle: AppText.preStartSubtext,
-                              isSelected: true,
-                              onPressed: () {},
-                              isLoading: true,
-                            ),
-                            DetailContainer(
-                              title: AppText.outboundPalletsReq,
-                              subtitle: AppText.outboundPalletSubtext,
-                              isSelected: false,
-                              onPressed: () {},
-                              isLoading: true,
-                            ),
-                            DetailContainer(
-                              title: AppText.inboundPalletsReq,
-                              subtitle: AppText.inboundPalletSubtext,
-                              isSelected: false,
-                              onPressed: () {},
-                              isLoading: true,
-                            ),
-                          ]);
+                          return Column(
+                            children: [
+                              if (snapshot.data[0]['checklist'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.checkList,
+                                  title: AppText.preStartCheckReq,
+                                  subtitle: AppText.preStartSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.preStartChecklist);
+                                  },
+                                  backgroundColor: AppColors.twoBlueGradient,
+                                  isLoading: !snapshot.hasData,
+                                ),
+                              if (snapshot.data[0]['outbound'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.boundpallets,
+                                  title: AppText.outboundPalletsReq,
+                                  subtitle: AppText.outboundPalletSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.outboundPallet);
+                                  },
+                                  backgroundColor: AppColors.twoBlackGradient,
+                                  isLoading: !snapshot.hasData,
+                                ),
+                              if (snapshot.data[0]['inbound'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.boundpallets,
+                                  title: AppText.inboundPalletsReq,
+                                  subtitle: AppText.inboundPalletSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.inboundPallet);
+                                  },
+                                  backgroundColor: AppColors.twoBlackGradient,
+                                  isLoading: !snapshot.hasData,
+                                )
+                            ],
+                          );
                         }
                       },
                     ),
@@ -312,31 +261,6 @@ class _HomeTabState extends State<HomeTab> {
                                           .headlineSmall,
                                     ),
                                     SizedBox(width: 2.w),
-                                    // if (snapshot.hasData)
-                                    //   CircleAvatar(
-                                    //     radius: 12,
-                                    //     backgroundColor: AppColors.blue,
-                                    //     child: Text(
-                                    //       (snapshot.data['data']?[DateFormat(
-                                    //                           'yyyy-MM-dd')
-                                    //                       .format(DateTime
-                                    //                           .now())] ==
-                                    //                   null
-                                    //               ? []
-                                    //               : snapshot.data[
-                                    //                       'data'][DateFormat(
-                                    //                           'yyyy-MM-dd')
-                                    //                       .format(DateTime.now())]
-                                    //                   ['consignments'])
-                                    //           .length
-                                    //           .toString(),
-                                    //       style: Theme.of(context)
-                                    //           .textTheme
-                                    //           .bodySmall
-                                    //           ?.copyWith(
-                                    //               color: AppColors.white),
-                                    //     ),
-                                    //   ),
                                     const Spacer(),
                                     Text(
                                       AppText.seeAll,
@@ -404,16 +328,14 @@ class _HomeTabState extends State<HomeTab> {
                                     controller: _scrollController,
                                     child: Column(
                                       children: [
-                                        for (var consignment in snapshot
-                                                    .data['data'][DateFormat(
-                                                        'yyyy-MM-dd')
-                                                    .format(DateTime.now())] ==
-                                                null
-                                            ? []
-                                            : snapshot.data['data'][
-                                                    DateFormat('yyyy-MM-dd')
-                                                        .format(DateTime.now())]
-                                                ['consignments']) ...{
+                                        for (var consignment
+                                            in snapshot.data['data']
+                                                        ['2024-04-04'] ==
+                                                    null
+                                                ? []
+                                                : snapshot.data['data']
+                                                        ['2024-04-04']
+                                                    ['consignments']) ...{
                                           ConsignmentContainer(
                                             consignment: consignment,
                                           ),
@@ -504,29 +426,33 @@ class _HomeTabState extends State<HomeTab> {
                           );
                         }
                         if (snapshot.hasError) {
+                          debugPrint('Error Print: ${snapshot.error}');
                           return Expanded(
                             child: SizedBox(
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        AppText.todayConsignments.toUpperCase(),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineSmall,
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    snapshot.error.toString(),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(color: AppColors.red),
-                                  ),
-                                ],
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          AppText.todayConsignments
+                                              .toUpperCase(),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineSmall,
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      snapshot.error.toString(),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(color: AppColors.red),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -577,115 +503,11 @@ class _HomeTabState extends State<HomeTab> {
           }),
           endDrawer: snapshot.hasData
               ? CustomDrawer(
-                  name: snapshot.data['data']['name'],
+                  name: snapshot.data['name'],
                 )
               : const SizedBox(),
         );
       },
-    );
-  }
-}
-
-class DetailContainer extends StatelessWidget {
-  const DetailContainer({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    this.isSelected = false,
-    required this.onPressed,
-    required this.isLoading,
-  });
-  final String title;
-  final String subtitle;
-  final bool isSelected;
-  final VoidCallback onPressed;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      child: Container(
-        height: 16.h,
-        width: double.maxFinite,
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? AppColors.preStartGradient
-              : AppColors.outInBoundGradient,
-          borderRadius: BorderRadius.circular(10.sp),
-        ),
-        padding: isLoading
-            ? const EdgeInsets.all(0)
-            : EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-        margin: EdgeInsets.only(bottom: 1.h),
-        child: isLoading
-            ? Shimmer.fromColors(
-                baseColor: AppColors.greyWhite,
-                highlightColor: AppColors.lightGrey,
-                child: Container(
-                  width: double.maxFinite,
-                  height: 10.h,
-                  color: AppColors.greyWhite,
-                ),
-              )
-            : Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                          height: 5.h,
-                          width: 5.h,
-                          padding: EdgeInsets.all(2.5.w),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.lightBlue
-                                : AppColors.grey,
-                            borderRadius: BorderRadius.circular(10.sp),
-                          ),
-                          child: isSelected
-                              ? SvgPicture.asset(
-                                  AppSvgs.checkList,
-                                )
-                              : SvgPicture.asset(
-                                  AppSvgs.pallet,
-                                )),
-                      SizedBox(width: 3.w),
-                      Text(
-                        title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(color: AppColors.white),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 1.h),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 14.w,
-                      ),
-                      Expanded(
-                        child: Text(
-                          subtitle,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                  color: AppColors.white, fontSize: 10.sp),
-                        ),
-                      ),
-                      SizedBox(width: 2.w),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.white,
-                        size: 15.sp,
-                      ),
-                    ],
-                  )
-                ],
-              ),
-      ),
     );
   }
 }

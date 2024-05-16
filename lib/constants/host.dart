@@ -1,18 +1,19 @@
 class AppHost {
   static const String hostURL = 'https://staging.xdock.com.au';
 
-  static const String login = '$hostURL/api/staff/v2/token';
-  static const String logout = '$hostURL/api/staff/v2/logout';
+  static const String login = '$hostURL/api/staff/v6/token';
+  static const String logout = '$hostURL/api/staff/v6/logout';
 
   static const String resetPasswordEmail =
-      '$hostURL/api/staff/v2/password/send-reset-password-email';
-  static const String verifyOTP = '$hostURL/api/staff/v2/password/verify-otp';
-  static const String resetPassword = '$hostURL/api/staff/v2/password/reset';
+      '$hostURL/api/staff/v6/password/send-reset-password-email';
+  static const String verifyOTP = '$hostURL/api/staff/v6/password/verify-otp';
+  static const String resetPassword = '$hostURL/api/staff/v6/password/reset';
 
   static const String loginStaffData =
-      '$hostURL/api/driver/profile/getLoginStaffData';
+      '$hostURL/api/driver/profile/v6/getLoginStaffData';
   static const String checkSubmissions =
-      '$hostURL/api/driver/submission/v2/check_ckecklist_inbound_and_outbound_submission';
+      '$hostURL/api/driver/submission/v6/check_checklist_inbound_and_outbound_submission';
+
   static const String consignments =
       '$hostURL/api/driver/runSheet/v6/consignments';
 
