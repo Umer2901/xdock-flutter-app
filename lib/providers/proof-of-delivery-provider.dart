@@ -7,84 +7,56 @@ enum DeliveryType { full, partial, none }
 
 
 class ProofOfDeliveryProvider with ChangeNotifier {
-  DeliveryType _selectedDeliveryType = DeliveryType.full;
-  int _palletValue = 0;
-  int _cartonsValue = 0;
-  bool _showSignature = false;
-  String _temperature = '';
-  String _serviceTime = '';
-  String _lengthOfDelivery = '';
-  String _receiverFirstName = '';
-  String _receiverLastName = ''; 
-  String _reasonpartialdelivery = ''; 
-  String _orderRejectionReason = '';
-  String _otherinfo = '';
+  int _index = 0;
+  Map _data = {};
   Uint8List? _signatureData;
-  
- List<String> _selectedOrderRejectionReasons = [];
- bool _isTempValid = false;
- bool _isServiceTimeValid = false;
- bool _isLengthOfDeliveryValid = false;
- bool _isReceiverFirstNameValid = false;
- bool _isReceiverLastNameValid = false;
- bool _isReasonPartialValid = false;
- bool _isReasonNoneValid = false;
-   List<XFile> _images = [];
+  List<XFile> _images = [];
   Map<String, String> _base64Images = {};
   Map<String, String> _pictureSources = {};
-  // int _space = 0;
-  // int _weigth = 0;
-  // String _signature = '';
-  // String _comments = '';
-  // String _serviceWindow = '';
-  // DateTime _serviceTimeStart = DateTime.now();
-  // DateTime _serviceTimeEnd = DateTime.now();
-  // int _addressId = 0;
-  // int _pickupAddressId = 0;
-  // int _podType = 0;
-  // String _customerReference = '';
-  // double _latitude = 0.0;
-  // double _longitude = 0.0;
-  // List<int> _consignments = [];
-  // Map<String, dynamic> _device = {};
-  // String _appVersion = '';
-  // int _driverId = 0;
-  // DateTime _dateDelivered = DateTime.now();
-  // List<String> _platforms = [];
-  // String _currentAppVersion = '';
-
- 
-
+  DeliveryType _selectedDeliveryType = DeliveryType.full;
+   bool _showSignature = false;
   
 
-  DeliveryType get selectedDeliveryType => _selectedDeliveryType;
-  int get palletValue => _palletValue;
-  int get cartonsValue => _cartonsValue;
-  bool get showSignature => _showSignature;
-  String get temperature => _temperature;
-  String get serviceTime => _serviceTime;
-  String get lengthOfDelivery => _lengthOfDelivery;
-  String get receiverFirstName => _receiverFirstName;
-  String get receiverLastName => _receiverLastName; 
-  String get reasonpartialdelivery => _reasonpartialdelivery;
-  String get orderRejectionReason => _orderRejectionReason;
-  String get otherinfo => _otherinfo;
-  List<String> get selectedOrderRejectionReasons => _selectedOrderRejectionReasons;
-  bool get isTempValid => _isTempValid;
-  bool get isServiceTimeValid => _isServiceTimeValid;
-  bool get isLengthOfDeliveryValid => _isLengthOfDeliveryValid;
-  bool get isReceiverFirstNameValid => _isReceiverFirstNameValid;
-  bool get isReceiverLastNameValid => _isReceiverLastNameValid;
-  bool get isReasonPartialValid => _isReasonPartialValid;
-  bool get isReasonNoneValid => _isReasonNoneValid;
+ 
+ int get index => _index;
+  Map get data => _data;
   List<XFile> get images => _images;
   Map<String, String> get base64Images => _base64Images;
   Map<String, String> get pictureSources => _pictureSources;
-  
+  DeliveryType get selectedDeliveryType => _selectedDeliveryType;
+  setIndex(int value) {
+    _index = value;
+    notifyListeners();
+  }
 
- 
+  addEntities(dynamic entries) {
+    _data.addEntries(entries);
+    notifyListeners();
+  }
 
-
+  setEntities(Map value) {
+    _data = value;
+    notifyListeners();
+  }
+    void updateSelectedDeliveryType(DeliveryType type) {
+    _selectedDeliveryType = type;
+    notifyListeners();
+  }
+ void updateSignatureData(Uint8List data) {
+    _signatureData = data;
+    notifyListeners();
+  }
+ void setShowSignature(bool value) {
+    _showSignature = value;
+    notifyListeners();
+  }
+  // void clearSignatureAndShowPopup(BuildContext context, SignatureController controller) {
+  //   controller.clear();
+  //   _showSignature = false;
+  //   notifyListeners();
+  //   showSignaturePopup(context, controller);
+  // }
+   
   void showSignaturePopup(BuildContext context, SignatureController controller) {
     showDialog(
       context: context,
@@ -176,238 +148,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   }
 
   
-  
-  void updateDeliveryFormData({
-    DeliveryType? selectedDeliveryType,
-    int? palletValue,
-    int? cartonsValue,
-    bool? showSignature,
-    String? temperature,
-    String? serviceTime,
-    String? lengthOfDelivery,
-    String? receiverFirstName,
-    String? receiverLastName,
-    String? reasonpartialdelivery,
-    String? orderRejectionReason,
-    String? otherinfo,
-
-
-  }) {
-    if (selectedDeliveryType != null) {
-      _selectedDeliveryType = selectedDeliveryType;
-    }
-    if (palletValue != null) {
-      _palletValue = palletValue;
-    }
-    if (cartonsValue != null) {
-      _cartonsValue = cartonsValue;
-    }
-    if (showSignature != null) {
-      _showSignature = showSignature;
-    }
-    if (temperature != null) {
-      _temperature = temperature;
-    }
-    if (serviceTime != null) {
-      _serviceTime = serviceTime;
-    }
-    if (lengthOfDelivery != null) {
-      _lengthOfDelivery = lengthOfDelivery;
-    }
-    if (receiverFirstName != null) {
-      _receiverFirstName = receiverFirstName;
-    }
-    if (receiverLastName != null) {
-      _receiverLastName = receiverLastName;
-    }
-    if (reasonpartialdelivery != null) {
-      _reasonpartialdelivery = reasonpartialdelivery;
-    }
-     if (orderRejectionReason != null) {
-      _orderRejectionReason = orderRejectionReason;
-    }
-    if ( otherinfo != null) {
-      _otherinfo =  otherinfo;
-    }
-    notifyListeners();
-  }
-
-void updateTempValidity(bool isValid) {
-    _isTempValid = isValid;
-    notifyListeners();
-  }
-
-  void updateServiceTimeValidity(bool isValid) {
-    _isServiceTimeValid = isValid;
-    notifyListeners();
-  }
-
-  void updateLengthOfDeliveryValidity(bool isValid) {
-    _isLengthOfDeliveryValid = isValid;
-    notifyListeners();
-  }
-
-  void updateReceiverFirstNameValidity(bool isValid) {
-    _isReceiverFirstNameValid = isValid;
-    notifyListeners();
-  }
-
-  void updateReceiverLastNameValidity(bool isValid) {
-    _isReceiverLastNameValid = isValid;
-    notifyListeners();
-  }
-
-  void updateisReasonPartialValidity(bool isValid) {
-    _isReasonPartialValid = isValid;
-    notifyListeners();
-  }
-   void updateisReasonNoneValidity(bool isValid) {
-    _isReasonNoneValid = isValid;
-    notifyListeners();
-  }
-
-
-  void updateSelectedDeliveryType(DeliveryType type) {
-    _selectedDeliveryType = type;
-    notifyListeners();
-  }
-
-  void updatePalletValue(int value) {
-    _palletValue = value;
-    notifyListeners();
-  }
-
-  void updateCartonsValue(int value) {
-    _cartonsValue = value;
-    notifyListeners();
-  }
-
-  void updateSignatureData(Uint8List data) {
-    _signatureData = data;
-    notifyListeners();
-  }
-
-  void clearSignatureAndShowPopup(BuildContext context, SignatureController controller) {
-    controller.clear();
-    _showSignature = false;
-    notifyListeners();
-    showSignaturePopup(context, controller);
-  }
-
-   void updateOrderRejectionReason(String reason) {
-    if (_selectedOrderRejectionReasons.contains(reason)) {
-      _selectedOrderRejectionReasons.remove(reason);
-    } else {
-      _selectedOrderRejectionReasons.add(reason);
-    }
-    notifyListeners();
-  }
-
-   void clearOrderRejectionReasons() {
-    _selectedOrderRejectionReasons.clear();
-    notifyListeners();
-  }
-
-  Map<String, dynamic> toMap() {
-      String? signatureBase64;
-  if (_signatureData != null && _signatureData!.isNotEmpty) {
-    signatureBase64 = base64Encode(_signatureData!);
-  }
-  
-    return {
-   //   'pod_type': _selectedDeliveryType == DeliveryType.full ? 'full' : 'partial',
-
-      'pod_type': "full",
-      'pallet': _palletValue,
-      'carton': _cartonsValue,
-      'signature': signatureBase64,
-    //  'signature': _showSignature,
-      'temperature': _temperature,
-      'serviceTime': _serviceTime,
-      'lengthOfDelivery': _lengthOfDelivery,
-      'first_name': _receiverFirstName,
-      'last_name': _receiverLastName,
-      //'reasonpartialdelivery': _reasonpartialdelivery,
-      //'orderRejectionReason': _orderRejectionReason,
-      'comments': _otherinfo,
-    //  'selectedOrderRejectionReasons': _selectedOrderRejectionReasons,
-    };
-  }
-    Map<String, dynamic> partialtoMap() {
-      String? signatureBase64;
-  if (_signatureData != null && _signatureData!.isNotEmpty) {
-    signatureBase64 = base64Encode(_signatureData!);
-  }
-  
-    return {
-      'pod_type': "partial",
-      'pallet': _palletValue,
-      'carton': _cartonsValue,
-      'signature': signatureBase64,
-    //  'signature': _showSignature,
-      'temperature': _temperature,
-      'serviceTime': _serviceTime,
-      'lengthOfDelivery': _lengthOfDelivery,
-      'first_name': _receiverFirstName,
-      'last_name': _receiverLastName,
-      'reasonpartialdelivery': _reasonpartialdelivery,
-      //'orderRejectionReason': _orderRejectionReason,
-      'comments': _otherinfo,
-    //  'selectedOrderRejectionReasons': _selectedOrderRejectionReasons,
-    };
-  }
-     Map<String, dynamic> nonetoMap() {
-      String? signatureBase64;
-  if (_signatureData != null && _signatureData!.isNotEmpty) {
-    signatureBase64 = base64Encode(_signatureData!);
-  }
-  
-    return {
-      'pod_type': "none",
-      'pallet': "",
-      'carton':"",
-      'signature': "",
-    //  'signature': _showSignature,
-      'temperature':"",
-      'serviceTime': "",
-      'lengthOfDelivery': "",
-      'first_name': "",
-      'last_name': "",
-      'reasonpartialdelivery': "",
-      'rejection_reason': _selectedOrderRejectionReasons.isEmpty ? "" : _selectedOrderRejectionReasons[0],
-      'comments': _orderRejectionReason,
-    //  'selectedOrderRejectionReasons': _selectedOrderRejectionReasons,
-    };
-  }
-
-  void clearFormData() {
-  _selectedDeliveryType = DeliveryType.full;
-  _palletValue = 0;
-  _cartonsValue = 0;
-  _showSignature = false;
-  _temperature = '';
-  _serviceTime = '';
-  _lengthOfDelivery = '';
-  _receiverFirstName = '';
-  _receiverLastName = '';
-  _reasonpartialdelivery = '';
-  _orderRejectionReason = '';
-  _otherinfo = '';
-  _selectedOrderRejectionReasons.clear();
-  _isTempValid = false;
-  _isServiceTimeValid = false;
-  _isLengthOfDeliveryValid = false;
-  _isReceiverFirstNameValid = false;
-  _isReceiverLastNameValid = false;
-  _isReasonPartialValid = false;
-  _isReasonNoneValid = false;
-  _images.clear();
-  _base64Images.clear();
-  _pictureSources.clear();
-  notifyListeners();
-}
-
-
+ 
     addImage({
     required XFile image,
     required String base64String,
@@ -430,8 +171,4 @@ void updateTempValidity(bool isValid) {
     notifyListeners();
   }
 
-    void setShowSignature(bool value) {
-    _showSignature = value;
-    notifyListeners();
-  }
 }

@@ -36,7 +36,7 @@ class CustomDropdown extends StatelessWidget {
     this.keyboardType = TextInputType.name,
     this.onChanged,
     required this.items,
-    this.isErrorState = false, required DeliveryType value,
+    this.isErrorState = false, 
   });
 
   @override

@@ -259,13 +259,13 @@ class _PreStartSignatureConfirmationTabState
                           onPressed: () async {
                             await _controller.toPngBytes().then((bytes) {
                               if (bytes != null) {
-                                context.read<PreStartProvider>().addEntities(
-                                      {
-                                        "driver_signature":
-                                            'data:image/png;base64, ${base64Encode(bytes).toString()}',
-                                        "total_question": 29.toString(),
-                                      }.entries,
-                                    );
+                                  context.read<PreStartProvider>().addEntities(
+                                        {
+                                          "driver_signature":
+                                              'data:image/png;base64, ${base64Encode(bytes).toString()}',
+                                          "total_question": 29.toString(),
+                                        }.entries,
+                                      );
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) {

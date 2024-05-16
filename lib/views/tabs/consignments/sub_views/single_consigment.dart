@@ -406,7 +406,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                               label: AppText.podCapture,
                               onPressed: () {
                                 Get.toNamed(AppRoutes.proofOfDelivery,
-                                arguments: Get.arguments
+                                arguments: Get.arguments,
                                 );
                               }),
                           SizedBox(

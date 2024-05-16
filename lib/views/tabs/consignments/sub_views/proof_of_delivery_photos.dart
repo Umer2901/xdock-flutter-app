@@ -17,163 +17,287 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
  
  
- 
- Future<void> postData() async {
-  setState(() {
-    isLoading = true;
-  });
-  AuthenticationState state =
-      BlocProvider.of<AuthenticationCubit>(context).state;
-  if (state is Authenticated) {
-    try {
-      Map<String, dynamic> requestBody = {};
-      String url = ''; 
+   Future<void> postData() async {
+    setState(() {
+      isLoading = true;
+    });
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
+    if (state is Authenticated) {
+      try {
+         final Map postData = context.read<ProofOfDeliveryProvider>().data;
 
-      switch (provider.selectedDeliveryType) {
-        case DeliveryType.full:
-          requestBody = provider.toMap();
-          url = AppHost.podfull;
-          break;
-        case DeliveryType.partial:
-          requestBody = provider.partialtoMap();
-          url = AppHost.podpartial;
-          break;
-        case DeliveryType.none:
-  List<String> rejectionReasons =
-      provider.selectedOrderRejectionReasons as List<String>;
-  for (String rejectionReason in rejectionReasons) {
-    print('Rejection Reason: $rejectionReason');
-    switch (rejectionReason) {
-      case "Temperature issue":
-        requestBody = provider.nonetoMap();
-        url = AppHost.temperateissue;
-        break;
-      case "Wrong Address":
-        requestBody =requestBody = provider.nonetoMap();
-        url = AppHost.wrongaddress;
-        break;
-      case "Damaged Goods":
-        requestBody = requestBody = provider.nonetoMap();
-        url = AppHost.damagegoods;
-        break;
-      case "Receiver Not Open":
-        requestBody = requestBody = provider.nonetoMap();
-        url = AppHost.notopen;
-        break;
-      case "Other Rejection":
-        requestBody = requestBody = provider.nonetoMap();
-        url = AppHost.otherrejection;
-        break;
-      default:
-        throw Exception('Invalid rejection reason: $rejectionReason');
-    }
-  }
-  break;
-      }
-      print('Request Body: $requestBody');
-      final response = await http.post(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Authorization': 'Bearer ${state.token}',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(requestBody),
-      );
-
-      if (response.statusCode == 200) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              icon: SizedBox(
-                height: 20.w,
-                width: 20.w,
-                child: const Image(
-                  image: AssetImage(AppImages.checkmark),
-                  color: Colors.green,
-                ),
-              ),
-              title: Text(
-                'Your Outbound pallets have been submitted successfully',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
-                textAlign: TextAlign.center,
-              ),
-              titlePadding: EdgeInsets.symmetric(
-                vertical: 1.h,
-                horizontal: 2.w,
-              ),
-              iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.sp),
-              ),
-              backgroundColor: AppColors.white,
-              actions: <Widget>[
-                Center(
-                  child: CustomButton(
-                    height: 5.h,
-                    width: 30.w,
-                    label: 'CLOSE',
-                    backgroundColor: AppColors.blue,
-                    borderColor: AppColors.blue,
-                    foregroundColor: AppColors.white,
-                    onPressed: () async {
-                      context.read<ProofOfDeliveryProvider>().clearFormData();
-                      Get.offAllNamed(AppRoutes.dashboard);
-                    },
-                  ),
-                ),
-              ],
-            );
+      // Print the data being posted
+      print('Data to post: $postData');
+        await http
+            .post(
+          Uri.parse(AppHost.podfull),
+          headers: <String, String>{
+            'Authorization': 'Bearer ${state.token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
-        );
-      } else {
+       body: jsonEncode(postData),
+          
+        )
+            .then((response) {
+          if (response.statusCode == 200) {
+            print('Data to post: $postData');
+            setState(() {
+              isLoading = false;
+            });
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  icon: SizedBox(
+                    height: 20.w,
+                    width: 20.w,
+                    child: const Image(
+                      image: AssetImage(AppImages.checkmark),
+                      color: Colors.green,
+                    ),
+                  ),
+                  title: Text(
+                    'Your Outbound pallets have been submitted successfully',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                  titlePadding: EdgeInsets.symmetric(
+                    vertical: 1.h,
+                    horizontal: 2.w,
+                  ),
+                  iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.sp),
+                  ),
+                  backgroundColor: AppColors.white,
+                  actions: <Widget>[
+                    Center(
+                      child: CustomButton(
+                        height: 5.h,
+                        width: 30.w,
+                        label: 'CLOSE',
+                        backgroundColor: AppColors.blue,
+                        borderColor: AppColors.blue,
+                        foregroundColor: AppColors.white,
+                        onPressed: () async {
+                          context.read<OutboundProvider>().restoreToDefault();
+                          Get.offAllNamed(AppRoutes.dashboard);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          } else {
+            print('Data to post: $postData');
+            setState(() {
+              isLoading = false;
+            });
+            final Map<String, dynamic> responseData =
+                json.decode(response.body);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.red,
+                    ),
+                    SizedBox(width: 2.w),
+                    Expanded(
+                      child: Text(   
+                        responseData['message'].trim(),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: AppColors.red),
+                      ),
+                    ),
+                    
+                  ],
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(0),
+                ),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: AppColors.lightRed,
+                margin: EdgeInsets.only(bottom: 2.h),
+              ),
+            );
+          }
+        });
+      } catch (e) {
         setState(() {
           isLoading = false;
         });
-        final Map<String, dynamic> responseData =
-            json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(
-                  Icons.error_outline_rounded,
-                  color: AppColors.red,
-                ),
-                SizedBox(width: 2.w),
-                Expanded(
-                  child: Text(
-                    responseData['message'].trim(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.red),
-                  ),
-                ),
-              ],
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(0),
-            ),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.lightRed,
-            margin: EdgeInsets.only(bottom: 2.h),
-          ),
-        );
+        debugPrint(e.toString());
       }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      debugPrint(e.toString());
     }
   }
-}
+
+//  Future<void> postData() async {
+//   setState(() {
+//     isLoading = true;
+//   });
+//   AuthenticationState state =
+//       BlocProvider.of<AuthenticationCubit>(context).state;
+//   if (state is Authenticated) {
+//     try {
+//       Map<String, dynamic> requestBody = {};
+//       String url = ''; 
+
+//       switch (provider.selectedDeliveryType) {
+//         case DeliveryType.full:
+//           requestBody = provider.toMap();
+//           url = AppHost.podfull;
+//           break;
+//         case DeliveryType.partial:
+//           requestBody = provider.partialtoMap();
+//           url = AppHost.podpartial;
+//           break;
+//         case DeliveryType.none:
+//   List<String> rejectionReasons =
+//       provider.selectedOrderRejectionReasons as List<String>;
+//   for (String rejectionReason in rejectionReasons) {
+//     print('Rejection Reason: $rejectionReason');
+//     switch (rejectionReason) {
+//       case "Temperature issue":
+//         requestBody = provider.nonetoMap();
+//         url = AppHost.temperateissue;
+//         break;
+//       case "Wrong Address":
+//         requestBody =requestBody = provider.nonetoMap();
+//         url = AppHost.wrongaddress;
+//         break;
+//       case "Damaged Goods":
+//         requestBody = requestBody = provider.nonetoMap();
+//         url = AppHost.damagegoods;
+//         break;
+//       case "Receiver Not Open":
+//         requestBody = requestBody = provider.nonetoMap();
+//         url = AppHost.notopen;
+//         break;
+//       case "Other Rejection":
+//         requestBody = requestBody = provider.nonetoMap();
+//         url = AppHost.otherrejection;
+//         break;
+//       default:
+//         throw Exception('Invalid rejection reason: $rejectionReason');
+//     }
+//   }
+//   break;
+//       }
+//       print('Request Body: $requestBody');
+//       final response = await http.post(
+//         Uri.parse(url),
+//         headers: <String, String>{
+//           'Authorization': 'Bearer ${state.token}',
+//           'Content-Type': 'application/json',
+//           'Accept': 'application/json',
+//         },
+//         body: jsonEncode(requestBody),
+//       );
+
+//       if (response.statusCode == 200) {
+//         showDialog(
+//           context: context,
+//           builder: (BuildContext context) {
+//             return AlertDialog(
+//               icon: SizedBox(
+//                 height: 20.w,
+//                 width: 20.w,
+//                 child: const Image(
+//                   image: AssetImage(AppImages.checkmark),
+//                   color: Colors.green,
+//                 ),
+//               ),
+//               title: Text(
+//                 'Your Outbound pallets have been submitted successfully',
+//                 style: Theme.of(context)
+//                     .textTheme
+//                     .bodyLarge
+//                     ?.copyWith(fontWeight: FontWeight.w700),
+//                 textAlign: TextAlign.center,
+//               ),
+//               titlePadding: EdgeInsets.symmetric(
+//                 vertical: 1.h,
+//                 horizontal: 2.w,
+//               ),
+//               iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(10.sp),
+//               ),
+//               backgroundColor: AppColors.white,
+//               actions: <Widget>[
+//                 Center(
+//                   child: CustomButton(
+//                     height: 5.h,
+//                     width: 30.w,
+//                     label: 'CLOSE',
+//                     backgroundColor: AppColors.blue,
+//                     borderColor: AppColors.blue,
+//                     foregroundColor: AppColors.white,
+//                     onPressed: () async {
+//                       context.read<ProofOfDeliveryProvider>().clearFormData();
+//                       Get.offAllNamed(AppRoutes.dashboard);
+//                     },
+//                   ),
+//                 ),
+//               ],
+//             );
+//           },
+//         );
+//       } else {
+//         setState(() {
+//           isLoading = false;
+//         });
+//         final Map<String, dynamic> responseData =
+//             json.decode(response.body);
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Row(
+//               children: [
+//                 const Icon(
+//                   Icons.error_outline_rounded,
+//                   color: AppColors.red,
+//                 ),
+//                 SizedBox(width: 2.w),
+//                 Expanded(
+//                   child: Text(
+//                     responseData['message'].trim(),
+//                     style: Theme.of(context)
+//                         .textTheme
+//                         .bodyMedium
+//                         ?.copyWith(color: AppColors.red),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             shape: RoundedRectangleBorder(
+//               borderRadius: BorderRadius.circular(0),
+//             ),
+//             duration: const Duration(seconds: 2),
+//             behavior: SnackBarBehavior.floating,
+//             backgroundColor: AppColors.lightRed,
+//             margin: EdgeInsets.only(bottom: 2.h),
+//           ),
+//         );
+//       }
+//     } catch (e) {
+//       setState(() {
+//         isLoading = false;
+//       });
+//       debugPrint(e.toString());
+//     }
+//   }
+// }
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -503,11 +627,14 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
               borderColor: AppColors.white,
       name: 'Textform',
       hintText: "Enter Text",
-      onChanged: (value) {
-    
-   Provider.of<ProofOfDeliveryProvider>(context, listen: false)
-    .updateDeliveryFormData(otherinfo: value);
-  },
+     initialValue: context
+                                    .read<ProofOfDeliveryProvider>()
+                                    .data
+                                    .containsKey('comments')
+                                ? context
+                                    .read<ProofOfDeliveryProvider>()
+                                    .data['comments']
+                                : null
             ),
           ),
         ],
@@ -524,6 +651,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     label: "Submit POD",
     onPressed: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
         ? () {
+            
             postData();
           }
         : (){},
