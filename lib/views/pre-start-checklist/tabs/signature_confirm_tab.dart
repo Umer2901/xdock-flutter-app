@@ -357,6 +357,7 @@ class _PreStartSignatureConfirmationTabState
                         ),
                       ),
                     ),
+                   
                     SizedBox(
                       height: 3.h,
                     ),

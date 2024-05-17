@@ -14,16 +14,19 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   Map<String, String> _base64Images = {};
   Map<String, String> _pictureSources = {};
   DeliveryType _selectedDeliveryType = DeliveryType.full;
-   bool _showSignature = false;
-  
+  bool _showSignature = false;
+    String? signatureData;
 
  
  int get index => _index;
-  Map get data => _data;
+ Map get data => _data;
+ bool get showSignature => _showSignature;
+
   List<XFile> get images => _images;
   Map<String, String> get base64Images => _base64Images;
   Map<String, String> get pictureSources => _pictureSources;
   DeliveryType get selectedDeliveryType => _selectedDeliveryType;
+   Uint8List? get signature => _signatureData;
   setIndex(int value) {
     _index = value;
     notifyListeners();
@@ -50,12 +53,12 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _showSignature = value;
     notifyListeners();
   }
-  // void clearSignatureAndShowPopup(BuildContext context, SignatureController controller) {
-  //   controller.clear();
-  //   _showSignature = false;
-  //   notifyListeners();
-  //   showSignaturePopup(context, controller);
-  // }
+  void clearSignatureAndShowPopup(BuildContext context, SignatureController controller) {
+    controller.clear();
+    _showSignature = false;
+    notifyListeners();
+    showSignaturePopup(context, controller);
+  }
    
   void showSignaturePopup(BuildContext context, SignatureController controller) {
     showDialog(
@@ -98,7 +101,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
                           style: TextStyle(color: Colors.blue),
                         ),
                         onPressed: () {
-                          // Perform any necessary actions
+                         context.read<ProofOfDeliveryProvider>().setSignatureData(controller.toPngBytes().toString());
                           Navigator.pop(context);
                         },
                       ),
@@ -146,7 +149,10 @@ class ProofOfDeliveryProvider with ChangeNotifier {
       },
     );
   }
-
+ void setSignatureData(String data) {
+    signatureData = data;
+    notifyListeners();
+  }
   
  
     addImage({
