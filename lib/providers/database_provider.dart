@@ -91,7 +91,7 @@ class DatabaseProvider with ChangeNotifier {
             required_delivery_date TEXT,
             special_instruction TEXT,
             save_special_instruction INTEGER,
-            confirm TEXT,
+            confirm INTEGER,
             finalize INTEGER,
             end_date TEXT,
             next_date TEXT,
@@ -109,10 +109,10 @@ class DatabaseProvider with ChangeNotifier {
             is_printed INTEGER,
             signature TEXT,
             temperature TEXT,
-            received_by_name TEXT,
+            recevied_by_name TEXT,
             runsheet_id INTEGER,
-            sort TEXT,
-            osrm_sort TEXT,
+            sort INTEGER,
+            osrm_sort INTEGER,
             osrm_eta TEXT,
             original_carton INTEGER,
             original_pallet INTEGER,
@@ -121,7 +121,7 @@ class DatabaseProvider with ChangeNotifier {
             validated INTEGER,
             grouping_flag INTEGER,
             pop_temperature TEXT,
-            pop_received_by_name TEXT,
+            pop_recevied_by_name TEXT,
             pop_signature TEXT,
             date_picked TEXT,
             is_unassigned INTEGER,
@@ -132,8 +132,11 @@ class DatabaseProvider with ChangeNotifier {
             delivery_runs TEXT,
             customers TEXT,
             product_types TEXT,
+            run_sheets TEXT,
+            consignment_pallets TEXT,
             datetime TEXT,
-            access_token TEXT
+            access_token TEXT,
+            is_complete INTEGER DEFAULT 0
           )
         ''');
     // Create other tables here...

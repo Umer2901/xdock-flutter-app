@@ -96,7 +96,9 @@ export 'bloc/forgot-password/forgot_password_cubit.dart';
 // Database Exports
 export 'database/user_database.dart';
 export 'database/precheck_database.dart';
+export 'database/consignment_database.dart';
 
 // Service Exports
 export 'services/user_service.dart';
 export 'services/precheck_status_service.dart';
+export 'services/consignments_service.dart';

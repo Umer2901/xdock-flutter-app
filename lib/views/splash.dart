@@ -18,7 +18,6 @@ class _SplashViewState extends State<SplashView> {
   }
 
   config() async {
-    onStart();
     await context.read<DatabaseProvider>().initDatabase().whenComplete(() {
       context.read<LocationProvider>().getCurrentLocation();
       BlocProvider.of<AuthenticationCubit>(context).check();
@@ -30,8 +29,13 @@ class _SplashViewState extends State<SplashView> {
       try {
         if (event.contains(ConnectivityResult.wifi) ||
             event.contains(ConnectivityResult.mobile)) {
-          await InternetAddress.lookup('google.com').then((result) {
-            if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {}
+          await InternetAddress.lookup('google.com').then((value) {
+            AuthenticationState state =
+                BlocProvider.of<AuthenticationCubit>(context).state;
+            if (state is Authenticated) {
+              ConsignmentService(context.read<DatabaseProvider>().database)
+                  .fetchAndStore(state.token);
+            }
           });
         }
       } on SocketException catch (e) {
@@ -48,7 +52,7 @@ class _SplashViewState extends State<SplashView> {
       listener: (context, state) async {
         if (state is Authenticated) {
           await PreCheckDatabase(context.read<DatabaseProvider>().database)
-              .read(state.token)
+              .read()
               .then((submissions) async {
             if (submissions.isEmpty) {
               try {
