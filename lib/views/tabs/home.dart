@@ -13,6 +13,8 @@ class _HomeTabState extends State<HomeTab> {
   late PreCheckDatabase precheck;
   late ConsignmentDatabase consignment;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -50,6 +52,7 @@ class _HomeTabState extends State<HomeTab> {
         stream: staff.controller.stream,
         builder: (context, staffSnapshot) {
           return Scaffold(
+            key: _scaffoldKey,
             body: SafeArea(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -87,7 +90,7 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                           InkWell(
                             onTap: () {
-                              Scaffold.of(context).openEndDrawer();
+                              _scaffoldKey.currentState?.openEndDrawer();
                             },
                             child: Stack(
                               children: [
