@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 class ProofOfDeliveryPhotos extends StatefulWidget {
-  const ProofOfDeliveryPhotos({super.key});
+  final dynamic data;
+  const ProofOfDeliveryPhotos({super.key, required this.data});
 
   @override
   State<ProofOfDeliveryPhotos> createState() => _ProofOfDeliveryPhotosState();
@@ -15,69 +16,122 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
+   var snapshot = widget.data;
  
- 
-   Future<void> postData() async {
-    setState(() {
-      isLoading = true;
-    });
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
-    if (state is Authenticated) {
-      try {
-         final Map postData = context.read<ProofOfDeliveryProvider>().data;
 
-      // Print the data being posted
-      print('Data to post: $postData');
-        await http
-            .post(
-          Uri.parse(AppHost.podfull),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-       body: jsonEncode(postData),
-          
-        )
-            .then((response) {
-          if (response.statusCode == 200) {
-            print('Data to post: $postData');
-            setState(() {
-              isLoading = false;
-            });
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  icon: SizedBox(
-                    height: 20.w,
-                    width: 20.w,
-                    child: const Image(
-                      image: AssetImage(AppImages.checkmark),
-                      color: Colors.green,
-                    ),
+ Future<void> postData() async {
+  setState(() {
+    isLoading = true;
+  });
+  AuthenticationState state =
+      BlocProvider.of<AuthenticationCubit>(context).state;
+  if (state is Authenticated) {
+    try {
+      final Map postData = context.read<ProofOfDeliveryProvider>().data;
+    //  Map<String, dynamic> requestBody = {};
+      String url = ''; 
+
+      switch (provider.selectedDeliveryType) {
+        case DeliveryType.full:
+          body: jsonEncode(postData);
+          url = AppHost.podfull;
+          break;
+        case DeliveryType.partial:
+          body: jsonEncode(postData);
+          url = AppHost.podpartial;
+          break;
+        case DeliveryType.none:
+  List<String> rejectionReasons =
+      provider.selectedOrderRejectionReasons as List<String>;
+  for (String rejectionReason in rejectionReasons) {
+    print('Rejection Reason: $rejectionReason');
+    switch (rejectionReason) {
+      case "Temperature issue":
+         body: jsonEncode(postData);
+        url = AppHost.temperateissue;
+        break;
+      case "Wrong Address":
+         body: jsonEncode(postData);
+        url = AppHost.wrongaddress;
+        break;
+      case "Damaged Goods":
+       body: jsonEncode(postData);
+        url = AppHost.damagegoods;
+        break;
+      case "Receiver Not Open":
+      body: jsonEncode(postData);
+        url = AppHost.notopen;
+        break;
+      case "Other Rejection":
+       body: jsonEncode(postData);
+        url = AppHost.otherrejection;
+        break;
+      default:
+        throw Exception('Invalid rejection reason: $rejectionReason');
+    }
+  }
+  break;
+      }
+      print('Request Body: $postData');
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Authorization': 'Bearer ${state.token}',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      body: jsonEncode(postData),
+      );
+
+      if (response.statusCode == 200) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              icon: SizedBox(
+                height: 20.w,
+                width: 20.w,
+                child: const Image(
+                  image: AssetImage(AppImages.checkmark),
+                  color: Colors.green,
+                ),
+              ),
+              title: Text(
+                'Your Proof of Delivery has been submitted successfully.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+              titlePadding: EdgeInsets.symmetric(
+                vertical: 1.h,
+                horizontal: 2.w,
+              ),
+              iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.sp),
+              ),
+              backgroundColor: AppColors.white,
+              actions: <Widget>[
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomButton(
+                    height: 5.h,
+                    width: 30.w,
+                    label: 'Edit',
+                    //foregroundColor: AppColors.black
+                    backgroundColor: AppColors.white,
+                    borderColor: AppColors.black,
+                    foregroundColor: AppColors.black,
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
                   ),
-                  title: Text(
-                    'Your Outbound pallets have been submitted successfully',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                    textAlign: TextAlign.center,
-                  ),
-                  titlePadding: EdgeInsets.symmetric(
-                    vertical: 1.h,
-                    horizontal: 2.w,
-                  ),
-                  iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.sp),
-                  ),
-                  backgroundColor: AppColors.white,
-                  actions: <Widget>[
-                    Center(
-                      child: CustomButton(
+                      CustomButton(
                         height: 5.h,
                         width: 30.w,
                         label: 'CLOSE',
@@ -85,219 +139,61 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                         borderColor: AppColors.blue,
                         foregroundColor: AppColors.white,
                         onPressed: () async {
-                          context.read<OutboundProvider>().restoreToDefault();
+                          context.read<ProofOfDeliveryProvider>().restoreToDefault();
                           Get.offAllNamed(AppRoutes.dashboard);
                         },
                       ),
-                    ),
-                  ],
-                );
-              },
-            );
-          } else {
-            print('Data to post: $postData');
-            setState(() {
-              isLoading = false;
-            });
-            final Map<String, dynamic> responseData =
-                json.decode(response.body);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(
-                      Icons.error_outline_rounded,
-                      color: AppColors.red,
-                    ),
-                    SizedBox(width: 2.w),
-                    Expanded(
-                      child: Text(   
-                        responseData['message'].trim(),
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: AppColors.red),
-                      ),
-                    ),
-                    
-                  ],
+                    ],
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(0),
-                ),
-                duration: const Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: AppColors.lightRed,
-                margin: EdgeInsets.only(bottom: 2.h),
-              ),
+              ],
             );
-          }
-        });
-      } catch (e) {
+          },
+        );
+      } else {
         setState(() {
           isLoading = false;
         });
-        debugPrint(e.toString());
+        final Map<String, dynamic> responseData =
+            json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.red,
+                ),
+                SizedBox(width: 2.w),
+                Expanded(
+                  child: Text(
+                    responseData['message'].trim(),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: AppColors.red),
+                  ),
+                ),
+              ],
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.lightRed,
+            margin: EdgeInsets.only(bottom: 2.h),
+          ),
+        );
       }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      debugPrint(e.toString());
     }
   }
-
-//  Future<void> postData() async {
-//   setState(() {
-//     isLoading = true;
-//   });
-//   AuthenticationState state =
-//       BlocProvider.of<AuthenticationCubit>(context).state;
-//   if (state is Authenticated) {
-//     try {
-//       Map<String, dynamic> requestBody = {};
-//       String url = ''; 
-
-//       switch (provider.selectedDeliveryType) {
-//         case DeliveryType.full:
-//           requestBody = provider.toMap();
-//           url = AppHost.podfull;
-//           break;
-//         case DeliveryType.partial:
-//           requestBody = provider.partialtoMap();
-//           url = AppHost.podpartial;
-//           break;
-//         case DeliveryType.none:
-//   List<String> rejectionReasons =
-//       provider.selectedOrderRejectionReasons as List<String>;
-//   for (String rejectionReason in rejectionReasons) {
-//     print('Rejection Reason: $rejectionReason');
-//     switch (rejectionReason) {
-//       case "Temperature issue":
-//         requestBody = provider.nonetoMap();
-//         url = AppHost.temperateissue;
-//         break;
-//       case "Wrong Address":
-//         requestBody =requestBody = provider.nonetoMap();
-//         url = AppHost.wrongaddress;
-//         break;
-//       case "Damaged Goods":
-//         requestBody = requestBody = provider.nonetoMap();
-//         url = AppHost.damagegoods;
-//         break;
-//       case "Receiver Not Open":
-//         requestBody = requestBody = provider.nonetoMap();
-//         url = AppHost.notopen;
-//         break;
-//       case "Other Rejection":
-//         requestBody = requestBody = provider.nonetoMap();
-//         url = AppHost.otherrejection;
-//         break;
-//       default:
-//         throw Exception('Invalid rejection reason: $rejectionReason');
-//     }
-//   }
-//   break;
-//       }
-//       print('Request Body: $requestBody');
-//       final response = await http.post(
-//         Uri.parse(url),
-//         headers: <String, String>{
-//           'Authorization': 'Bearer ${state.token}',
-//           'Content-Type': 'application/json',
-//           'Accept': 'application/json',
-//         },
-//         body: jsonEncode(requestBody),
-//       );
-
-//       if (response.statusCode == 200) {
-//         showDialog(
-//           context: context,
-//           builder: (BuildContext context) {
-//             return AlertDialog(
-//               icon: SizedBox(
-//                 height: 20.w,
-//                 width: 20.w,
-//                 child: const Image(
-//                   image: AssetImage(AppImages.checkmark),
-//                   color: Colors.green,
-//                 ),
-//               ),
-//               title: Text(
-//                 'Your Outbound pallets have been submitted successfully',
-//                 style: Theme.of(context)
-//                     .textTheme
-//                     .bodyLarge
-//                     ?.copyWith(fontWeight: FontWeight.w700),
-//                 textAlign: TextAlign.center,
-//               ),
-//               titlePadding: EdgeInsets.symmetric(
-//                 vertical: 1.h,
-//                 horizontal: 2.w,
-//               ),
-//               iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(10.sp),
-//               ),
-//               backgroundColor: AppColors.white,
-//               actions: <Widget>[
-//                 Center(
-//                   child: CustomButton(
-//                     height: 5.h,
-//                     width: 30.w,
-//                     label: 'CLOSE',
-//                     backgroundColor: AppColors.blue,
-//                     borderColor: AppColors.blue,
-//                     foregroundColor: AppColors.white,
-//                     onPressed: () async {
-//                       context.read<ProofOfDeliveryProvider>().clearFormData();
-//                       Get.offAllNamed(AppRoutes.dashboard);
-//                     },
-//                   ),
-//                 ),
-//               ],
-//             );
-//           },
-//         );
-//       } else {
-//         setState(() {
-//           isLoading = false;
-//         });
-//         final Map<String, dynamic> responseData =
-//             json.decode(response.body);
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(
-//             content: Row(
-//               children: [
-//                 const Icon(
-//                   Icons.error_outline_rounded,
-//                   color: AppColors.red,
-//                 ),
-//                 SizedBox(width: 2.w),
-//                 Expanded(
-//                   child: Text(
-//                     responseData['message'].trim(),
-//                     style: Theme.of(context)
-//                         .textTheme
-//                         .bodyMedium
-//                         ?.copyWith(color: AppColors.red),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//             shape: RoundedRectangleBorder(
-//               borderRadius: BorderRadius.circular(0),
-//             ),
-//             duration: const Duration(seconds: 2),
-//             behavior: SnackBarBehavior.floating,
-//             backgroundColor: AppColors.lightRed,
-//             margin: EdgeInsets.only(bottom: 2.h),
-//           ),
-//         );
-//       }
-//     } catch (e) {
-//       setState(() {
-//         isLoading = false;
-//       });
-//       debugPrint(e.toString());
-//     }
-//   }
-// }
+}
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -345,17 +241,21 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'ID: 123456',
-                            style: Theme.of(context).textTheme.headlineSmall,
+                           Text(
+                            'ID: ${widget.data['data']['id']}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall,
                           ),
                           VerticalDivider(
                             color: AppColors.black.withOpacity(0.5),
                             thickness: 2,
                           ),
                           Text(
-                            'REF: 1234',
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            'REF: ${widget.data['data']['customer_reference']}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall,
                           ),
                         ],
                       ),
@@ -406,21 +306,33 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Ritchies IGA',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            Text(
-                              'Recipient: Drew Moran 830 Wellington road, Rowville',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                             Text(
+                              (widget.data['data']['consignment_type'] ==
+                                          'delivery'
+                                      ? widget.data['data']['delivery_addresses']
+                                          ['company_name']
+                                      : widget.data['data']['pickup_addresses']
+                                          ['company_name']) ??
+                                  'Not Provided',
                               style: Theme.of(context)
                                   .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  .headlineMedium,
                             ),
+                            Text(
+                              'Recipient: ${(widget.data['data']['consignment_type'] == 'delivery' ? widget.data['data']['delivery_addresses']['customer_name'] : widget.data['data']['pickup_addresses']['customer_name']) ?? 'Not Provided'}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              widget.data['data']['consignment_type'] ==
+                                      'delivery'
+                                  ? '${widget.data['data']['delivery_addresses']['street_address']}, ${widget.data['data']['delivery_addresses']['suburb']}'
+                                  : '${widget.data['data']['pickup_addresses']['street_address']}, ${widget.data['data']['pickup_addresses']['suburb']}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                                      )
                           ],
                         ),
                       ),
@@ -466,49 +378,11 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                       ),
                       GestureDetector(
                         onTap: () async{
-                          // showModalBottomSheet(
-                          //   backgroundColor: AppColors.white,
-                          //   context: context,
-                          //   builder: (BuildContext context) {
-                          //     return Wrap(
-                          //       children: <Widget>[
-                          //         ListTile(
-                          //           leading: const Icon(Icons.camera_alt),
-                          //           title: Text(
-                          //             'Take Photo',
-                          //             style: Theme.of(context)
-                          //                 .textTheme
-                          //                 .bodyMedium
-                          //                 ?.copyWith(
-                          //                   fontWeight: FontWeight.w600,
-                          //                 ),
-                          //           ),
-                          //           onTap: () async {
-                          //             Navigator.pop(context);
-                          //             await _takePhoto();
-                          //           },
-                          //         ),
-                          //         ListTile(
-                          //           leading: const Icon(Icons.image),
-                          //           title: Text(
-                          //             'Pick Image',
-                          //             style: Theme.of(context)
-                          //                 .textTheme
-                          //                 .bodyMedium
-                          //                 ?.copyWith(
-                          //                   fontWeight: FontWeight.w600,
-                          //                 ),
-                          //           ),
-                          //           onTap: () async {
-                          //             Navigator.pop(context);
-                          //             await _pickImage();
-                          //           },
-                          //         ),
-                          //       ],
-                          //     );
-                          //   },
-                          // );
-                         await _takePhoto();
+                     
+                         
+                           context.read<ProofOfDeliveryProvider>().image == null
+                                  ? _takePhoto()
+                                  : null;
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -625,16 +499,19 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                 vertical: 1.h, horizontal: 2.w),
             child: CustomTextField(
               borderColor: AppColors.white,
-      name: 'Textform',
+      name: 'commentspho',
       hintText: "Enter Text",
-     initialValue: context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data
-                                    .containsKey('comments')
-                                ? context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['comments']
-                                : null
+    //  initialValue: context
+    //                                 .read<ProofOfDeliveryProvider>()
+    //                                 .data
+    //                                 .containsKey('comments')
+    //                             ? context
+    //                                 .read<ProofOfDeliveryProvider>()
+    //                                 .data['comments']
+    //                             : null
+                                 onChanged: (value) {
+                    context.read<ProofOfDeliveryProvider>().data['comments'] = value;
+                  },
             ),
           ),
         ],

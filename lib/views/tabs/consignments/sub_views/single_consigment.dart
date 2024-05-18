@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery.dart';
 import 'package:http/http.dart' as http;
 
 class SingleConsigmentView extends StatefulWidget {
@@ -405,9 +406,11 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                           CustomElevatedButton(
                               label: AppText.podCapture,
                               onPressed: () {
-                                Get.toNamed(AppRoutes.proofOfDelivery,
-                                arguments: Get.arguments,
-                                );
+                              Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ProofOfDeliveryView(data: snapshot.data),
+    ),);
                               }),
                           SizedBox(
                             height: 8.h,

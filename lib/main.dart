@@ -37,7 +37,6 @@ class MyApp extends StatelessWidget {
           ),
            ChangeNotifierProvider(
             create: (_) => ProofOfDeliveryProvider(),
-            child: ProofOfDeliveryView(),
           ),
            ChangeNotifierProvider<BottomNavProvider>(
             create: (_) => BottomNavProvider(),
