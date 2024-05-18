@@ -23,11 +23,10 @@ class ConsignmentService {
 
         if (response.statusCode == 200) {
           final dynamic data = json.decode(response.body);
-          print(data);
           if (data['status'] == 'success') {
-            // Map<String, dynamic> submissionData = data['data'][[DateFormat('yyyy-MM-dd').format(DateTime.now())]];
-            List<dynamic> submissionData =
-                data['data']['2024-04-04']['consignments'];
+            List<dynamic> submissionData = data['data']
+                    [DateFormat('yyyy-MM-dd').format(DateTime.now())]
+                ['consignments'];
             for (var dataIteration in submissionData) {
               dataIteration['delivery_addresses'] = json.encode(
                 dataIteration['delivery_addresses'],
@@ -55,14 +54,10 @@ class ConsignmentService {
                 'datetime': DateFormat('dd/MM/yyyy').format(DateTime.now()),
                 'is_complete': 0,
               });
-              try {
-                List consignment = await ConsignmentDatabase(_database)
-                    .readById(dataIteration['id']);
-                if (consignment.isEmpty) {
-                  await ConsignmentDatabase(_database).create(dataIteration);
-                }
-              } catch (e) {
-                print('Old Error: $e');
+              List consignment = await ConsignmentDatabase(_database)
+                  .readById(dataIteration['id']);
+              if (consignment.isEmpty) {
+                await ConsignmentDatabase(_database).create(dataIteration);
               }
             }
           } else {

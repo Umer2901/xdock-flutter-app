@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:coldxpress/export.dart';
 
 class CustomConsignmentContainer extends StatelessWidget {
@@ -6,16 +8,25 @@ class CustomConsignmentContainer extends StatelessWidget {
   final Widget? icon;
   final Function? onTap;
   final Map? consignment;
-  const CustomConsignmentContainer(
-      {super.key,
-      this.isLoading = false,
-      this.consignment,
-      this.icon,
-      this.isSelected,
-      this.onTap});
+  const CustomConsignmentContainer({
+    super.key,
+    this.isLoading = false,
+    this.consignment,
+    this.icon,
+    this.isSelected,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    Map? productTypes;
+    Map? deliveryAddresses;
+    Map? pickupAddresses;
+    if (consignment != null) {
+      productTypes = json.decode(consignment!['product_types']);
+      deliveryAddresses = json.decode(consignment!['delivery_addresses']);
+      pickupAddresses = json.decode(consignment!['pickup_addresses']);
+    }
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -45,18 +56,16 @@ class CustomConsignmentContainer extends StatelessWidget {
                     height: 3.5.h,
                     width: 18.w,
                     decoration: BoxDecoration(
-                      color: consignment!['product_types']['id'] == 1
+                      color: productTypes!['id'] == 1
                           ? AppColors.skyBlue
                           : AppColors.darkBlue,
                       borderRadius: BorderRadius.circular(15.sp),
                     ),
                     child: Center(
                       child: Text(
-                        (consignment!['product_types']['name'])
-                            .toString()
-                            .toUpperCase(),
+                        (productTypes['name']).toString().toUpperCase(),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: consignment!['product_types']['id'] == 1
+                            color: productTypes['id'] == 1
                                 ? AppColors.black
                                 : AppColors.white,
                             fontSize: 10.sp,
@@ -77,29 +86,14 @@ class CustomConsignmentContainer extends StatelessWidget {
                               : const Icon(Icons.check_box_outline_blank))
                           : icon,
                     ),
-                    // CircleAvatar(
-                    //   backgroundColor: AppColors.darkGrey.withOpacity(0.16),
-                    //   radius: 7.5.w,
-                    //   child: SizedBox(
-                    //     height: 15.h,
-                    //     width: 15.w,
-                    //     child: Image(
-                    //       image: consignment!['product_types']['id'] == 1
-                    //           ? const AssetImage(AppImages.chilled)
-                    //           : const AssetImage(AppImages.frozen),
-                    //     ),
-                    //   ),
-                    // ),
                     SizedBox(width: 2.w),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           (consignment!['consignment_type'] == 'delivery'
-                                  ? consignment!['delivery_addresses']
-                                      ['customer_name']
-                                  : consignment!['pickup_addresses']
-                                      ['customer_name']) ??
+                                  ? deliveryAddresses!['customer_name']
+                                  : pickupAddresses!['customer_name']) ??
                               'Not Provided',
                           style: Theme.of(context)
                               .textTheme

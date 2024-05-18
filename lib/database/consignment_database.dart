@@ -42,7 +42,11 @@ class ConsignmentDatabase {
         where: 'access_token = ? AND datetime = ?',
         whereArgs: [
           accessToken,
-          DateFormat('dd/MM/yyyy').format(DateTime.now())
+          DateFormat('dd/MM/yyyy').format(
+            DateTime.now().subtract(
+              const Duration(days: 1),
+            ),
+          )
         ],
         orderBy: 'sort ASC',
       )

@@ -69,7 +69,10 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
           child: StreamBuilder(
               stream: consignment.controller.stream,
               builder: (context, consignmentSnapshot) {
-                if (consignmentSnapshot.hasData) {
+                if (consignmentSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const SizedBox();
+                } else if (consignmentSnapshot.hasData) {
                   return Column(
                     children: [
                       Container(
@@ -173,7 +176,10 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                         ? Get.toNamed(AppRoutes.consignmentMap)
                                         : i == 1
                                             ? Get.toNamed(
-                                                AppRoutes.consigmentReorder)
+                                                AppRoutes.consigmentReorder,
+                                                arguments:
+                                                    consignmentSnapshot.data,
+                                              )
                                             : i == 2
                                                 ? Get.toNamed(
                                                     AppRoutes.consigmentGroup)
@@ -263,8 +269,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                       ),
                     ],
                   );
-                }
-                if (consignmentSnapshot.hasError) {
+                } else if (consignmentSnapshot.hasError) {
                   return SizedBox(
                     child: Column(
                       children: [
