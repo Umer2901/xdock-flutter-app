@@ -3,7 +3,6 @@ import 'package:coldxpress/export.dart';
 
 enum DeliveryType { full, partial, none }
 
-
 class ProofOfDeliveryProvider with ChangeNotifier {
   int _index = 0;
   Map _data = {};
@@ -17,7 +16,6 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   String? signatureData;
   XFile? _image;
   
- 
   int get index => _index;
   Map get data => _data;
   bool get showSignature => _showSignature;
@@ -28,8 +26,6 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   DeliveryType get selectedDeliveryType => _selectedDeliveryType;
   Uint8List? get signature => _signatureData;
   List<String> get selectedOrderRejectionReasons => _selectedOrderRejectionReasons;
-  
-
 
   setIndex(int value) {
     _index = value;
@@ -46,45 +42,59 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     notifyListeners();
   }
   
-   setImage({required XFile image}) {
+  setImage({required XFile image}) {
     _image = image;
     notifyListeners();
   }
+
   void clearImage() {
     _image = null;
     notifyListeners();
   }
+
   void clearSignatureAndShowPopup(BuildContext context, SignatureController controller) {
     controller.clear();
-    _showSignature = false;
-    notifyListeners();
+    _signatureData = null;
+    _showSignature = true;
     showSignaturePopup(context, controller);
+    notifyListeners();
+    
   }
- void updateSelectedDeliveryType(DeliveryType type) {
+
+  void updateSelectedDeliveryType(DeliveryType type) {
     _selectedDeliveryType = type;
     notifyListeners();
   }
- void updateSignatureData(Uint8List data) {
+
+  void updateSignatureData(Uint8List data) {
     _signatureData = data;
     notifyListeners();
   }
- void setShowSignature(bool value) {
+
+  void setShowSignature(bool value) {
     _showSignature = value;
     notifyListeners();
   }
- void updateOrderRejectionReason(String reason) {
-  _selectedOrderRejectionReasons.clear(); 
-  _selectedOrderRejectionReasons.add(reason); 
-  data['rejection_reason'] = reason; 
-  notifyListeners();
-}
- void clearOrderRejectionReasons() {
+
+  void updateOrderRejectionReason(String reason) {
+    _selectedOrderRejectionReasons.clear();
+    _selectedOrderRejectionReasons.add(reason);
+    data['rejection_reason'] = reason;
+    notifyListeners();
+  }
+
+  void clearOrderRejectionReasons() {
     _selectedOrderRejectionReasons.clear();
     notifyListeners();
   }
-   
- void showSignaturePopup(BuildContext context, SignatureController controller) {
+ void resetSignatureState() {
+    _showSignature = false;
+    _signatureData = null;
+    notifyListeners();
+  }
+  void showSignaturePopup(BuildContext context, SignatureController controller) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return Dialog(
@@ -112,6 +122,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
                         ),
                         onPressed: () {
                           Navigator.pop(context);
+                          context.read<ProofOfDeliveryProvider>().resetSignatureState();
                         },
                       ),
                       Text(
@@ -123,9 +134,12 @@ class ProofOfDeliveryProvider with ChangeNotifier {
                           "Done",
                           style: TextStyle(color: Colors.blue),
                         ),
-                        onPressed: () {
-                         context.read<ProofOfDeliveryProvider>().setSignatureData(controller.toPngBytes().toString());
-                          Navigator.pop(context);
+                        onPressed: () async {
+                          final bytes = await controller.toPngBytes();
+                          if (bytes != null) {
+                            context.read<ProofOfDeliveryProvider>().updateSignatureData(bytes);
+                            Navigator.pop(context);
+                          }
                         },
                       ),
                     ],
@@ -172,44 +186,47 @@ class ProofOfDeliveryProvider with ChangeNotifier {
       },
     );
   }
- 
- void setSignatureData(String data) {
-    signatureData = data;
-    notifyListeners();
-  }
-  
- 
+
   addImage({
     required XFile image,
     required String base64String,
     required String source,
   }) {
     _images.add(image);
-    _base64Images
-        .addEntries({'picture${_images.length}': base64String}.entries);
+    _base64Images.addEntries({'picture${_images.length}': base64String}.entries);
     _pictureSources.addEntries({'picture${_images.length}': source}.entries);
     notifyListeners();
   }
 
-    removeImage({
-    required XFile image,
-  }) {
+  removeImage({required XFile image}) {
     _images.remove(image);
     int index = _images.indexOf(image);
     _base64Images.remove('picture${index + 1}');
     _pictureSources.remove('picture${index + 1}');
     notifyListeners();
   }
+
   restoreToDefault() {
     _index = 0;
     _data = {};
     _images = [];
     _base64Images = {};
     _pictureSources = {};
+    resetSignatureState();
+    
   }
-   void setDeviceInfo(Map<String, dynamic> deviceInfo) {
+
+   backToDefault() {
+    _index = 0;
+    _data = {};
+    _images = [];
+    _base64Images = {};
+    _pictureSources = {};
+    //resetSignatureState();
+  }
+
+  void setDeviceInfo(Map<String, dynamic> deviceInfo) {
     _data['device'] = deviceInfo;
     notifyListeners();
   }
-
 }

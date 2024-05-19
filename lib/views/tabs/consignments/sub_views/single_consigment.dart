@@ -53,6 +53,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
 
         if (response.statusCode == 200) {
           final dynamic data = json.decode(response.body);
+           
           _consignmentStreamController.add(data);
         } else {
           _consignmentStreamController.addError('Failed to fetch data');

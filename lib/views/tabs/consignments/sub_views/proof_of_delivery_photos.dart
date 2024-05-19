@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable, unused_label
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -19,8 +21,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
    var snapshot = widget.data;
  
 
- Future<void> postData() async {
-  setState(() {
+   Future<void> postData() async {setState(() {
     isLoading = true;
   });
   AuthenticationState state =
@@ -203,7 +204,9 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
+            provider.backToDefault();
           },
+          
           icon: Icon(
             Icons.arrow_back_ios,
             size: 15.sp,
@@ -501,14 +504,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
               borderColor: AppColors.white,
       name: 'commentspho',
       hintText: "Enter Text",
-    //  initialValue: context
-    //                                 .read<ProofOfDeliveryProvider>()
-    //                                 .data
-    //                                 .containsKey('comments')
-    //                             ? context
-    //                                 .read<ProofOfDeliveryProvider>()
-    //                                 .data['comments']
-    //                             : null
+ 
                                  onChanged: (value) {
                     context.read<ProofOfDeliveryProvider>().data['comments'] = value;
                   },
@@ -530,6 +526,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
         ? () {
             
             postData();
+            
           }
         : (){},
     backgroundColor: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty

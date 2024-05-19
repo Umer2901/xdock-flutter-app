@@ -291,7 +291,9 @@ class _EditTimeState extends State<EditTime> {
                           width: 30.w,
                           child: CustomButton(
                             label: "Cancel",
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
                             backgroundColor: AppColors.white,
                             foregroundColor: AppColors.darkGrey,
                             borderColor: Colors.grey,
