@@ -262,6 +262,8 @@ class _LoginViewState extends State<LoginView> {
                               password: _formKey
                                   .currentState?.fields['password']?.value
                                   .trim(),
+                              database:
+                                  context.read<DatabaseProvider>().database,
                             );
                           }
                         }

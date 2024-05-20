@@ -42,7 +42,7 @@ class AppPages extends AppRoutes {
     ),
     GetPage(
       name: AppRoutes.preStartChecklist,
-      page: () => const PreStartChecklistView(),
+      page: () => const PreStartCheckListView(),
     ),
     GetPage(
       name: AppRoutes.consignmentMap,
@@ -59,6 +59,7 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.singleConsigment,
       page: () => const SingleConsigmentView(),
+      alignment: Get.arguments,
     ),
     GetPage(
       name: AppRoutes.proofOfDelivery,
@@ -67,12 +68,13 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.consigmentReorder,
       page: () => const MyConsigmentReorder(),
+      arguments: Get.arguments,
     ),
     GetPage(
       name: AppRoutes.Stopwatch,
       page: () => const EditTime(),
     ),
-     GetPage(
+    GetPage(
       name: AppRoutes.podphotos,
       page: () => const ProofOfDeliveryPhotos(),
     ),

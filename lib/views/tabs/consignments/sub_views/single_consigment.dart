@@ -1,10 +1,27 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:convert';
 import 'package:coldxpress/export.dart';
-import 'package:flutter/material.dart';
 
-class SingleConsigmentView extends StatelessWidget {
+class SingleConsigmentView extends StatefulWidget {
   const SingleConsigmentView({super.key});
+
+  @override
+  State<SingleConsigmentView> createState() => _SingleConsigmentViewState();
+}
+
+class _SingleConsigmentViewState extends State<SingleConsigmentView> {
+  late Map productTypes;
+  late Map deliveryAddresses;
+  late Map pickupAddresses;
+
+  @override
+  void initState() {
+    super.initState();
+    productTypes = json.decode(Get.arguments['product_types']);
+    deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
+    pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,47 +62,39 @@ class SingleConsigmentView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    surfaceTintColor: Colors.transparent,
-                    centerTitle: true,
-                    leading: const SizedBox.shrink(),
-                    title: IntrinsicHeight(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'ID: 123456',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          VerticalDivider(
-                            color: AppColors.black.withOpacity(0.5),
-                            thickness: 2,
-                          ),
-                          Text(
-                            'REF: 1234',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                    actions: [
-                      InkWell(
-                        onTap: () {},
-                        child: Container(
-                          width: 13.5.w,
-                          height: 6.h,
-                          decoration: BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(50.sp),
-                              border: Border.all()),
-                          child: SvgPicture.asset(
-                            AppSvgs.mapMarker,
-                            color: AppColors.black,
+                  IntrinsicHeight(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'ID: ${Get.arguments['id']}',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        VerticalDivider(
+                          color: AppColors.black.withOpacity(0.5),
+                          thickness: 2,
+                        ),
+                        Text(
+                          'REF: ${Get.arguments['customer_reference']}',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        InkWell(
+                          onTap: () {},
+                          child: Container(
+                            width: 13.5.w,
+                            height: 6.h,
+                            decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all()),
+                            child: SvgPicture.asset(
+                              AppSvgs.mapMarker,
+                              color: AppColors.black,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(
                     height: 2.h,
@@ -101,14 +110,16 @@ class SingleConsigmentView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8.sp),
                         ),
                         child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 2.w,
-                              vertical: 1.h,
-                            ),
-                            child: SizedBox(
-                                width: 16.w,
-                                height: 7.h,
-                                child: Image.asset(AppImages.cardboard))),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 2.w,
+                            vertical: 1.h,
+                          ),
+                          child: SizedBox(
+                            width: 16.w,
+                            height: 7.h,
+                            child: Image.asset(AppImages.cardboard),
+                          ),
+                        ),
                       ),
                       SizedBox(
                         width: 54.w,
@@ -116,20 +127,26 @@ class SingleConsigmentView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Ritchies IGA',
+                              (Get.arguments['consignment_type'] == 'delivery'
+                                      ? deliveryAddresses['company_name']
+                                      : pickupAddresses['company_name']) ??
+                                  'Not Provided',
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             Text(
-                              maxLines: 2,
+                              'Recipient: ${(Get.arguments['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              'Recipient: Drew Moran 830 Wellington road, Rowville',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
                             ),
+                            Text(
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? '${deliveryAddresses['street_address']}, ${deliveryAddresses['suburb']}'
+                                  : '${pickupAddresses['street_address']}, ${pickupAddresses['suburb']}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )
                           ],
                         ),
                       ),
@@ -159,8 +176,10 @@ class SingleConsigmentView extends StatelessWidget {
                       Get.toNamed(AppRoutes.Stopwatch);
                     },
                     child: CustomProductTypeAndTime(
-                      type: AppText.chilled,
-                      time: '10.00 - 12.00',
+                      type: (productTypes['id']) == 1 ? '1' : '2',
+                      time: Get.arguments['consignment_type'] == 'delivery'
+                          ? '${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}'
+                          : '${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}',
                       svgImage: SvgPicture.asset(AppSvgs.frozen),
                     ),
                   ),
@@ -203,34 +222,44 @@ class SingleConsigmentView extends StatelessWidget {
                         SizedBox(
                           height: 2.h,
                         ),
-                        const CustomOrderTracking(
+                        CustomOrderTracking(
                             title: "Supplier",
                             subText: 'Acme Corporation',
                             isLastStep: false,
-                            currentStep: 3,
+                            currentStep:
+                                Get.arguments['consignment_type'] == 'delivery'
+                                    ? 3
+                                    : 1,
                             stepIndex: 1),
-                        const CustomOrderTracking(
+                        CustomOrderTracking(
                           title: "Pickup",
                           isLastStep: false,
-                          currentStep: 3,
+                          currentStep:
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? 3
+                                  : 1,
                           stepIndex: 2,
-                          subText:
-                              'ColdXpress Transport 2071 portarlinton road, Drysdale',
+                          subText: pickupAddresses['full_address'],
                         ),
-                        const CustomOrderTracking(
+                        CustomOrderTracking(
                           title: "Out for Delivery",
                           isLastStep: false,
-                          currentStep: 3,
+                          currentStep:
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? 3
+                                  : 1,
                           stepIndex: 3,
                           subText: 'Driver: Abram Vetrovs',
                         ),
-                        const CustomOrderTracking(
+                        CustomOrderTracking(
                           title: "Drop off",
                           isLastStep: true,
-                          currentStep: 3,
+                          currentStep:
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? 3
+                                  : 1,
                           stepIndex: 4,
-                          subText:
-                              'Pronto Fine Food 830 wellington road, Rowville',
+                          subText: deliveryAddresses['full_address'],
                         ),
                       ],
                     ),
@@ -246,12 +275,12 @@ class SingleConsigmentView extends StatelessWidget {
                         children: [
                           CustomDeliveryDetailsContainer(
                             type: AppText.cartons,
-                            counts: '5',
+                            counts: '${Get.arguments['carton']}',
                             svgIcon: SvgPicture.asset(AppSvgs.carton),
                           ),
                           CustomDeliveryDetailsContainer(
                             type: AppText.pallets,
-                            counts: '5',
+                            counts: '${Get.arguments['pallet']}',
                             svgIcon: SvgPicture.asset(AppSvgs.palletBlue),
                           )
                         ],
@@ -264,13 +293,13 @@ class SingleConsigmentView extends StatelessWidget {
                         children: [
                           CustomDeliveryDetailsContainer(
                             type: AppText.space,
-                            counts: '5',
+                            counts: '${Get.arguments['space']}',
                             countType: 'sqft',
                             svgIcon: SvgPicture.asset(AppSvgs.space),
                           ),
                           CustomDeliveryDetailsContainer(
                             type: AppText.weight,
-                            counts: '5',
+                            counts: '${Get.arguments['weight']}',
                             countType: 'KG',
                             svgIcon: SvgPicture.asset(AppSvgs.weight),
                           )
@@ -288,7 +317,9 @@ class SingleConsigmentView extends StatelessWidget {
                         ),
                   ),
                   Text(
-                    AppText.specialInstructionsDetail,
+                    Get.arguments['special_instruction'] == ''
+                        ? 'Not Provided'
+                        : Get.arguments['special_instruction'],
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.black,
                         ),

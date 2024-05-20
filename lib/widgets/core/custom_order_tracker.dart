@@ -94,7 +94,7 @@ class _CustomOrderTrackingState extends State<CustomOrderTracking>
                 ),
                 widget.subText != '' && widget.subText != null
                     ? SizedBox(
-                        width: 50.w,
+                        width: 60.w,
                         child: Text(
                           widget.subText ?? '',
                           maxLines: 4,

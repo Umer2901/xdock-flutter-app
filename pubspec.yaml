@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  connectivity_plus: ^6.0.3
   cupertino_icons: ^1.0.6
   dropdown_search: ^5.0.6
   flutter:
@@ -45,6 +46,7 @@ dependencies:
   image_picker: ^1.0.7
   intl: ^0.18.1
   loading_indicator: ^3.1.1
+  path: ^1.9.0
   pinput: ^4.0.0
   progressive_time_picker: ^1.0.1
   provider: ^6.1.2
@@ -52,6 +54,7 @@ dependencies:
   shimmer: ^3.0.0
   signature: ^5.4.1
   sizer: ^2.0.15
+  sqflite: ^2.3.3+1
 
 dependency_overrides:
   form_builder_validators: ^9.1.0

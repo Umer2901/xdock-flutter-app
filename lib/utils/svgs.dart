@@ -1,7 +1,9 @@
 class AppSvgs {
   static const String password = 'assets/svg/password.svg';
+
   static const String checkList = 'assets/svg/checklist.svg';
-  static const String pallet = 'assets/svg/pallet.svg';
+  static const String boundpallets = 'assets/svg/pallet.svg';
+
   static const String palletDark = 'assets/svg/palletDark.svg';
   static const String palletBlue = 'assets/svg/palletBlue.svg';
   static const String cardboardBox = 'assets/svg/cardboardBox.svg';

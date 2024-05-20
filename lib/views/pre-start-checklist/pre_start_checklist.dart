@@ -10,68 +10,14 @@ part 'tabs/vehicle_check_tab.dart';
 part 'tabs/fridge_pan_check_tab.dart';
 part 'tabs/signature_confirm_tab.dart';
 
-class PreStartChecklistView extends StatefulWidget {
-  const PreStartChecklistView({super.key});
-
-  @override
-  State<PreStartChecklistView> createState() => _PreStartChecklistViewState();
-}
-
-class _PreStartChecklistViewState extends State<PreStartChecklistView> {
-  final StreamController<dynamic> _questionsStreamController =
-      StreamController<dynamic>();
-
-  late Timer _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-    _timer = Timer.periodic(
-      const Duration(seconds: 30),
-      (timer) {
-        fetchData();
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _questionsStreamController.close();
-    _timer.cancel();
-    super.dispose();
-  }
-
-  Future<void> fetchData() async {
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
-    if (state is Authenticated) {
-      try {
-        final response = await http.get(
-          Uri.parse(AppHost.indexPreChecklist),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
-
-        if (response.statusCode == 200) {
-          final dynamic data = json.decode(response.body);
-          _questionsStreamController.add(data);
-        } else {
-          _questionsStreamController.addError('Failed to fetch data');
-        }
-      } catch (e) {
-        if (!_questionsStreamController.isClosed) {
-          _questionsStreamController.addError(e.toString());
-        }
-      }
-    }
-  }
+class PreStartCheckListView extends StatelessWidget {
+  const PreStartCheckListView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: AppColors.preStartHeaderGradient,
@@ -120,8 +66,12 @@ class _PreStartChecklistViewState extends State<PreStartChecklistView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StreamBuilder(
-                stream: _questionsStreamController.stream,
+              FutureBuilder(
+                future: state is Authenticated
+                    ? PrecheckStatusService(
+                            context.read<DatabaseProvider>().database)
+                        .fetchPreChecklistQA(state.token)
+                    : null,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     return Expanded(

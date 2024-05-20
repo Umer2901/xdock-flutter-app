@@ -310,7 +310,6 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                                 return vehicle['vehicle_rego'];
                               }).toList(),
                               validator: (value) {
-                                debugPrint(value);
                                 if (value == null || value == '') {
                                   setState(() {
                                     isRegistrationError = true;
@@ -324,9 +323,13 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                                 return null;
                               },
                               onChanged: (value) {
-                                vehicleRegistration = widget.data['vehicles']
-                                    .firstWhere((vehicle) =>
-                                        vehicle['vehicle_rego'] == value);
+                                setState(() {
+                                  vehicleRegistration =
+                                      widget.data['vehicles'].firstWhere(
+                                    (vehicle) =>
+                                        vehicle['vehicle_rego'] == value,
+                                  );
+                                });
                               },
                               dropdownDecoratorProps: DropDownDecoratorProps(
                                 dropdownSearchDecoration: InputDecoration(

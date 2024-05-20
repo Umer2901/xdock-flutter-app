@@ -1,5 +1,5 @@
 // ignore_for_file: deprecated_member_use
-
+import 'dart:convert';
 import 'package:coldxpress/export.dart';
 
 class CustomMyConsigmentContainer extends StatefulWidget {
@@ -23,6 +23,10 @@ class _CustomMyConsigmentContainerState
 
   @override
   Widget build(BuildContext context) {
+    Map productTypes = json.decode(widget.consignment?['product_types']);
+    Map deliveryAddresses =
+        json.decode(widget.consignment?['delivery_addresses']);
+    Map pickupAddresses = json.decode(widget.consignment?['pickup_addresses']);
     return Padding(
       padding: EdgeInsets.only(top: 2.h),
       child: widget.isLoading
@@ -60,14 +64,6 @@ class _CustomMyConsigmentContainerState
                             vertical: 1.8.h,
                           ),
                           child: Text(
-                            // widget.consignment!['data']?.containsKey('2024-04-04') ==
-                            //         false
-                            //     ? '0'
-                            //     : widget
-                            //         .consignment!['data']['2024-04-04']
-                            //             ['consignments']
-                            //         .length
-                            //         .toString(),
                             widget.index.toString(),
                             style: Theme.of(context)
                                 .textTheme
@@ -86,23 +82,21 @@ class _CustomMyConsigmentContainerState
                             Text(
                               (widget.consignment!['consignment_type'] ==
                                           'delivery'
-                                      ? widget.consignment![
-                                          'delivery_addresses']['customer_name']
-                                      : widget.consignment!['pickup_addresses']
-                                          ['customer_name']) ??
+                                      ? deliveryAddresses['customer_name']
+                                      : pickupAddresses['customer_name']) ??
                                   'Not Provided',
                               maxLines: 1,
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             Text(
                               maxLines: 1,
-                              'Recipient: ${(widget.consignment!['consignment_type'] == 'delivery' ? widget.consignment!['delivery_addresses']['customer_name'] : widget.consignment!['pickup_addresses']['customer_name']) ?? 'Not Provided'}',
+                              'Recipient: ${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              '${(widget.consignment!['consignment_type'] == 'delivery' ? widget.consignment!['delivery_addresses']['street_address'] : widget.consignment!['pickup_addresses']['street_address']) ?? 'Not Provided'}',
+                              '${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['street_address'] : pickupAddresses['street_address']) ?? 'Not Provided'}',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
@@ -142,11 +136,10 @@ class _CustomMyConsigmentContainerState
                       Get.toNamed(AppRoutes.Stopwatch);
                     },
                     child: CustomProductTypeAndTime(
-                      type:
-                          widget.consignment!['product_types']['id'].toString(),
+                      type: productTypes['id'].toString(),
                       time:
-                          '${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(widget.consignment!['delivery_addresses']['service_time_start'])) : DateFormat('hh.mm').format(DateTime.parse(widget.consignment!['pickup_addresses']['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(widget.consignment!['delivery_addresses']['service_time_end'])) : DateFormat('hh.mm').format(DateTime.parse(widget.consignment!['pickup_addresses']['service_time_end'])))}',
-                      svgImage: widget.consignment!['product_types']['id'] == 1
+                          '${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
+                      svgImage: productTypes['id'] == 1
                           ? SvgPicture.asset(AppSvgs.chilled)
                           : SvgPicture.asset(AppSvgs.frozen),
                     ),
@@ -173,10 +166,8 @@ class _CustomMyConsigmentContainerState
                                   value: (widget.consignment![
                                                   'consignment_type'] ==
                                               'delivery'
-                                          ? widget.consignment![
-                                              'delivery_addresses']['suburb']
-                                          : widget.consignment![
-                                              'pickup_addresses']['suburb']) ??
+                                          ? deliveryAddresses['suburb']
+                                          : pickupAddresses['suburb']) ??
                                       'Not Provided',
                                 ),
                                 SizedBox(
@@ -187,12 +178,8 @@ class _CustomMyConsigmentContainerState
                                   value: (widget.consignment![
                                                   'consignment_type'] ==
                                               'delivery'
-                                          ? widget.consignment![
-                                                  'delivery_addresses']
-                                              ['customer_name']
-                                          : widget.consignment![
-                                                  'pickup_addresses']
-                                              ['customer_name']) ??
+                                          ? deliveryAddresses['customer_name']
+                                          : pickupAddresses['customer_name']) ??
                                       'Not Provided',
                                 ),
                                 SizedBox(
@@ -291,7 +278,7 @@ class _CustomMyConsigmentContainerState
                                 backgroundColor: AppColors.belowMidGreyTwo,
                                 radius: 8.w,
                                 child: SvgPicture.asset(
-                                  AppSvgs.pallet,
+                                  AppSvgs.boundpallets,
                                   height: 3.h,
                                 ),
                               ),
