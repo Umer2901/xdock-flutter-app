@@ -874,10 +874,12 @@ Consumer<ProofOfDeliveryProvider>(
             final images = context.read<ProofOfDeliveryProvider>().base64Images;
             final consignments = widget.data['data']['consignments'];
             final driver_id = widget.data['data']['driver_id'];
+            final address_id = widget.data['data']['address_id'];
             final date_delivered = widget.data['data']['date_delivered'];
             final space = widget.data['data']['space'];
             final weight = widget.data['data']['weight'];
             final customer_reference = widget.data['data']['customer_reference'];
+            final service_window = widget.data['data']['service_window'];
 
             final temp = {
               "pod_type": "partial",
@@ -901,6 +903,8 @@ Consumer<ProofOfDeliveryProvider>(
               "date_delivered": date_delivered,
               "space": space,
               "weight": weight,
+              "address_id": address_id,
+              "service_window": service_window,
               "customer_reference": customer_reference,
               "comments": comments,
               "pictures": images,
@@ -1285,9 +1289,11 @@ Row(
         final consignments = widget.data['data']['consignments'];
         final driver_id = widget.data['data']['driver_id'];
         final date_delivered = widget.data['data']['date_delivered'];
+        final address_id = widget.data['data']['address_id'];
         final space = widget.data['data']['space'];
         final weight= widget.data['data']['weight'];
         final customer_reference= widget.data['data']['customer_reference'];
+        final service_window = widget.data['data']['service_window'];
 
         final temp = {
           "pod_type": "partial",
@@ -1298,6 +1304,7 @@ Row(
           "lengthofDelivery": lengthofDelivery,
           "cartons": cartons,
           "pallets": pallets,
+          "service_window":service_window,
           "service_time_start": service_time_start,
           "service_time_end": service_time_end,
           "signature": signature,
@@ -1314,6 +1321,7 @@ Row(
           "weight": weight,
           "customer_reference": customer_reference,
           "comments": comments,
+          "address_id": address_id,
           "pictures": images,
         };
 

@@ -76,6 +76,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     notifyListeners();
   }
 
+
   void updateOrderRejectionReason(String reason) {
     _selectedOrderRejectionReasons.clear();
     _selectedOrderRejectionReasons.add(reason);
@@ -122,6 +123,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
                         ),
                         onPressed: () {
                           Navigator.pop(context);
+                           controller.clear();
                           context.read<ProofOfDeliveryProvider>().resetSignatureState();
                         },
                       ),
