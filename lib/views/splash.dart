@@ -18,9 +18,16 @@ class _SplashViewState extends State<SplashView> {
   }
 
   config() async {
-    await context.read<DatabaseProvider>().initDatabase().whenComplete(() {
+    await context
+        .read<DatabaseProvider>()
+        .initDatabase()
+        .whenComplete(() async {
       context.read<LocationProvider>().getCurrentLocation();
-      BlocProvider.of<AuthenticationCubit>(context).check();
+      await BlocProvider.of<AuthenticationCubit>(context)
+          .check()
+          .whenComplete(() {
+        onStart();
+      });
     });
   }
 

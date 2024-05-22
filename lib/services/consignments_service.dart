@@ -24,9 +24,11 @@ class ConsignmentService {
         if (response.statusCode == 200) {
           final dynamic data = json.decode(response.body);
           if (data['status'] == 'success') {
-            List<dynamic> submissionData = data['data']
-                    [DateFormat('yyyy-MM-dd').format(DateTime.now())]
-                ['consignments'];
+            // List<dynamic> submissionData = data['data']
+            //         [DateFormat('yyyy-MM-dd').format(DateTime.now())]
+            //     ['consignments'];
+            List<dynamic> submissionData =
+                data['data']['2024-04-04']['consignments'];
             for (var dataIteration in submissionData) {
               dataIteration['delivery_addresses'] = json.encode(
                 dataIteration['delivery_addresses'],
@@ -73,7 +75,7 @@ class ConsignmentService {
     } on SocketException catch (e) {
       throw Exception('No Internet ($e)');
     } catch (e) {
-      throw Exception('Unsuccessful to fetch submission data!');
+      throw Exception('Unsuccessful to fetch submission data! $e');
     }
   }
 }

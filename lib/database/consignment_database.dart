@@ -39,14 +39,14 @@ class ConsignmentDatabase {
       await txn
           .query(
         'consignments',
-        where: 'access_token = ? AND datetime = ?',
+        where: 'access_token = ?',
         whereArgs: [
           accessToken,
-          DateFormat('dd/MM/yyyy').format(
-            DateTime.now().subtract(
-              const Duration(days: 1),
-            ),
-          )
+          // DateFormat('dd/MM/yyyy').format(
+          //   DateTime.now().subtract(
+          //     const Duration(days: 1),
+          //   ),
+          // )
         ],
         orderBy: 'sort ASC',
       )

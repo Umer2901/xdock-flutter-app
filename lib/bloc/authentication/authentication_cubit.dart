@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
-import 'package:coldxpress/services/user_service.dart';
 import 'package:http/http.dart' as http;
 
 part 'authentication_state.dart';
@@ -45,7 +44,6 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
         final String token = responseData['access_token'];
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
-        print(token.toString());
         await UserService(database).fetchAndStore(token);
         emit(Authenticated(token: token));
       } else {
