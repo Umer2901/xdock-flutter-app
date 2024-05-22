@@ -17,6 +17,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   void initState() {
     super.initState();
     _consignments = Get.arguments;
+    print('Before Consignments $_consignments');
   }
 
   // Future<void> reorder(var data) async {
@@ -139,13 +140,19 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                         if (newIndex > oldIndex) {
                           newIndex -= 1;
                         }
+                        if (newIndex < oldIndex) {
+                          newIndex += 1;
+                        }
+                        print('Index New $newIndex $oldIndex');
                         final item = _consignments.removeAt(oldIndex);
                         _consignments.insert(newIndex, item);
+                        consignmentIds = [];
+                        for (var consignment in _consignments) {
+                          consignmentIds.add(consignment['id']);
+                        }
+                        print('After Consignments $_consignments');
                       });
-                      consignmentIds = [];
-                      for (var consignment in _consignments) {
-                        consignmentIds.add(consignment['id']);
-                      }
+                      print(consignmentIds);
                     },
                     children: List.generate(
                       _consignments.length,
@@ -159,43 +166,25 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                       },
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 4.h,
-                    ),
-                    child: SizedBox(
-                      width: 60.w,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Image(
-                            image: AssetImage(
-                              AppImages.cardboard,
+                  GestureDetector(
+                    onTap: () {
+                      _scrollController.animateTo(
+                        0.0,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2.h),
+                      child: Text(
+                        AppText.returnToTop,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.midBlue,
+                              fontWeight: FontWeight.w700,
                             ),
-                          ),
-                          SizedBox(
-                            height: 3.h,
-                          ),
-                          Text(
-                            'Consignment Completed!',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          Text(
-                            'Get back safe, and remember to return your pallets.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
-                          ),
-                        ],
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ],
