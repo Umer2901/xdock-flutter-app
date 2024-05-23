@@ -905,8 +905,8 @@ Consumer<ProofOfDeliveryProvider>(
               "pallets": pallets,
               "service_time_start": service_time_start,
               "service_time_end": service_time_end,
-              //"signature": signature,
-            //  "pictureSources": pictureSources,
+              "signature": signature,
+            "pictureSources": pictureSources,
               "latitude": latitude,
               "longitude": longitude,
               "current_app_version": "3.15.2",
@@ -926,7 +926,7 @@ Consumer<ProofOfDeliveryProvider>(
               "service_window": service_window,
               "customer_reference": customer_reference,
               "comments": comments,
-             // "pictures": images,
+             "pictures": images,
             };
 
             context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
