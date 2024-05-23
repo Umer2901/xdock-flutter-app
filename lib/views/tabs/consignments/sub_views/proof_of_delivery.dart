@@ -1349,19 +1349,18 @@ Row(
           "comments": comments,
           "address_id": address_id,
           "pictures": images,
-                  "platforms": [
-        "android",
-        "cordova",
-        "mobile",
-        "hybrid"
-    ],
+         "lodgeError": { "comments":  comments, "errorPictures":   images, "errorPictureSources":  pictureSources,  },
+          "platforms": [
+           "android",
+           "cordova",
+           "mobile",
+           "hybrid"
+            ],
         };
 
         context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
        Get.toNamed(AppRoutes.podphotos, arguments: Get.arguments);
-        // Navigator.push(
-        //       context,
-        //       MaterialPageRoute(builder: (context) =>  ProofOfDeliveryPhotos(data: snapshot)),);
+      
       } else {
         print("Form key is null.");
       }
@@ -1373,6 +1372,7 @@ Row(
 ),
 
     ),
+  
   ],
 ),
 
