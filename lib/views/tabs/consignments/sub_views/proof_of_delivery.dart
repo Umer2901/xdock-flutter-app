@@ -452,6 +452,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                     onChanged: (newValue) {
                       
                       context.read<ProofOfDeliveryProvider>().updateSelectedDeliveryType(newValue!);
+                      provider.lpc(context, controller);
+                       
                     },
                     items: [
                       DropdownMenuItem(
@@ -765,12 +767,15 @@ Consumer<ProofOfDeliveryProvider>(
                     ),
                     child: Column(
                       children: [
-                        Signature(
-                          controller: controller,
-                          width: 90.w,
-                          height: 20.h,
-                          backgroundColor: Colors.transparent,
-                        ),
+                        IgnorePointer(
+                      child: Signature(
+                        dynamicPressureSupported: false,
+                        controller: controller,
+                        width: 90.w,
+                        height: 20.h,
+                        backgroundColor: Colors.transparent,
+                      ),
+                    ),
                         const Divider(
                           height: 1,
                           thickness: 2,
@@ -1174,103 +1179,106 @@ Consumer<ProofOfDeliveryProvider>(
                             height: 1.h,
                           ),
 Consumer<ProofOfDeliveryProvider>(
-        builder: (context, provider, _) {
-          return SizedBox(
-            width: 90.w,
-            child: GestureDetector(
-              onTap: () async{
-                
-               if (!provider.showSignature) {
-      provider.setShowSignature(true);
-      provider.showSignaturePopup(context, controller);
-      final bytes = await controller.toPngBytes();
-      if (bytes != null) {
-        provider.updateSignatureData(bytes);
-        provider.addEntities({
-          "signature": 'data:image/png;base64, ${base64Encode(bytes)}',
-        });
-      }
-                }
-              },
-                          child: Stack(
-                            children: [
-                              if (controller.isEmpty && !provider.showSignature)
-                  Container(
-                    height: 25.h,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.navyBlue),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(5.sp),
+  builder: (context, provider, _) {
+    return SizedBox(
+      width: 90.w,
+      child: GestureDetector(
+        onTap: () async {
+          // Check if the signature is not empty and showSignature is false
+          if (controller.isEmpty && !provider.showSignature) {
+            provider.setShowSignature(true);
+            provider.showSignaturePopup(context, controller);
+            final bytes = await controller.toPngBytes();
+            if (bytes != null) {
+              provider.updateSignatureData(bytes);
+              provider.addEntities({
+                "signature": 'data:image/png;base64, ${base64Encode(bytes)}',
+              });
+            }
+          }
+        },
+        child: Stack(
+          children: [
+            if (controller.isEmpty && !provider.showSignature)
+              Container(
+                height: 25.h,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.navyBlue),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.sp),
+                  ),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: 1.h,
+                  horizontal: 2.w,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 50.sp,
+                      height: 50.sp,
+                      child: Image.asset(
+                        AppImages.handWithPen,
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: 1.h,
-                      horizontal: 2.w,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 50.sp,
-                          height: 50.sp,
-                          child: Image.asset(
-                            AppImages.handWithPen,
-                          ),
-                        ),
-                        Text(
-                          AppText.tapHereToSign,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        )
-                      ],
-                    ),
+                    Text(
+                      AppText.tapHereToSign,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    )
+                  ],
+                ),
+              ),
+            if (provider.showSignature)
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.navyBlue),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.sp),
                   ),
-                              if (provider.showSignature)
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.navyBlue),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(5.sp),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: 1.h,
+                  horizontal: 2.w,
+                ),
+                child: Column(
+                  children: [
+                    IgnorePointer(
+                      child: Signature(
+                        dynamicPressureSupported: false,
+                        controller: controller,
+                        width: 90.w,
+                        height: 20.h,
+                        backgroundColor: Colors.transparent,
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: 1.h,
-                      horizontal: 2.w,
+                    const Divider(
+                      height: 1,
+                      thickness: 2,
+                      color: AppColors.grey,
                     ),
-                    child: Column(
-                      children: [
-                        Signature(
-                          controller: controller,
-                          width: 90.w,
-                          height: 20.h,
-                          backgroundColor: Colors.transparent,
-                        ),
-                        const Divider(
-                          height: 1,
-                          thickness: 2,
-                          color: AppColors.grey,
-                        ),
-                        CupertinoButton(
-                          child: const Text(
-                            "Redo",
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                          onPressed: () {
-                          provider.clearSignatureAndShowPopup(context, controller);
-                          },
-                        ),
-                      ],
+                    CupertinoButton(
+                      child: const Text(
+                        "Redo",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      onPressed: () {
+                        provider.clearSignatureAndShowPopup(context, controller);
+                      },
                     ),
-                  ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  },
+),
 
                         
                          SizedBox(

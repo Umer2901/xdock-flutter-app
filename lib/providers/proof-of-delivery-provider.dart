@@ -60,6 +60,18 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     notifyListeners();
     
   }
+    void lpc(BuildContext context, SignatureController controller) {
+    controller.clear();
+    _signatureData = null;
+    _showSignature = false;
+    _index = 0;
+    _data = {};
+    _images = [];
+    _base64Images = {};
+    _pictureSources = {};
+    notifyListeners();
+    
+  }
 
   void updateSelectedDeliveryType(DeliveryType type) {
     _selectedDeliveryType = type;
@@ -224,7 +236,6 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _images = [];
     _base64Images = {};
     _pictureSources = {};
-    //resetSignatureState();
   }
 
   void setDeviceInfo(Map<String, dynamic> deviceInfo) {
