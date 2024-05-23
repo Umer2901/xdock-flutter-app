@@ -7,21 +7,31 @@ import 'package:http/http.dart' as http;
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 class ProofOfDeliveryPhotos extends StatefulWidget {
-  final dynamic data;
-  const ProofOfDeliveryPhotos({super.key, required this.data});
+  
+  const ProofOfDeliveryPhotos({super.key,required arguments});
 
   @override
   State<ProofOfDeliveryPhotos> createState() => _ProofOfDeliveryPhotosState();
 }
 bool isLoading = false;
+ late Map productTypes;
+  late Map deliveryAddresses;
+  late Map pickupAddresses;
 class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
+    @override
+    void initState() {
+    super.initState();
+     productTypes = json.decode(Get.arguments['product_types']);
+    deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
+    pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+    
+  }
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
-   var snapshot = widget.data;
  
 
-   Future<void> postData() async {setState(() {
+    Future<void> postData() async {setState(() {
     isLoading = true;
   });
   AuthenticationState state =
@@ -235,56 +245,44 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    surfaceTintColor: Colors.transparent,
-                    centerTitle: true,
-                    leading: const SizedBox.shrink(),
-                    title: IntrinsicHeight(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                           Text(
-                            'ID: ${widget.data['data']['id']}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall,
-                          ),
-                          VerticalDivider(
-                            color: AppColors.black.withOpacity(0.5),
-                            thickness: 2,
-                          ),
-                          Text(
-                            'REF: ${widget.data['data']['customer_reference']}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall,
-                          ),
-                        ],
-                      ),
+                  IntrinsicHeight(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                           'ID: ${Get.arguments?['id'] ?? 'Not Provided'}',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        VerticalDivider(
+                          color: AppColors.black.withOpacity(0.5),
+                          thickness: 2,
+                        ),
+                       Text(
+                      'REF: ${Get.arguments?['customer_reference'] ?? 'Not Provided'}',
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    actions: [
-                      InkWell(
-                        onTap: () {},
-                        child: Container(
-                          width: 13.5.w,
-                          height: 6.h,
-                          decoration: BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(50.sp),
-                              border: Border.all()),
-                          child: SvgPicture.asset(
-                            AppSvgs.journey,
-                            color: AppColors.blue,
+                        InkWell(
+                          onTap: () {},
+                          child: Container(
+                            width: 13.5.w,
+                            height: 6.h,
+                            decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all()),
+                            child: SvgPicture.asset(
+                              AppSvgs.mapMarker,
+                              color: AppColors.black,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(
                     height: 2.h,
                   ),
-      Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
@@ -295,47 +293,43 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                           borderRadius: BorderRadius.circular(8.sp),
                         ),
                         child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 2.w,
-                              vertical: 1.h,
-                            ),
-                            child: SizedBox(
-                                width: 16.w,
-                                height: 7.h,
-                                child: Image.asset(AppImages.cardboard))),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 2.w,
+                            vertical: 1.h,
+                          ),
+                          child: SizedBox(
+                            width: 16.w,
+                            height: 7.h,
+                            child: Image.asset(AppImages.cardboard),
+                          ),
+                        ),
                       ),
                       SizedBox(
                         width: 54.w,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                             Text(
-                              (widget.data['data']['consignment_type'] ==
-                                          'delivery'
-                                      ? widget.data['data']['delivery_addresses']
-                                          ['company_name']
-                                      : widget.data['data']['pickup_addresses']
-                                          ['company_name']) ??
+                            Text(
+                              (Get.arguments?['consignment_type'] == 'delivery'
+                                      ? deliveryAddresses['company_name']
+                                      : pickupAddresses['company_name']) ??
                                   'Not Provided',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium,
+                              style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             Text(
-                              'Recipient: ${(widget.data['data']['consignment_type'] == 'delivery' ? widget.data['data']['delivery_addresses']['customer_name'] : widget.data['data']['pickup_addresses']['customer_name']) ?? 'Not Provided'}',
+                              'Recipient: ${(Get.arguments?['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
                               style: Theme.of(context).textTheme.bodySmall,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              widget.data['data']['consignment_type'] ==
-                                      'delivery'
-                                  ? '${widget.data['data']['delivery_addresses']['street_address']}, ${widget.data['data']['delivery_addresses']['suburb']}'
-                                  : '${widget.data['data']['pickup_addresses']['street_address']}, ${widget.data['data']['pickup_addresses']['suburb']}',
+                              Get.arguments?['consignment_type'] == 'delivery'
+                                  ? '${deliveryAddresses['street_address']}, ${deliveryAddresses['suburb']}'
+                                  : '${pickupAddresses['street_address']}, ${pickupAddresses['suburb']}',
                               style: Theme.of(context).textTheme.bodySmall,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                                      )
+                            )
                           ],
                         ),
                       ),

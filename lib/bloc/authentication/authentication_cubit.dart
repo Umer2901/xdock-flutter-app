@@ -22,7 +22,10 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     }
   }
 
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login(
+      {required String email,
+      required String password,
+      required Database database}) async {
     emit(Authenticating());
     try {
       final response = await http.post(
@@ -36,12 +39,12 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
           'password': password,
         }),
       );
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         final String token = responseData['access_token'];
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
+        await UserService(database).fetchAndStore(token);
         emit(Authenticated(token: token));
       } else {
         final Map<String, dynamic> responseData = json.decode(response.body);

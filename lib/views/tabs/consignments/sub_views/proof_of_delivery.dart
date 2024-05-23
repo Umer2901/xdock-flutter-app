@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery_photos.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:coldxpress/export.dart';
@@ -9,9 +8,8 @@ import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 
 class ProofOfDeliveryView extends StatefulWidget {
-final dynamic data;
 
-  const ProofOfDeliveryView({super.key, this.data});
+  const ProofOfDeliveryView({super.key, required arguments});
   @override
   State<ProofOfDeliveryView> createState() => _ProofOfDeliveryViewState();
 }
@@ -27,12 +25,18 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool isLoading = false;
   Map<String, dynamic> deviceinfo = {};
-
+  late Map productTypes;
+  late Map deliveryAddresses;
+  late Map pickupAddresses;
   @override
   void initState() {
     super.initState();
    _setDeviceInfo();
     config();
+     productTypes = json.decode(Get.arguments['product_types']);
+    deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
+    pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+    
   }
  config() async {
     context.read<LocationProvider>().getCurrentLocation();
@@ -80,22 +84,30 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   @override
   Widget build(BuildContext context) {
       var provider = Provider.of<ProofOfDeliveryProvider>(context);
-      var snapshot = widget.data;
+  //  print({Get.arguments});
+  //  print("2 ${pickupAddresses}");
+  //  print(productTypes);
+  //  print("3${deliveryAddresses}");
+
       bool _isValid() {
   final cartons = _formKey.currentState!.fields['cartons']!.value;
   final pallets = _formKey.currentState!.fields['pallets']!.value;
+  final temperature = _formKey.currentState!.fields['temp']!.value;
+  final lengthofDelivery = _formKey.currentState!.fields['length']!.value;
   final receiverFirstName = _formKey.currentState!.fields['receiverFirstName']!.value;
   final receiverLastName = _formKey.currentState!.fields['receiverLastName']!.value;
   final signature = provider.signature;
   return cartons != null &&
          pallets != null &&
+         temperature != null &&
+         lengthofDelivery != null &&
          receiverFirstName != null &&
          receiverLastName != null &&
          signature != null;
+        
 }
       //for none only
- Future<void> postData() async {
-  setState(() {
+ Future<void> postData() async {setState(() {
     isLoading = true;
   });
   AuthenticationState state =
@@ -190,17 +202,35 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
               backgroundColor: AppColors.white,
               actions: <Widget>[
                 Center(
-                  child: CustomButton(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomButton(
                     height: 5.h,
                     width: 30.w,
-                    label: 'CLOSE',
-                    backgroundColor: AppColors.blue,
-                    borderColor: AppColors.blue,
-                    foregroundColor: AppColors.white,
+                    label: 'Edit',
+                    //foregroundColor: AppColors.black
+                    backgroundColor: AppColors.white,
+                    borderColor: AppColors.black,
+                    foregroundColor: AppColors.black,
                     onPressed: () async {
-                      context.read<ProofOfDeliveryProvider>().restoreToDefault();
-                      Get.offAllNamed(AppRoutes.dashboard);
+                      Navigator.pop(context);
+                      Navigator.pop(context);
                     },
+                  ),
+                      CustomButton(
+                        height: 5.h,
+                        width: 30.w,
+                        label: 'CLOSE',
+                        backgroundColor: AppColors.blue,
+                        borderColor: AppColors.blue,
+                        foregroundColor: AppColors.white,
+                        onPressed: () async {
+                          context.read<ProofOfDeliveryProvider>().restoreToDefault();
+                          Get.offAllNamed(AppRoutes.dashboard);
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -251,7 +281,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     }
   }
 }
-
+   
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -289,55 +319,44 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
             child: Center(
               child: FormBuilder(
                       key: _formKey,
+                     
                 child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AppBar(
-                          backgroundColor: Colors.transparent,
-                          surfaceTintColor: Colors.transparent,
-                          centerTitle: true,
-                          leading: const SizedBox.shrink(),
-                          title: IntrinsicHeight(
-                            child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'ID: ${widget.data['data']['id']}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall,
-                          ),
-                          VerticalDivider(
-                            color: AppColors.black.withOpacity(0.5),
-                            thickness: 2,
-                          ),
-                          Text(
-                            'REF: ${widget.data['data']['customer_reference']}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall,
-                          ),
-                        ],
-                      ),
+                       
+                    IntrinsicHeight(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                           'ID: ${Get.arguments?['id'] ?? 'Not Provided'}',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        VerticalDivider(
+                          color: AppColors.black.withOpacity(0.5),
+                          thickness: 2,
+                        ),
+                       Text(
+                      'REF: ${Get.arguments?['customer_reference'] ?? 'Not Provided'}',
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    actions: [
-                      InkWell(
-                        onTap: () {},
-                        child: Container(
-                          width: 13.5.w,
-                          height: 6.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(50.sp),
-                            border: Border.all(),
-                          ),
-                          child: SvgPicture.asset(
-                            AppSvgs.journey,
-                            color: AppColors.blue,
+                        InkWell(
+                          onTap: () {},
+                          child: Container(
+                            width: 13.5.w,
+                            height: 6.h,
+                            decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all()),
+                            child: SvgPicture.asset(
+                              AppSvgs.mapMarker,
+                              color: AppColors.black,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(
                     height: 2.h,
@@ -370,53 +389,47 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              (widget.data['data']['consignment_type'] ==
-                                          'delivery'
-                                      ? widget.data['data']['delivery_addresses']
-                                          ['company_name']
-                                      : widget.data['data']['pickup_addresses']
-                                          ['company_name']) ??
+                              (Get.arguments?['consignment_type'] == 'delivery'
+                                      ? deliveryAddresses['company_name']
+                                      : pickupAddresses['company_name']) ??
                                   'Not Provided',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium,
+                              style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             Text(
-                              'Recipient: ${(widget.data['data']['consignment_type'] == 'delivery' ? widget.data['data']['delivery_addresses']['customer_name'] : widget.data['data']['pickup_addresses']['customer_name']) ?? 'Not Provided'}',
+                              'Recipient: ${(Get.arguments?['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
                               style: Theme.of(context).textTheme.bodySmall,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              widget.data['data']['consignment_type'] ==
-                                      'delivery'
-                                  ? '${widget.data['data']['delivery_addresses']['street_address']}, ${widget.data['data']['delivery_addresses']['suburb']}'
-                                  : '${widget.data['data']['pickup_addresses']['street_address']}, ${widget.data['data']['pickup_addresses']['suburb']}',
+                              Get.arguments?['consignment_type'] == 'delivery'
+                                  ? '${deliveryAddresses['street_address']}, ${deliveryAddresses['suburb']}'
+                                  : '${pickupAddresses['street_address']}, ${pickupAddresses['suburb']}',
                               style: Theme.of(context).textTheme.bodySmall,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                                      )
-                                ],
-                              ),
-                            ),
-                            InkWell(
-                              onTap: () {},
-                              child: Container(
-                                width: 13.5.w,
-                                height: 6.h,
-                                decoration: BoxDecoration(
-                                  color: AppColors.black.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(50.sp),
-                                ),
-                                child: Icon(
-                                  Icons.call,
-                                  color: AppColors.white,
-                                  size: 4.h,
-                                ),
-                              ),
-                            ),
+                            )
                           ],
                         ),
+                      ),
+                      InkWell(
+                        onTap: () {},
+                        child: Container(
+                          width: 13.5.w,
+                          height: 6.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(50.sp),
+                          ),
+                          child: Icon(
+                            Icons.call,
+                            color: AppColors.white,
+                            size: 4.h,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                         SizedBox(
                           height: 2.h,
                         ),
@@ -435,7 +448,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                     name: 'deliveryType',
                     hintText: 'Please Select',
                     fillColor: AppColors.white,
-                   // value: Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType,
+                
                     onChanged: (newValue) {
                       
                       context.read<ProofOfDeliveryProvider>().updateSelectedDeliveryType(newValue!);
@@ -511,7 +524,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                               PalletContainer(
                                 name: 'cartons',
                                 heading: AppText.cartons,
-                                icon: SvgPicture.asset(AppSvgs.pallet),
+                                  icon: SvgPicture.asset(AppSvgs.boundpallets),
                                 hintText: '0',
                                  initialValue: context
                                         .read<ProofOfDeliveryProvider>()
@@ -521,7 +534,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                         .read<ProofOfDeliveryProvider>()
                                         .data['cartons'])
                                     : 0,
-                                totalPallet: widget.data['data']['carton'],
+                                 totalPallet: int.tryParse(Get.arguments?['carton']?.toString() ?? '0') ?? 0,
                                   
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 4.w,
@@ -541,8 +554,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                         .data['pallet'])
                                     : 0,
                                     
-                                totalPallet: widget.data['data']['pallet'],
-                               
+                              
+                                totalPallet: int.tryParse(Get.arguments?['pallet']?.toString() ?? '0') ?? 0,
                               ),
                             
                         
@@ -797,8 +810,8 @@ Consumer<ProofOfDeliveryProvider>(
                                        CustomButton(
                                         label: "Next",
                                       onPressed: () {
-        if (int.parse(_formKey.currentState!.fields['cartons']!.value.toString()) < widget.data['data']['carton'] ||
-            int.parse(_formKey.currentState!.fields['pallets']!.value.toString()) < widget.data['data']['pallet']) {
+        if (int.parse(_formKey.currentState!.fields['cartons']!.value.toString()) < Get.arguments['carton'] ||
+            int.parse(_formKey.currentState!.fields['pallets']!.value.toString()) < Get.arguments['pallet']) {
           showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -872,17 +885,17 @@ Consumer<ProofOfDeliveryProvider>(
             final latitude = context.read<LocationProvider>().current!.latitude;
             final longitude = context.read<LocationProvider>().current!.longitude;
             final images = context.read<ProofOfDeliveryProvider>().base64Images;
-            final consignments = widget.data['data']['consignments'];
-            final driver_id = widget.data['data']['driver_id'];
-            final address_id = widget.data['data']['address_id'];
-            final date_delivered = widget.data['data']['date_delivered'];
-            final space = widget.data['data']['space'];
-            final weight = widget.data['data']['weight'];
-            final customer_reference = widget.data['data']['customer_reference'];
-            final service_window = widget.data['data']['service_window'];
+            final consignments =  Get.arguments['consignments'];
+            final driver_id =  Get.arguments['driver_id'];
+            final address_id =  Get.arguments['address_id'];
+            final date_delivered =  Get.arguments['date_delivered'];
+            final space =  Get.arguments['space'];
+            final weight = Get.arguments['weight'];
+            final customer_reference = Get.arguments['customer_reference'];
+            final service_window = Get.arguments['service_window'];
 
             final temp = {
-              "pod_type": "partial",
+              "pod_type": "full",
               "temperature": temperature,
               "first_name": first_name,
               "last_name": last_name,
@@ -892,12 +905,18 @@ Consumer<ProofOfDeliveryProvider>(
               "pallets": pallets,
               "service_time_start": service_time_start,
               "service_time_end": service_time_end,
-              "signature": signature,
-              "pictureSources": pictureSources,
+              //"signature": signature,
+            //  "pictureSources": pictureSources,
               "latitude": latitude,
               "longitude": longitude,
               "current_app_version": "3.15.2",
               "app_version": "3.15.2",
+              "platforms": [
+        "android",
+        "cordova",
+        "mobile",
+        "hybrid"
+    ],
               "consignments": consignments,
               "driver_id": driver_id,
               "date_delivered": date_delivered,
@@ -907,14 +926,13 @@ Consumer<ProofOfDeliveryProvider>(
               "service_window": service_window,
               "customer_reference": customer_reference,
               "comments": comments,
-              "pictures": images,
+             // "pictures": images,
             };
 
             context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProofOfDeliveryPhotos(data: snapshot)),
-            );
+
+       
+            Get.toNamed(AppRoutes.podphotos, arguments: Get.arguments);
           }
         }
       },
@@ -947,10 +965,10 @@ Consumer<ProofOfDeliveryProvider>(
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                                 PalletContainer(
+                                PalletContainer(
                                 name: 'cartons',
                                 heading: AppText.cartons,
-                                icon: SvgPicture.asset(AppSvgs.pallet),
+                                  icon: SvgPicture.asset(AppSvgs.boundpallets),
                                 hintText: '0',
                                  initialValue: context
                                         .read<ProofOfDeliveryProvider>()
@@ -960,7 +978,7 @@ Consumer<ProofOfDeliveryProvider>(
                                         .read<ProofOfDeliveryProvider>()
                                         .data['cartons'])
                                     : 0,
-                                totalPallet: widget.data['data']['carton'],
+                                 totalPallet: int.tryParse(Get.arguments?['carton']?.toString() ?? '0') ?? 0,
                                   
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 4.w,
@@ -980,8 +998,8 @@ Consumer<ProofOfDeliveryProvider>(
                                         .data['pallet'])
                                     : 0,
                                     
-                                totalPallet: widget.data['data']['pallet'],
-                               
+                              
+                                totalPallet: int.tryParse(Get.arguments?['pallet']?.toString() ?? '0') ?? 0,
                               ),
                             ],
                           ),
@@ -1286,14 +1304,14 @@ Row(
         final latitude = context.read<LocationProvider>().current!.latitude;
         final longitude = context.read<LocationProvider>().current!.longitude;
         final images = context.read<ProofOfDeliveryProvider>().base64Images;
-        final consignments = widget.data['data']['consignments'];
-        final driver_id = widget.data['data']['driver_id'];
-        final date_delivered = widget.data['data']['date_delivered'];
-        final address_id = widget.data['data']['address_id'];
-        final space = widget.data['data']['space'];
-        final weight= widget.data['data']['weight'];
-        final customer_reference= widget.data['data']['customer_reference'];
-        final service_window = widget.data['data']['service_window'];
+        final consignments =  Get.arguments['consignments'];
+        final driver_id =  Get.arguments['driver_id'];
+        final address_id =  Get.arguments['address_id'];
+        final date_delivered =  Get.arguments['date_delivered'];
+        final space =  Get.arguments['space'];
+        final weight = Get.arguments['weight'];
+        final customer_reference = Get.arguments['customer_reference'];
+        final service_window = Get.arguments['service_window'];
 
         final temp = {
           "pod_type": "partial",
@@ -1323,12 +1341,19 @@ Row(
           "comments": comments,
           "address_id": address_id,
           "pictures": images,
+                  "platforms": [
+        "android",
+        "cordova",
+        "mobile",
+        "hybrid"
+    ],
         };
 
         context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
-        Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  ProofOfDeliveryPhotos(data: snapshot)),);
+       Get.toNamed(AppRoutes.podphotos, arguments: Get.arguments);
+        // Navigator.push(
+        //       context,
+        //       MaterialPageRoute(builder: (context) =>  ProofOfDeliveryPhotos(data: snapshot)),);
       } else {
         print("Form key is null.");
       }
@@ -1363,7 +1388,7 @@ Row(
                               PalletContainer(
                                 name: 'cartons',
                                 heading: AppText.cartons,
-                                icon: SvgPicture.asset(AppSvgs.pallet),
+                                 icon: SvgPicture.asset(AppSvgs.boundpallets),
                                 hintText: '0',
                                 initialValue: 0,
                                 totalPallet: 5,
@@ -1450,20 +1475,21 @@ Row(
                             children: [
                               SizedBox(
                                 width: 50.w,
-                                child: CustomButton(label: "Submit POD",
+                                child: CustomButton(label: "Submit POD",backgroundColor: AppColors.red,borderColor: AppColors.red,
                      onPressed: () {
   if (_formKey.currentState != null) {
     final provider = context.read<ProofOfDeliveryProvider>();
     final rejection_reason = provider.data['rejection_reason']; 
-    final space = widget.data['data']['space'];
-    final weight= widget.data['data']['weight'];
-    final carton= widget.data['data']['carton'];
-    final pallet= widget.data['data']['pallet'];
-    final consignments = widget.data['data']['consignments'];
+    final consignments =  Get.arguments['consignments'];
+    final driver_id =  Get.arguments['driver_id'];
+    final address_id =  Get.arguments['address_id'];
+    final date_delivered =  Get.arguments['date_delivered'];
+    final space =  Get.arguments['space'];
+    final weight = Get.arguments['weight'];
+    final customer_reference = Get.arguments['customer_reference'];
+    final service_window = Get.arguments['service_window'];
     final pictureSources = provider.pictureSources;
     final images = provider.base64Images;
-    final driver_id = widget.data['data']['driver_id'];
-    final date_delivered = widget.data['data']['date_delivered'];
     final device = provider.data['device'];
  final commentss = _formKey.currentState!.fields['Order rejection']?.value.toString();
  
@@ -1513,6 +1539,12 @@ Row(
       "pictureSources": pictureSources,
       "app_version": "3.15.2",
       "current_app_version": "3.15.2",
+              "platforms": [
+        "android",
+        "cordova",
+        "mobile",
+        "hybrid"
+    ],
     };
 
     provider.addEntities(temp.entries);

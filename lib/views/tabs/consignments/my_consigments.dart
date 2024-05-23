@@ -1,7 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
 import 'package:coldxpress/export.dart';
 
 class MyConsigmentTab extends StatefulWidget {
@@ -12,60 +8,26 @@ class MyConsigmentTab extends StatefulWidget {
 }
 
 class _MyConsigmentTabState extends State<MyConsigmentTab> {
-  final StreamController<dynamic> _consignmentStreamController =
-      StreamController<dynamic>();
+  late ConsignmentDatabase consignment;
   final ScrollController _scrollController = ScrollController();
-  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    fetchConsignment();
-    _timer = Timer.periodic(
-      const Duration(seconds: 30),
-      (timer) {
-        fetchConsignment();
-      },
-    );
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
+    if (state is Authenticated) {
+      consignment = ConsignmentDatabase(
+        context.read<DatabaseProvider>().database,
+        accessToken: state.token,
+      );
+    }
   }
 
   @override
   void dispose() {
-    _consignmentStreamController.close();
-    _timer.cancel();
+    consignment.dispose();
     super.dispose();
-  }
-
-  Future<void> fetchConsignment() async {
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
-    if (state is Authenticated) {
-      try {
-        final response = await http.get(
-          Uri.parse(AppHost.consignments),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
-        if (response.statusCode == 200) {
-          final dynamic data = json.decode(response.body);
-          
-          if (data['status'] == 'success') {
-            _consignmentStreamController.add(data);
-          } else {
-            _consignmentStreamController.addError(data['message']);
-          }
-        } else {
-          _consignmentStreamController.addError('Failed to fetch data');
-        }
-      } catch (e) {
-        if (!_consignmentStreamController.isClosed) {
-          _consignmentStreamController.addError(e.toString());
-        }
-      }
-    }
   }
 
   @override
@@ -105,9 +67,12 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
         child: SingleChildScrollView(
           controller: _scrollController,
           child: StreamBuilder(
-              stream: _consignmentStreamController.stream,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
+              stream: consignment.controller.stream,
+              builder: (context, consignmentSnapshot) {
+                if (consignmentSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const SizedBox();
+                } else if (consignmentSnapshot.hasData) {
                   return Column(
                     children: [
                       Container(
@@ -138,15 +103,8 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                 Row(
                                   children: [
                                     Text(
-                                      snapshot.data['data']
-                                                  .containsKey('2024-04-04') ==
-                                              false
-                                          ? '0'
-                                          : snapshot
-                                              .data['data']['2024-04-04']
-                                                  ['consignments']
-                                              .length
-                                              .toString(),
+                                      consignmentSnapshot.data.length
+                                          .toString(),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -218,7 +176,10 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                         ? Get.toNamed(AppRoutes.consignmentMap)
                                         : i == 1
                                             ? Get.toNamed(
-                                                AppRoutes.consigmentReorder)
+                                                AppRoutes.consigmentReorder,
+                                                arguments:
+                                                    consignmentSnapshot.data,
+                                              )
                                             : i == 2
                                                 ? Get.toNamed(
                                                     AppRoutes.consigmentGroup)
@@ -269,28 +230,18 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                           },
                         ],
                       ),
-                      for (var consignment
-                          in snapshot.data['data']['2024-04-04'] == null
-                              ? []
-                              : snapshot.data['data']['2024-04-04']
-                                  ['consignments']) ...{
+                      for (var consignment in consignmentSnapshot.data) ...{
                         GestureDetector(
                           onTap: () {
                             Get.toNamed(
                               AppRoutes.singleConsigment,
-                              arguments: snapshot.data['data']['2024-04-04']
-                                  ['consignments'][snapshot.data['data']
-                                      ['2024-04-04']['consignments']
-                                  .indexOf(consignment)]['id'],
+                              arguments: consignment,
                             );
                           },
                           child: CustomMyConsigmentContainer(
                             consignment: consignment,
                             isLoading: false,
-                            index: snapshot.data['data']['2024-04-04']
-                                ['consignments'][snapshot.data['data']
-                                    ['2024-04-04']['consignments']
-                                .indexOf(consignment)]['sort'],
+                            index: consignment['sort'],
                           ),
                         ),
                       },
@@ -318,8 +269,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                       ),
                     ],
                   );
-                }
-                if (snapshot.hasError) {
+                } else if (consignmentSnapshot.hasError) {
                   return SizedBox(
                     child: Column(
                       children: [
@@ -333,7 +283,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          snapshot.error.toString(),
+                          consignmentSnapshot.error.toString(),
                           style: Theme.of(context)
                               .textTheme
                               .bodyLarge
@@ -379,16 +329,18 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                                   )
                                                 : i == 1
                                                     ? SvgPicture.asset(
-                                                        AppSvgs.pallet,
+                                                        AppSvgs.boundpallets,
                                                         width: 10.w,
                                                       )
                                                     : i == 2
                                                         ? SvgPicture.asset(
-                                                            AppSvgs.pallet,
+                                                            AppSvgs
+                                                                .boundpallets,
                                                             width: 10.w,
                                                           )
                                                         : SvgPicture.asset(
-                                                            AppSvgs.pallet,
+                                                            AppSvgs
+                                                                .boundpallets,
                                                             width: 10.w,
                                                           ),
                                           ),

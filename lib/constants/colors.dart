@@ -11,7 +11,8 @@ class AppColors {
     end: Alignment.bottomRight,
     tileMode: TileMode.clamp,
   );
-  static const LinearGradient preStartGradient = LinearGradient(
+
+  static const LinearGradient twoBlueGradient = LinearGradient(
     colors: [
       Color(0xE92662FD),
       Color(0xFF2662FD),
@@ -21,6 +22,7 @@ class AppColors {
     stops: [0.5, 0.5],
     transform: GradientRotation(-150 + 360),
   );
+
   static const LinearGradient preStartHeaderGradient = LinearGradient(
     colors: [
       Color(0xFF4579fd),
@@ -35,7 +37,7 @@ class AppColors {
     stops: [0.115, 0.115, 0.16, 0.16, 0.208, 0.208],
     transform: GradientRotation(150),
   );
-  static const LinearGradient outInBoundGradient = LinearGradient(
+  static const LinearGradient twoBlackGradient = LinearGradient(
     colors: [
       Color(0xE9333333),
       Color(0xFF333333),

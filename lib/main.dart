@@ -2,7 +2,7 @@ import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 
-void main() {
+void main() async {
   runApp(const MyApp());
 }
 
@@ -32,15 +32,17 @@ class MyApp extends StatelessWidget {
           ),
           ChangeNotifierProvider(
             create: (_) => TimeProvider(),
-            child: EditTime(),
+            child: const EditTime(),
           ),
            ChangeNotifierProvider(
             create: (_) => ProofOfDeliveryProvider(),
           ),
-           ChangeNotifierProvider<BottomNavProvider>(
+          ChangeNotifierProvider<BottomNavProvider>(
             create: (_) => BottomNavProvider(),
           ),
-
+          ChangeNotifierProvider<DatabaseProvider>(
+            create: (_) => DatabaseProvider(),
+          ),
         ],
         child: Sizer(
           builder: (context, language, child) {

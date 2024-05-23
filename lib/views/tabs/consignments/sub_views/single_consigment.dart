@@ -1,9 +1,5 @@
-// ignore_for_file: deprecated_member_use
-import 'dart:async';
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
-import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery.dart';
-import 'package:http/http.dart' as http;
 
 class SingleConsigmentView extends StatefulWidget {
   const SingleConsigmentView({super.key});
@@ -13,61 +9,22 @@ class SingleConsigmentView extends StatefulWidget {
 }
 
 class _SingleConsigmentViewState extends State<SingleConsigmentView> {
-  final StreamController<dynamic> _consignmentStreamController =
-      StreamController<dynamic>();
-
-  late Timer _timer;
+  late Map productTypes;
+  late Map deliveryAddresses;
+  late Map pickupAddresses;
 
   @override
   void initState() {
     super.initState();
-    fetchData();
-    _timer = Timer.periodic(
-      const Duration(seconds: 30),
-      (timer) {
-        fetchData();
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _consignmentStreamController.close();
-    _timer.cancel();
-    super.dispose();
-  }
-
-  Future<void> fetchData() async {
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
-    if (state is Authenticated) {
-      try {
-        final response = await http.get(
-          Uri.parse('${AppHost.consignmentDetail}${Get.arguments}'),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
-
-        if (response.statusCode == 200) {
-          final dynamic data = json.decode(response.body);
-           
-          _consignmentStreamController.add(data);
-        } else {
-          _consignmentStreamController.addError('Failed to fetch data');
-        }
-      } catch (e) {
-        if (!_consignmentStreamController.isClosed) {
-          _consignmentStreamController.addError(e.toString());
-        }
-      }
-    }
+    productTypes = json.decode(Get.arguments['product_types']);
+    deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
+    pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+    
   }
 
   @override
   Widget build(BuildContext context) {
+    print({Get.arguments});
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -102,326 +59,302 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: SingleChildScrollView(
             child: Center(
-              child: StreamBuilder(
-                  stream: _consignmentStreamController.stream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppBar(
-                            backgroundColor: Colors.transparent,
-                            surfaceTintColor: Colors.transparent,
-                            centerTitle: true,
-                            leading: const SizedBox.shrink(),
-                            title: IntrinsicHeight(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'ID: ${snapshot.data['data']['id']}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall,
-                                  ),
-                                  VerticalDivider(
-                                    color: AppColors.black.withOpacity(0.5),
-                                    thickness: 2,
-                                  ),
-                                  Text(
-                                    'REF: ${snapshot.data['data']['customer_reference']}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            actions: [
-                              InkWell(
-                                onTap: () {},
-                                child: Container(
-                                  width: 13.5.w,
-                                  height: 6.h,
-                                  decoration: BoxDecoration(
-                                      color: AppColors.white,
-                                      borderRadius:
-                                          BorderRadius.circular(50.sp),
-                                      border: Border.all()),
-                                  child: SvgPicture.asset(
-                                    AppSvgs.mapMarker,
-                                    color: AppColors.black,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 2.h,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                height: 8.h,
-                                width: 18.w,
-                                decoration: BoxDecoration(
-                                  color: AppColors.darkGrey,
-                                  borderRadius: BorderRadius.circular(8.sp),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 2.w,
-                                    vertical: 1.h,
-                                  ),
-                                  child: SizedBox(
-                                    width: 16.w,
-                                    height: 7.h,
-                                    child: Image.asset(AppImages.cardboard),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 54.w,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      (snapshot.data['data']
-                                                      ['consignment_type'] ==
-                                                  'delivery'
-                                              ? snapshot.data['data']
-                                                      ['delivery_addresses']
-                                                  ['company_name']
-                                              : snapshot.data['data']
-                                                      ['pickup_addresses']
-                                                  ['company_name']) ??
-                                          'Not Provided',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium,
-                                    ),
-                                    Text(
-                                      'Recipient: ${(snapshot.data['data']['consignment_type'] == 'delivery' ? snapshot.data['data']['delivery_addresses']['customer_name'] : snapshot.data['data']['pickup_addresses']['customer_name']) ?? 'Not Provided'}',
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      snapshot.data['data']
-                                                  ['consignment_type'] ==
-                                              'delivery'
-                                          ? '${snapshot.data['data']['delivery_addresses']['street_address']}, ${snapshot.data['data']['delivery_addresses']['suburb']}'
-                                          : '${snapshot.data['data']['pickup_addresses']['street_address']}, ${snapshot.data['data']['pickup_addresses']['suburb']}',
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  ],
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () {},
-                                child: Container(
-                                  width: 13.5.w,
-                                  height: 6.h,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.black.withOpacity(0.8),
-                                    borderRadius: BorderRadius.circular(50.sp),
-                                  ),
-                                  child: Icon(
-                                    Icons.call,
-                                    color: AppColors.white,
-                                    size: 4.h,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 2.h,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Get.toNamed(AppRoutes.Stopwatch);
-                            },
-                            child: CustomProductTypeAndTime(
-                              type: (snapshot.data['data']['product_types']
-                                          ['id']) ==
-                                      1
-                                  ? '1'
-                                  : '2',
-                              time: snapshot.data['data']['consignment_type'] ==
-                                      'delivery'
-                                  ? '${snapshot.data['data']['delivery_addresses']['service_time_start'].toString().split(' ').last.split(':')[0]}.${snapshot.data['data']['delivery_addresses']['service_time_start'].toString().split(' ').last.split(':')[1]} - ${snapshot.data['data']['delivery_addresses']['service_time_end'].toString().split(' ').last.split(':')[0]}.${snapshot.data['data']['delivery_addresses']['service_time_end'].toString().split(' ').last.split(':')[1]}'
-                                  : '${snapshot.data['data']['pickup_addresses']['service_time_start'].toString().split(' ').last.split(':')[0]}.${snapshot.data['data']['pickup_addresses']['service_time_start'].toString().split(' ').last.split(':')[1]} - ${snapshot.data['data']['pickup_addresses']['service_time_end'].toString().split(' ').last.split(':')[0]}.${snapshot.data['data']['pickup_addresses']['service_time_end'].toString().split(' ').last.split(':')[1]}',
-                              svgImage: SvgPicture.asset(AppSvgs.frozen),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 2.h,
-                          ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 6.w, vertical: 2.h),
-                            // height: 3.5.h,
-                            width: double.maxFinite,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'ID: ${Get.arguments['id']}',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        VerticalDivider(
+                          color: AppColors.black.withOpacity(0.5),
+                          thickness: 2,
+                        ),
+                        Text(
+                          'REF: ${Get.arguments['customer_reference']}',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        InkWell(
+                          onTap: () {},
+                          child: Container(
+                            width: 13.5.w,
+                            height: 6.h,
                             decoration: BoxDecoration(
-                              color: AppColors.greyWhite,
-                              borderRadius: BorderRadius.circular(8.sp),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  height: 3.5.h,
-                                  width: 19.w,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.darkGrey,
-                                    borderRadius: BorderRadius.circular(20.sp),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'En Route',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: AppColors.white,
-                                            fontSize: 10.sp,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 2.h,
-                                ),
-                                const CustomOrderTracking(
-                                    title: "Supplier",
-                                    subText: 'Acme Corporation',
-                                    isLastStep: false,
-                                    currentStep: 3,
-                                    stepIndex: 1),
-                                const CustomOrderTracking(
-                                  title: "Pickup",
-                                  isLastStep: false,
-                                  currentStep: 3,
-                                  stepIndex: 2,
-                                  subText:
-                                      'ColdXpress Transport 2071 portarlinton road, Drysdale',
-                                ),
-                                const CustomOrderTracking(
-                                  title: "Out for Delivery",
-                                  isLastStep: false,
-                                  currentStep: 3,
-                                  stepIndex: 3,
-                                  subText: 'Driver: Abram Vetrovs',
-                                ),
-                                const CustomOrderTracking(
-                                  title: "Drop off",
-                                  isLastStep: true,
-                                  currentStep: 3,
-                                  stepIndex: 4,
-                                  subText:
-                                      'Pronto Fine Food 830 wellington road, Rowville',
-                                ),
-                              ],
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all()),
+                            child: SvgPicture.asset(
+                              AppSvgs.mapMarker,
+                              color: AppColors.black,
                             ),
                           ),
-                          SizedBox(
-                            height: 3.h,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        height: 8.h,
+                        width: 18.w,
+                        decoration: BoxDecoration(
+                          color: AppColors.darkGrey,
+                          borderRadius: BorderRadius.circular(8.sp),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 2.w,
+                            vertical: 1.h,
                           ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  CustomDeliveryDetailsContainer(
-                                    type: AppText.cartons,
-                                    counts:
-                                        '${snapshot.data['data']['carton']}',
-                                    svgIcon: SvgPicture.asset(AppSvgs.carton),
+                          child: SizedBox(
+                            width: 16.w,
+                            height: 7.h,
+                            child: Image.asset(AppImages.cardboard),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 54.w,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              (Get.arguments['consignment_type'] == 'delivery'
+                                      ? deliveryAddresses['company_name']
+                                      : pickupAddresses['company_name']) ??
+                                  'Not Provided',
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            Text(
+                              'Recipient: ${(Get.arguments['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? '${deliveryAddresses['street_address']}, ${deliveryAddresses['suburb']}'
+                                  : '${pickupAddresses['street_address']}, ${pickupAddresses['suburb']}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {},
+                        child: Container(
+                          width: 13.5.w,
+                          height: 6.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(50.sp),
+                          ),
+                          child: Icon(
+                            Icons.call,
+                            color: AppColors.white,
+                            size: 4.h,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Get.toNamed(AppRoutes.Stopwatch);
+                    },
+                    child: CustomProductTypeAndTime(
+                      type: (productTypes['id']) == 1 ? '1' : '2',
+                      time: Get.arguments['consignment_type'] == 'delivery'
+                          ? '${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}'
+                          : '${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}',
+                      svgImage: SvgPicture.asset(AppSvgs.frozen),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    // height: 3.5.h,
+                    width: double.maxFinite,
+                    decoration: BoxDecoration(
+                      color: AppColors.greyWhite,
+                      borderRadius: BorderRadius.circular(8.sp),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 3.5.h,
+                          width: 19.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.darkGrey,
+                            borderRadius: BorderRadius.circular(20.sp),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'En Route',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.white,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  CustomDeliveryDetailsContainer(
-                                    type: AppText.pallets,
-                                    counts:
-                                        '${snapshot.data['data']['pallet']}',
-                                    svgIcon:
-                                        SvgPicture.asset(AppSvgs.palletBlue),
-                                  )
-                                ],
-                              ),
-                              SizedBox(
-                                height: 2.h,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  CustomDeliveryDetailsContainer(
-                                    type: AppText.space,
-                                    counts: '${snapshot.data['data']['space']}',
-                                    countType: 'sqft',
-                                    svgIcon: SvgPicture.asset(AppSvgs.space),
-                                  ),
-                                  CustomDeliveryDetailsContainer(
-                                    type: AppText.weight,
-                                    counts:
-                                        '${snapshot.data['data']['weight']}',
-                                    countType: 'KG',
-                                    svgIcon: SvgPicture.asset(AppSvgs.weight),
-                                  )
-                                ],
-                              ),
-                            ],
+                            ),
                           ),
-                          SizedBox(
-                            height: 4.h,
+                        ),
+                        SizedBox(
+                          height: 2.h,
+                        ),
+                        CustomOrderTracking(
+                            title: "Supplier",
+                            subText: 'Acme Corporation',
+                            isLastStep: false,
+                            currentStep:
+                                Get.arguments['consignment_type'] == 'delivery'
+                                    ? 3
+                                    : 1,
+                            stepIndex: 1),
+                        CustomOrderTracking(
+                          title: "Pickup",
+                          isLastStep: false,
+                          currentStep:
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? 3
+                                  : 1,
+                          stepIndex: 2,
+                          subText: pickupAddresses['full_address'],
+                        ),
+                        CustomOrderTracking(
+                          title: "Out for Delivery",
+                          isLastStep: false,
+                          currentStep:
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? 3
+                                  : 1,
+                          stepIndex: 3,
+                          subText: 'Driver: Abram Vetrovs',
+                        ),
+                        CustomOrderTracking(
+                          title: "Drop off",
+                          isLastStep: true,
+                          currentStep:
+                              Get.arguments['consignment_type'] == 'delivery'
+                                  ? 3
+                                  : 1,
+                          stepIndex: 4,
+                          subText: deliveryAddresses['full_address'],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 3.h,
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CustomDeliveryDetailsContainer(
+                            type: AppText.cartons,
+                            counts: '${Get.arguments['carton']}',
+                            svgIcon: SvgPicture.asset(AppSvgs.carton),
                           ),
-                          Text(
-                            AppText.specialInstructions,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.black.withOpacity(0.5),
-                                    ),
-                          ),
-                          Text(
-                            snapshot.data['data']['special_instruction'] == ''
-                                ? 'Not Provided'
-                                : snapshot.data['data']['special_instruction'],
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: AppColors.black,
-                                ),
-                          ),
-                          SizedBox(
-                            height: 4.h,
-                          ),
-                          CustomElevatedButton(
-                              label: AppText.podCapture,
-                              onPressed: () {
-                              Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => ProofOfDeliveryView(data: snapshot.data),
-    ),);
-                              }),
-                          SizedBox(
-                            height: 8.h,
-                          ),
+                          CustomDeliveryDetailsContainer(
+                            type: AppText.pallets,
+                            counts: '${Get.arguments['pallet']}',
+                            svgIcon: SvgPicture.asset(AppSvgs.palletBlue),
+                          )
                         ],
-                      );
-                    } else {
-                      return const CircularProgressIndicator();
-                    }
-                  }),
+                      ),
+                      SizedBox(
+                        height: 2.h,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CustomDeliveryDetailsContainer(
+                            type: AppText.space,
+                            counts: '${Get.arguments['space']}',
+                            countType: 'sqft',
+                            svgIcon: SvgPicture.asset(AppSvgs.space),
+                          ),
+                          CustomDeliveryDetailsContainer(
+                            type: AppText.weight,
+                            counts: '${Get.arguments['weight']}',
+                            countType: 'KG',
+                            svgIcon: SvgPicture.asset(AppSvgs.weight),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 4.h,
+                  ),
+                  Text(
+                    AppText.specialInstructions,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.black.withOpacity(0.5),
+                        ),
+                  ),
+                  Text(
+                    Get.arguments['special_instruction'] == ''
+                        ? 'Not Provided'
+                        : Get.arguments['special_instruction'],
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.black,
+                        ),
+                  ),
+                  SizedBox(
+                    height: 4.h,
+                  ),
+                  CustomElevatedButton(
+                    label: AppText.podCapture,
+                    onPressed: () {
+                      
+    //                final Map<String, dynamic> dataToSend = {
+    //   'id': Get.arguments['id'],
+    //   'customer_reference': Get.arguments['customer_reference'],
+    //   'consignment_type': Get.arguments['consignment_type'],
+    //   'delivery_addresses': deliveryAddresses,
+    //   'pickup_addresses': pickupAddresses,
+    //   'product_types': productTypes,
+    //   'carton': Get.arguments['carton'],
+    //   'pallet': Get.arguments['pallet'],
+    //   'space': Get.arguments['space'],
+    //   'weight': Get.arguments['weight'],
+    //   'special_instruction': Get.arguments['special_instruction'],
+    //   // Add any other required fields here
+    // };
+
+    // Navigate to the ProofOfDelivery screen with arguments
+    Get.toNamed(AppRoutes.proofOfDelivery, arguments: Get.arguments);
+                    },
+                  ),
+                  SizedBox(
+                    height: 8.h,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
