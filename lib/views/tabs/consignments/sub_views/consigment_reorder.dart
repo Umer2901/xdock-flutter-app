@@ -1,4 +1,5 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:convert';
 import 'package:coldxpress/export.dart';
 
 class MyConsigmentReorder extends StatefulWidget {
@@ -10,14 +11,13 @@ class MyConsigmentReorder extends StatefulWidget {
 
 class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   final ScrollController _scrollController = ScrollController();
-  late List<dynamic> _consignments;
+  final List<dynamic> _consignments = [];
   List<int> consignmentIds = [];
 
   @override
   void initState() {
     super.initState();
-    _consignments = Get.arguments;
-    print('Before Consignments $_consignments');
+    _consignments.addAll(json.decode(json.encode(Get.arguments)));
   }
 
   // Future<void> reorder(var data) async {
@@ -113,20 +113,28 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     CustomButton(
-                        label: AppText.cancel.toUpperCase(),
-                        borderColor: AppColors.belowMidGreyTwo,
-                        backgroundColor: AppColors.white,
-                        foregroundColor: AppColors.border.withOpacity(0.8),
-                        width: 40.w,
-                        height: 5.h,
-                        onPressed: () {}),
+                      label: AppText.cancel.toUpperCase(),
+                      borderColor: AppColors.belowMidGreyTwo,
+                      backgroundColor: AppColors.white,
+                      foregroundColor: AppColors.border.withOpacity(0.8),
+                      width: 40.w,
+                      height: 5.h,
+                      onPressed: () {
+                        Get.back();
+                      },
+                    ),
                     CustomButton(
-                        width: 40.w,
-                        height: 5.h,
-                        label: AppText.save.toUpperCase(),
-                        onPressed: () {
-                          print(consignmentIds);
-                        }),
+                      width: 40.w,
+                      height: 5.h,
+                      label: AppText.save.toUpperCase(),
+                      onPressed: () {
+                        if (consignmentIds.isNotEmpty) {
+                          ConsignmentService(
+                                  context.read<DatabaseProvider>().database)
+                              .reorderConsignments(consignmentIds);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -140,19 +148,13 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                         if (newIndex > oldIndex) {
                           newIndex -= 1;
                         }
-                        if (newIndex < oldIndex) {
-                          newIndex += 1;
-                        }
-                        print('Index New $newIndex $oldIndex');
                         final item = _consignments.removeAt(oldIndex);
                         _consignments.insert(newIndex, item);
                         consignmentIds = [];
                         for (var consignment in _consignments) {
                           consignmentIds.add(consignment['id']);
                         }
-                        print('After Consignments $_consignments');
                       });
-                      print(consignmentIds);
                     },
                     children: List.generate(
                       _consignments.length,

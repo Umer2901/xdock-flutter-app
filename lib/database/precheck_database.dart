@@ -15,6 +15,7 @@ class PreCheckDatabase {
   }
 
   Future<void> create(Map<String, dynamic> data) async {
+    print('Submission Data: $data');
     await _database.insert('precheck_status', data);
   }
 

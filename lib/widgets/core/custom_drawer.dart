@@ -236,6 +236,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           if (state is Authenticated) {
                             BlocProvider.of<AuthenticationCubit>(context)
                                 .logout(
+                              database:
+                                  context.read<DatabaseProvider>().database,
                               token: state.token,
                             );
                           }

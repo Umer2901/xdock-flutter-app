@@ -34,6 +34,15 @@ class ConsignmentDatabase {
     );
   }
 
+  Future<void> update(int id, Map<String, dynamic> data) async {
+    _database.update(
+      'consignments',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   void _startListeningToChanges() {
     _database.transaction((txn) async {
       await txn

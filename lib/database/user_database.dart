@@ -26,6 +26,14 @@ class UserDatabase {
     );
   }
 
+  Future<void> delete() async {
+    await _database.delete(
+      'users',
+      where: 'access_token = ?',
+      whereArgs: [accessToken],
+    );
+  }
+
   void _startListeningToChanges() {
     _database.transaction((txn) async {
       await txn.query(

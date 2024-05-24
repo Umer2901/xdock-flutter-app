@@ -43,8 +43,8 @@ class _ConsignmentMapTabState extends State<ConsignmentMapTab> {
       (customIcon) {
         for (Map consignment in consignments) {
           Map deliveryAddresses =
-              json.decode(Get.arguments['delivery_addresses']);
-          Map pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+              json.decode(consignment['delivery_addresses']);
+          Map pickupAddresses = json.decode(consignment['pickup_addresses']);
           markers.add(
             Marker(
               markerId: MarkerId('${consignment["id"]}'),
