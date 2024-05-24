@@ -15,7 +15,6 @@ class _SplashViewState extends State<SplashView> {
   }
 
   config() async {
-    // await context.read<DatabaseProvider>().deleteDatabase();
     await context
         .read<DatabaseProvider>()
         .initDatabase()

@@ -75,11 +75,11 @@ class _ConsignmentMapTabState extends State<ConsignmentMapTab> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-        stream: consignment.controller.stream,
+        stream: consignment.stream,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            if (snapshot.data.isNotEmpty) {
-              addMarkerOnMap(snapshot.data);
+            if (snapshot.data!.isNotEmpty) {
+              addMarkerOnMap(snapshot.data!);
             }
           }
           return Scaffold(

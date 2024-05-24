@@ -1,12 +1,14 @@
 import 'dart:async';
-import 'package:coldxpress/export.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:intl/intl.dart';
 
 class PreCheckDatabase {
   final Database _database;
   final String? accessToken;
   late StreamController<List<Map<String, dynamic>>> _streamController;
+  Timer? _timer;
 
-  StreamController get controller => _streamController;
+  Stream<List<Map<String, dynamic>>> get stream => _streamController.stream;
 
   PreCheckDatabase(this._database, {this.accessToken}) {
     _streamController =
@@ -15,34 +17,41 @@ class PreCheckDatabase {
   }
 
   Future<void> create(Map<String, dynamic> data) async {
-    print('Submission Data: $data');
     await _database.insert('precheck_status', data);
+    _refreshStream();
   }
 
   Future<List<Map<String, dynamic>>> read() async {
-    return _database.query(
-      'precheck_status',
-      where: 'access_token = ? AND datetime = ?',
-      whereArgs: [accessToken, DateFormat('dd/MM/yyyy').format(DateTime.now())],
-    );
-  }
-
-  void _startListeningToChanges() {
-    _database.transaction((txn) async {
-      await txn.query(
+    try {
+      final result = await _database.query(
         'precheck_status',
         where: 'access_token = ? AND datetime = ?',
         whereArgs: [
           accessToken,
           DateFormat('dd/MM/yyyy').format(DateTime.now())
         ],
-      ).then((result) {
-        _streamController.add(result);
-      });
+      );
+      return result;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  void _startListeningToChanges() {
+    _timer = Timer.periodic(const Duration(milliseconds: 800), (timer) async {
+      _refreshStream();
     });
   }
 
+  Future<void> _refreshStream() async {
+    final result = await read();
+    if (!_streamController.isClosed) {
+      _streamController.add(result);
+    }
+  }
+
   void dispose() {
+    _timer?.cancel();
     _streamController.close();
   }
 }

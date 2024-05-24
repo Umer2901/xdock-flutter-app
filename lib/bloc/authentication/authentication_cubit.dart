@@ -70,8 +70,9 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
   Future<void> onStart(Database database, String token) async {
     await InternetAddress.lookup('google.com').then((value) async {
       try {
-        await PreCheckDatabase(database).read().then((submissions) async {
-          // print('Submission Test: $submissions');
+        await PreCheckDatabase(database, accessToken: token)
+            .read()
+            .then((submissions) async {
           if (submissions.isEmpty) {
             try {
               await PrecheckStatusService(
@@ -94,7 +95,9 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
             event.contains(ConnectivityResult.mobile)) {
           await InternetAddress.lookup('google.com').then((value) async {
             try {
-              await PreCheckDatabase(database).read().then((submissions) async {
+              await PreCheckDatabase(database, accessToken: token)
+                  .read()
+                  .then((submissions) async {
                 if (submissions.isEmpty) {
                   try {
                     await PrecheckStatusService(
