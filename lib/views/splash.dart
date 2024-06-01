@@ -21,35 +21,9 @@ class _SplashViewState extends State<SplashView> {
     await context
         .read<DatabaseProvider>()
         .initDatabase()
-        .whenComplete(() async {
+        .then((database) async {
       context.read<LocationProvider>().getCurrentLocation();
-      await BlocProvider.of<AuthenticationCubit>(context)
-          .check()
-          .whenComplete(() {
-        onStart();
-      });
-    });
-  }
-
-  void onStart() {
-    Connectivity().onConnectivityChanged.listen((event) async {
-      try {
-        if (event.contains(ConnectivityResult.wifi) ||
-            event.contains(ConnectivityResult.mobile)) {
-          await InternetAddress.lookup('google.com').then((value) {
-            AuthenticationState state =
-                BlocProvider.of<AuthenticationCubit>(context).state;
-            if (state is Authenticated) {
-              ConsignmentService(context.read<DatabaseProvider>().database)
-                  .fetchAndStore(state.token);
-            }
-          });
-        }
-      } on SocketException catch (e) {
-        throw Exception('No Internet ($e)');
-      } catch (e) {
-        throw Exception('Something went wrong! ($e)');
-      }
+      await BlocProvider.of<AuthenticationCubit>(context).check(database);
     });
   }
 
@@ -58,19 +32,9 @@ class _SplashViewState extends State<SplashView> {
     return BlocListener<AuthenticationCubit, AuthenticationState>(
       listener: (context, state) async {
         if (state is Authenticated) {
-          await PreCheckDatabase(context.read<DatabaseProvider>().database)
-              .read()
-              .then((submissions) async {
-            if (submissions.isEmpty) {
-              try {
-                await PrecheckStatusService(
-                  context.read<DatabaseProvider>().database,
-                ).fetchAndStore(state.token);
-              } catch (e) {
-                debugPrint("Not Connected to Network");
-              }
-            }
-          });
+          await Future.delayed(
+            const Duration(milliseconds: 1200),
+          );
 
           Get.offAndToNamed(AppRoutes.dashboard);
         } else {

@@ -67,7 +67,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
         child: SingleChildScrollView(
           controller: _scrollController,
           child: StreamBuilder(
-              stream: consignment.controller.stream,
+              stream: consignment.stream,
               builder: (context, consignmentSnapshot) {
                 if (consignmentSnapshot.connectionState ==
                     ConnectionState.waiting) {
@@ -103,7 +103,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                 Row(
                                   children: [
                                     Text(
-                                      consignmentSnapshot.data.length
+                                      consignmentSnapshot.data!.length
                                           .toString(),
                                       style: Theme.of(context)
                                           .textTheme
@@ -230,7 +230,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                           },
                         ],
                       ),
-                      for (var consignment in consignmentSnapshot.data) ...{
+                      for (var consignment in consignmentSnapshot.data!) ...{
                         GestureDetector(
                           onTap: () {
                             Get.toNamed(

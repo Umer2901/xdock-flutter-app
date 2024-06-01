@@ -10,36 +10,35 @@ class PrecheckStatusService {
 
   Future<void> fetchAndStore(String accessToken) async {
     try {
-      final result = await InternetAddress.lookup('google.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        final response = await http.get(
-          Uri.parse(AppHost.checkSubmissions),
-          headers: <String, String>{
-            'Authorization': 'Bearer $accessToken',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
+      final response = await http.get(
+        Uri.parse(AppHost.checkSubmissions),
+        headers: <String, String>{
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
 
-        if (response.statusCode == 200) {
-          final dynamic data = json.decode(response.body);
-          if (data['status'] == 'success') {
-            Map<String, dynamic> submissionData = data;
-            submissionData.addAll({
-              'access_token': accessToken,
-              'datetime': DateFormat('dd/MM/yyyy').format(DateTime.now())
-            });
-            submissionData.remove('status');
-            await PreCheckDatabase(_database).create(submissionData);
-          } else {
-            throw Exception(
-              'Unsuccessful to fetch submission data! (Error: ${data['message']})',
-            );
-          }
+      if (response.statusCode == 200) {
+        final dynamic data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          Map<String, dynamic> submissionData = data;
+          submissionData.addAll({
+            'access_token': accessToken,
+            'datetime': DateFormat('dd/MM/yyyy').format(
+              DateTime.now(),
+            ),
+          });
+          submissionData.remove('status');
+          await PreCheckDatabase(_database).create(submissionData);
         } else {
           throw Exception(
-              'Unsuccessful to fetch submission data! (Error Code: ${response.statusCode})');
+            'Unsuccessful to fetch submission data! (Error: ${data['message']})',
+          );
         }
+      } else {
+        throw Exception(
+            'Unsuccessful to fetch submission data! (Error Code: ${response.statusCode})');
       }
     } on SocketException catch (e) {
       throw Exception('No Internet ($e)');

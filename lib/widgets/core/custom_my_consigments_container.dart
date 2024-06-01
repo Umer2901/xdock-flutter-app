@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:convert';
+import 'package:coldxpress/services/map_helper.dart';
 import 'package:coldxpress/export.dart';
 
 class CustomMyConsigmentContainer extends StatefulWidget {
@@ -104,7 +105,28 @@ class _CustomMyConsigmentContainerState
                       ),
                       InkWell(
                         onTap: () {
-                          Get.toNamed(AppRoutes.consignmentMap);
+                          MapHelper.openDirections(
+                            originLatitude: context
+                                .read<LocationProvider>()
+                                .current!
+                                .latitude
+                                .toString(),
+                            originLongitude: context
+                                .read<LocationProvider>()
+                                .current!
+                                .longitude
+                                .toString(),
+                            destinationLatitude:
+                                widget.consignment!['consignment_type'] ==
+                                        'delivery'
+                                    ? deliveryAddresses['latitude']
+                                    : pickupAddresses['latitude'],
+                            destinationLongitude:
+                                widget.consignment!['consignment_type'] ==
+                                        'delivery'
+                                    ? deliveryAddresses['longitude']
+                                    : pickupAddresses['longitude'],
+                          );
                         },
                         child: Container(
                           padding: EdgeInsets.symmetric(

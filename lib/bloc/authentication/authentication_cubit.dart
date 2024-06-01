@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:coldxpress/export.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 
 part 'authentication_state.dart';
@@ -7,12 +9,16 @@ part 'authentication_state.dart';
 class AuthenticationCubit extends Cubit<AuthenticationState> {
   AuthenticationCubit() : super(AuthenticationInitial());
 
-  Future<void> check() async {
+  Future<void> check(Database database) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
+    if (token != null) {
+      await onStart(database, token);
+    }
+
     await Future.delayed(
-      const Duration(milliseconds: 1200),
+      const Duration(milliseconds: 800),
     );
 
     if (token != null && token != '') {
@@ -42,6 +48,7 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         final String token = responseData['access_token'];
+        await onStart(database, token);
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await UserService(database).fetchAndStore(token);
@@ -60,7 +67,64 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     }
   }
 
-  Future<void> logout({required String token}) async {
+  Future<void> onStart(Database database, String token) async {
+    await InternetAddress.lookup('google.com').then((value) async {
+      try {
+        await PreCheckDatabase(database, accessToken: token)
+            .read()
+            .then((submissions) async {
+          if (submissions.isEmpty) {
+            try {
+              await PrecheckStatusService(
+                database,
+              ).fetchAndStore(token);
+            } catch (e) {
+              debugPrint("Not Connected to Network");
+            }
+          }
+        }).whenComplete(() {
+          ConsignmentService(database).fetchAndStore(token);
+        });
+      } catch (e) {
+        debugPrint('My Error: $e');
+      }
+    });
+    Connectivity().onConnectivityChanged.listen((event) async {
+      try {
+        if (event.contains(ConnectivityResult.wifi) ||
+            event.contains(ConnectivityResult.mobile)) {
+          await InternetAddress.lookup('google.com').then((value) async {
+            try {
+              await PreCheckDatabase(database, accessToken: token)
+                  .read()
+                  .then((submissions) async {
+                if (submissions.isEmpty) {
+                  try {
+                    await PrecheckStatusService(
+                      database,
+                    ).fetchAndStore(token);
+                  } catch (e) {
+                    debugPrint("Not Connected to Network");
+                  }
+                }
+              }).whenComplete(() {
+                ConsignmentService(database).fetchAndStore(token);
+              });
+            } catch (e) {
+              debugPrint('My Error: $e');
+            }
+          });
+        }
+      } on SocketException catch (e) {
+        throw Exception('No Internet ($e)');
+      } catch (e) {
+        throw Exception('Something went wrong! ($e)');
+      }
+    });
+  }
+
+  Future<void> logout(
+      {required Database database, required String token}) async {
     try {
       final response = await http.get(
         Uri.parse(AppHost.logout),
@@ -72,6 +136,7 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
       );
 
       if (response.statusCode == 200) {
+        await UserDatabase(database, accessToken: token).delete();
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', '');
         emit(Unauthenticated());

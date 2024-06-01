@@ -229,15 +229,20 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       child: drawerItem(
                         icon: Icons.logout,
                         title: AppText.logout,
-                        onTap: () {
+                        onTap: () async {
                           AuthenticationState state =
                               BlocProvider.of<AuthenticationCubit>(context)
                                   .state;
                           if (state is Authenticated) {
                             BlocProvider.of<AuthenticationCubit>(context)
                                 .logout(
+                              database:
+                                  context.read<DatabaseProvider>().database,
                               token: state.token,
                             );
+                            await context
+                                .read<DatabaseProvider>()
+                                .deleteDatabase();
                           }
                         },
                       ),

@@ -6,11 +6,11 @@ class DatabaseProvider with ChangeNotifier {
 
   Database get database => _database;
 
-  Future<void> initDatabase() async {
+  Future<Database> initDatabase() async {
     final path = join(await getDatabasesPath(), 'coldxpress.db');
-    debugPrint(path.toString());
     _database = await openDatabase(path, version: 1, onCreate: createTables);
     notifyListeners();
+    return _database;
   }
 
   Future<void> createTables(Database db, int version) async {
@@ -137,6 +137,14 @@ class DatabaseProvider with ChangeNotifier {
             datetime TEXT,
             access_token TEXT,
             is_complete INTEGER DEFAULT 0
+          )
+        ''');
+    await db.execute('''
+          CREATE TABLE IF NOT EXISTS sync_task(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_name TEXT,
+            task_type TEXT,
+            data TEXT
           )
         ''');
     // Create other tables here...

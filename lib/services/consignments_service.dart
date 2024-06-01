@@ -75,7 +75,24 @@ class ConsignmentService {
     } on SocketException catch (e) {
       throw Exception('No Internet ($e)');
     } catch (e) {
-      throw Exception('Unsuccessful to fetch submission data! $e');
+      debugPrint('Unsuccessful to fetch submission data! $e');
     }
+  }
+
+  void reorderConsignments(List consignmentIds) {
+    for (int id in consignmentIds) {
+      ConsignmentDatabase(_database).update(
+        id,
+        {'sort': consignmentIds.indexOf(id) + 1},
+      );
+      TaskDatabase(_database).create(
+        {
+          'task_name': 'Re-order Consignments',
+          'task_type': 'reorder',
+          'data': json.encode(consignmentIds)
+        },
+      );
+    }
+    print('Done ...');
   }
 }

@@ -35,7 +35,15 @@ class _HomeTabState extends State<HomeTab> {
         context.read<DatabaseProvider>().database,
         accessToken: state.token,
       );
+      config(state.token);
     }
+  }
+
+  config(token) async {
+    var data = await PreCheckDatabase(context.read<DatabaseProvider>().database,
+            accessToken: token)
+        .read();
+    print('My Test Data: $data');
   }
 
   @override
@@ -138,54 +146,59 @@ class _HomeTabState extends State<HomeTab> {
                     },
                     SizedBox(height: 2.h),
                     StreamBuilder(
-                        stream: precheck.controller.stream,
-                        builder: (context, precheckSnapshot) {
-                          if (precheckSnapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const SizedBox();
-                          } else {
-                            return Column(
-                              children: [
-                                if (precheckSnapshot.data[0]['checklist'] == 0)
-                                  SubmissionCheckContainer(
-                                    leadingSVG: AppSvgs.checkList,
-                                    title: AppText.preStartCheckReq,
-                                    subtitle: AppText.preStartSubtext,
-                                    onPressed: () {
-                                      Get.toNamed(AppRoutes.preStartChecklist);
-                                    },
-                                    backgroundColor: AppColors.twoBlueGradient,
-                                    isLoading: !precheckSnapshot.hasData,
-                                  ),
-                                if (precheckSnapshot.data[0]['outbound'] == 0)
-                                  SubmissionCheckContainer(
-                                    leadingSVG: AppSvgs.boundpallets,
-                                    title: AppText.outboundPalletsReq,
-                                    subtitle: AppText.outboundPalletSubtext,
-                                    onPressed: () {
-                                      Get.toNamed(AppRoutes.outboundPallet);
-                                    },
-                                    backgroundColor: AppColors.twoBlackGradient,
-                                    isLoading: !precheckSnapshot.hasData,
-                                  ),
-                                if (precheckSnapshot.data[0]['inbound'] == 0)
-                                  SubmissionCheckContainer(
-                                    leadingSVG: AppSvgs.boundpallets,
-                                    title: AppText.inboundPalletsReq,
-                                    subtitle: AppText.inboundPalletSubtext,
-                                    onPressed: () {
-                                      Get.toNamed(AppRoutes.inboundPallet);
-                                    },
-                                    backgroundColor: AppColors.twoBlackGradient,
-                                    isLoading: !precheckSnapshot.hasData,
-                                  )
-                              ],
-                            );
-                          }
-                        }),
+                      stream: precheck.stream,
+                      builder: (context, precheckSnapshot) {
+                        if (precheckSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const SizedBox();
+                        } else if (!precheckSnapshot.hasData ||
+                            precheckSnapshot.data!.isEmpty) {
+                          return const Text('No data available');
+                        } else {
+                          final data = precheckSnapshot.data!;
+                          return Column(
+                            children: [
+                              if (data[0]['checklist'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.checkList,
+                                  title: AppText.preStartCheckReq,
+                                  subtitle: AppText.preStartSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.preStartChecklist);
+                                  },
+                                  backgroundColor: AppColors.twoBlueGradient,
+                                  isLoading: false,
+                                ),
+                              if (data[0]['outbound'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.boundpallets,
+                                  title: AppText.outboundPalletsReq,
+                                  subtitle: AppText.outboundPalletSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.outboundPallet);
+                                  },
+                                  backgroundColor: AppColors.twoBlackGradient,
+                                  isLoading: false,
+                                ),
+                              if (data[0]['inbound'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.boundpallets,
+                                  title: AppText.inboundPalletsReq,
+                                  subtitle: AppText.inboundPalletSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.inboundPallet);
+                                  },
+                                  backgroundColor: AppColors.twoBlackGradient,
+                                  isLoading: false,
+                                ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
                     SizedBox(height: 2.h),
                     StreamBuilder(
-                      stream: consignment.controller.stream,
+                      stream: consignment.stream,
                       builder: (context, consignmentSnapshot) {
                         if (consignmentSnapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -219,7 +232,7 @@ class _HomeTabState extends State<HomeTab> {
                                 Row(
                                   children: [
                                     Text(
-                                      consignmentSnapshot.data.length
+                                      consignmentSnapshot.data!.length
                                           .toString(),
                                       style: Theme.of(context)
                                           .textTheme
@@ -257,7 +270,7 @@ class _HomeTabState extends State<HomeTab> {
                                 Expanded(
                                   child: SingleChildScrollView(
                                     controller: _scrollController,
-                                    child: consignmentSnapshot.data.isEmpty
+                                    child: consignmentSnapshot.data!.isEmpty
                                         ? Padding(
                                             padding: EdgeInsets.symmetric(
                                               vertical: 4.h,
@@ -306,7 +319,7 @@ class _HomeTabState extends State<HomeTab> {
                                             children: [
                                               for (var consignment
                                                   in consignmentSnapshot
-                                                      .data) ...{
+                                                      .data!) ...{
                                                 ConsignmentContainer(
                                                   consignment: consignment,
                                                 ),

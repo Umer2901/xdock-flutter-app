@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
 
@@ -19,7 +21,6 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
     productTypes = json.decode(Get.arguments['product_types']);
     deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
     pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
-    
   }
 
   @override
@@ -328,28 +329,10 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                     height: 4.h,
                   ),
                   CustomElevatedButton(
-                    label: AppText.podCapture,
-                    onPressed: () {
-                      
-    //                final Map<String, dynamic> dataToSend = {
-    //   'id': Get.arguments['id'],
-    //   'customer_reference': Get.arguments['customer_reference'],
-    //   'consignment_type': Get.arguments['consignment_type'],
-    //   'delivery_addresses': deliveryAddresses,
-    //   'pickup_addresses': pickupAddresses,
-    //   'product_types': productTypes,
-    //   'carton': Get.arguments['carton'],
-    //   'pallet': Get.arguments['pallet'],
-    //   'space': Get.arguments['space'],
-    //   'weight': Get.arguments['weight'],
-    //   'special_instruction': Get.arguments['special_instruction'],
-    //   // Add any other required fields here
-    // };
-
-    // Navigate to the ProofOfDelivery screen with arguments
-    Get.toNamed(AppRoutes.proofOfDelivery, arguments: Get.arguments);
-                    },
-                  ),
+                      label: AppText.podCapture,
+                      onPressed: () {
+                        Get.toNamed(AppRoutes.proofOfDelivery);
+                      }),
                   SizedBox(
                     height: 8.h,
                   ),

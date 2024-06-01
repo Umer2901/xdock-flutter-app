@@ -1,4 +1,5 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:convert';
 import 'package:coldxpress/export.dart';
 
 class MyConsigmentReorder extends StatefulWidget {
@@ -10,13 +11,13 @@ class MyConsigmentReorder extends StatefulWidget {
 
 class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   final ScrollController _scrollController = ScrollController();
-  late List<dynamic> _consignments;
+  final List<dynamic> _consignments = [];
   List<int> consignmentIds = [];
 
   @override
   void initState() {
     super.initState();
-    _consignments = Get.arguments;
+    _consignments.addAll(json.decode(json.encode(Get.arguments)));
   }
 
   // Future<void> reorder(var data) async {
@@ -112,20 +113,28 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     CustomButton(
-                        label: AppText.cancel.toUpperCase(),
-                        borderColor: AppColors.belowMidGreyTwo,
-                        backgroundColor: AppColors.white,
-                        foregroundColor: AppColors.border.withOpacity(0.8),
-                        width: 40.w,
-                        height: 5.h,
-                        onPressed: () {}),
+                      label: AppText.cancel.toUpperCase(),
+                      borderColor: AppColors.belowMidGreyTwo,
+                      backgroundColor: AppColors.white,
+                      foregroundColor: AppColors.border.withOpacity(0.8),
+                      width: 40.w,
+                      height: 5.h,
+                      onPressed: () {
+                        Get.back();
+                      },
+                    ),
                     CustomButton(
-                        width: 40.w,
-                        height: 5.h,
-                        label: AppText.save.toUpperCase(),
-                        onPressed: () {
-                          print(consignmentIds);
-                        }),
+                      width: 40.w,
+                      height: 5.h,
+                      label: AppText.save.toUpperCase(),
+                      onPressed: () {
+                        if (consignmentIds.isNotEmpty) {
+                          ConsignmentService(
+                                  context.read<DatabaseProvider>().database)
+                              .reorderConsignments(consignmentIds);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -141,11 +150,11 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                         }
                         final item = _consignments.removeAt(oldIndex);
                         _consignments.insert(newIndex, item);
+                        consignmentIds = [];
+                        for (var consignment in _consignments) {
+                          consignmentIds.add(consignment['id']);
+                        }
                       });
-                      consignmentIds = [];
-                      for (var consignment in _consignments) {
-                        consignmentIds.add(consignment['id']);
-                      }
                     },
                     children: List.generate(
                       _consignments.length,
@@ -159,43 +168,25 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                       },
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 4.h,
-                    ),
-                    child: SizedBox(
-                      width: 60.w,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Image(
-                            image: AssetImage(
-                              AppImages.cardboard,
+                  GestureDetector(
+                    onTap: () {
+                      _scrollController.animateTo(
+                        0.0,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2.h),
+                      child: Text(
+                        AppText.returnToTop,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.midBlue,
+                              fontWeight: FontWeight.w700,
                             ),
-                          ),
-                          SizedBox(
-                            height: 3.h,
-                          ),
-                          Text(
-                            'Consignment Completed!',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          Text(
-                            'Get back safe, and remember to return your pallets.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
-                          ),
-                        ],
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ],
