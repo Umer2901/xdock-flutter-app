@@ -983,31 +983,31 @@ Consumer<ProofOfDeliveryProvider>(
           );
         } else {
           if (_formKey.currentState != null) {
-      final temperature = _formKey.currentState!.fields['temp']?.value?.toString() ?? '';
-        final first_name = _formKey.currentState!.fields['receiverFirstName']?.value?.toString() ?? '';
-        final last_name = _formKey.currentState!.fields['receiverLastName']?.value?.toString() ?? '';
-        final comments = _formKey.currentState!.fields['commentspho']?.value?.toString() ?? '';
-        final device = context.read<ProofOfDeliveryProvider>().data['device'] ?? '';
+          final temperature = _formKey.currentState!.fields['temp']!.value.toString();
+        final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
+        final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
+        final comments = _formKey.currentState!.fields['commentspho']?.value.toString();
+        final device = context.read<ProofOfDeliveryProvider>().data['device'];
         final serviceTimeProvider = Provider.of<TimeProvider>(context, listen: false); 
         final service_time_start = '${serviceTimeProvider.startTime.h}:${serviceTimeProvider.startTime.m}';
         final service_time_end = '${serviceTimeProvider.endTime.h}:${serviceTimeProvider.endTime.m}';
-        final lengthofDelivery = int.tryParse(_formKey.currentState!.fields['length']?.value?.toString() ?? '0') ?? 0;
-        final cartons = int.tryParse(_formKey.currentState!.fields['cartons']?.value?.toString() ?? '0') ?? 0;
-        final pallets = int.tryParse(_formKey.currentState!.fields['pallets']?.value?.toString() ?? '0') ?? 0;
-        final signature = provider.signature != null ? 'data:image/png;base64, ${base64Encode(provider.signature!)}' : '';
-        final reason = _formKey.currentState!.fields['Reasonpartial']?.value?.toString() ?? '';
+        final lengthofDelivery = _formKey.currentState!.fields['length']!.value.toString();
+        final cartons = _formKey.currentState!.fields['cartons']!.value.toString();
+        final pallets = _formKey.currentState!.fields['pallets']!.value.toString();
+         final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
+        final reason = _formKey.currentState!.fields['Reasonpartial']!.value.toString();
         final pictureSources = jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources);
-        final latitude = context.read<LocationProvider>().current?.latitude ?? 0.0;
-        final longitude = context.read<LocationProvider>().current?.longitude ?? 0.0;
+        final latitude = context.read<LocationProvider>().current!.latitude;
+        final longitude = context.read<LocationProvider>().current!.longitude;
         final images = jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images);
-        final consignments = jsonEncode(Get.arguments['consignments']);
-        final driver_id = int.tryParse(Get.arguments['driver_id'].toString()) ?? 0;
-        final address_id = int.tryParse(Get.arguments['address_id'].toString()) ?? 0;
-        final date_delivered = Get.arguments['date_delivered'] ?? '';
-        final space = double.tryParse(Get.arguments['space'].toString()) ?? 0.0;
-        final weight = double.tryParse(Get.arguments['weight'].toString()) ?? 0.0;
-        final customer_reference = Get.arguments['customer_reference'] ?? '';
-        final service_window = Get.arguments['service_window'] ?? '';
+        final consignments =  Get.arguments['consignments'];
+        final driver_id =  Get.arguments['driver_id'];
+        final address_id =  Get.arguments['address_id'];
+        final date_delivered =  Get.arguments['date_delivered'];
+        final space =  Get.arguments['space'];
+        final weight = Get.arguments['weight'];
+        final customer_reference = Get.arguments['customer_reference'];
+        final service_window = Get.arguments['service_window'];
         final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
 
         final temp = {
@@ -1424,7 +1424,7 @@ Row(
         final weight = Get.arguments['weight'];
         final customer_reference = Get.arguments['customer_reference'];
         final service_window = Get.arguments['service_window'];
-      //  final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
+        //final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
 
         final temp = {
           "pod_type": "partial",
