@@ -15,16 +15,21 @@ class ConsignmentDatabase {
     _startListeningToChanges();
   }
 
-  Future<void> create(Map<String, dynamic> data) async {
-    await _database.insert('consignments', data);
-    _refreshStream();
+ Future<void> create(Map<String, dynamic> data) async {
+    try {
+      await _database.insert('consignments', data);
+      print('Data inserted into the database: $data');
+      _refreshStream();
+    } catch (e) {
+      print('Error inserting data into the database: $e');
+    }
   }
 
   Future<List<Map<String, dynamic>>> read() async {
     return _database.query(
       'consignments',
-      where: 'access_token = ? AND datetime = ?',
-      whereArgs: [accessToken, DateFormat('dd/MM/yyyy').format(DateTime.now())],
+      where: 'access_token = ? ',
+      whereArgs: [accessToken, ],
       orderBy: 'sort',
     );
   }

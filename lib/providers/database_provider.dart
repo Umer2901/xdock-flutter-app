@@ -1,5 +1,6 @@
-import 'package:coldxpress/export.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/material.dart';
 
 class DatabaseProvider with ChangeNotifier {
   late Database _database;
@@ -46,7 +47,7 @@ class DatabaseProvider with ChangeNotifier {
         is_contractor_storeman INTEGER,
         storeman_id TEXT,
         allow_sort_consignment INTEGER,
-        "is_scanning_staff" INTEGER,
+        is_scanning_staff INTEGER,
         access_token TEXT
       )
     ''');
@@ -61,97 +62,309 @@ class DatabaseProvider with ChangeNotifier {
       )
     ''');
     await db.execute('''
-          CREATE TABLE IF NOT EXISTS consignments(
-            id INTEGER PRIMARY KEY,
-            invoice_id INTEGER,
-            driver_invoice_id INTEGER,
-            removed_from_driver_invoice INTEGER,
-            sale_order_id INTEGER,
-            customer_reference TEXT,
-            barcode TEXT,
-            consignment_type TEXT,
-            multi_leg INTEGER,
-            carton INTEGER,
-            pallet INTEGER,
-            space INTEGER,
-            weight REAL,
-            hand_unload_fee_applied INTEGER,
-            invoice_value REAL,
-            comment TEXT,
-            status TEXT,
-            date_delivered TEXT,
-            manifest_id INTEGER,
-            rate_zone_id INTEGER,
-            manually_assigned_rate_zone INTEGER,
-            cash_on_delivery INTEGER,
-            complete_cod INTEGER,
-            cod_value REAL,
-            cod_requirement TEXT,
-            delivery_date TEXT,
-            required_delivery_date TEXT,
-            special_instruction TEXT,
-            save_special_instruction INTEGER,
-            confirm INTEGER,
-            finalize INTEGER,
-            end_date TEXT,
-            next_date TEXT,
-            repeat_every TEXT,
-            repeat_count INTEGER,
-            is_repeat INTEGER,
-            no_charge INTEGER,
-            parent_repeat_id INTEGER,
-            created_at TEXT,
-            is_group INTEGER,
-            sort_arrival INTEGER,
-            delivery_address_string_id INTEGER,
-            pickup_address_string_id INTEGER,
-            cc_consignment_id INTEGER,
-            is_printed INTEGER,
-            signature TEXT,
-            temperature TEXT,
-            recevied_by_name TEXT,
-            runsheet_id INTEGER,
-            sort INTEGER,
-            osrm_sort INTEGER,
-            osrm_eta TEXT,
-            original_carton INTEGER,
-            original_pallet INTEGER,
-            original_space INTEGER,
-            original_weight REAL,
-            validated INTEGER,
-            grouping_flag INTEGER,
-            pop_temperature TEXT,
-            pop_recevied_by_name TEXT,
-            pop_signature TEXT,
-            date_picked TEXT,
-            is_unassigned INTEGER,
-            deleted_at TEXT,
-            loadsheet_pallet_id INTEGER,
-            delivery_addresses TEXT,
-            pickup_addresses TEXT,
-            delivery_runs TEXT,
-            customers TEXT,
-            product_types TEXT,
-            run_sheets TEXT,
-            consignment_pallets TEXT,
-            datetime TEXT,
-            access_token TEXT,
-            is_complete INTEGER DEFAULT 0
-          )
-        ''');
+      CREATE TABLE IF NOT EXISTS consignments (
+        id INTEGER PRIMARY KEY,
+        invoice_id INTEGER,
+        driver_invoice_id INTEGER,
+        removed_from_driver_invoice INTEGER,
+        sale_order_id INTEGER,
+        customer_reference TEXT,
+        barcode TEXT,
+        consignment_type TEXT,
+        multi_leg INTEGER,
+        carton INTEGER,
+        pallet INTEGER,
+        space INTEGER,
+        weight REAL,
+        hand_unload_fee_applied INTEGER,
+        invoice_value REAL,
+        comment TEXT,
+        status TEXT,
+        date_delivered TEXT,
+        manifest_id INTEGER,
+        rate_zone_id INTEGER,
+        manually_assigned_rate_zone INTEGER,
+        cash_on_delivery INTEGER,
+        complete_cod INTEGER,
+        cod_value REAL,
+        cod_requirement TEXT,
+        delivery_date TEXT,
+        required_delivery_date TEXT,
+        special_instruction TEXT,
+        save_special_instruction INTEGER,
+        confirm INTEGER,
+        finalize INTEGER,
+        end_date TEXT,
+        next_date TEXT,
+        repeat_every TEXT,
+        repeat_count INTEGER,
+        is_repeat INTEGER,
+        no_charge INTEGER,
+        parent_repeat_id INTEGER,
+        created_at TEXT,
+        is_group INTEGER,
+        sort_arrival INTEGER,
+        delivery_address_string_id INTEGER,
+        pickup_address_string_id INTEGER,
+        cc_consignment_id INTEGER,
+        is_printed INTEGER,
+        signature TEXT,
+        temperature TEXT,
+        recevied_by_name TEXT,
+        runsheet_id INTEGER,
+        sort INTEGER,
+        osrm_sort INTEGER,
+        osrm_eta TEXT,
+        original_carton INTEGER,
+        original_pallet INTEGER,
+        original_space INTEGER,
+        original_weight REAL,
+        validated INTEGER,
+        grouping_flag INTEGER,
+        pop_temperature TEXT,
+        pop_recevied_by_name TEXT,
+        pop_signature TEXT,
+        date_picked TEXT,
+        is_unassigned INTEGER,
+        deleted_at TEXT,
+        loadsheet_pallet_id INTEGER,
+        delivery_addresses TEXT,
+        pickup_addresses TEXT,
+        delivery_runs TEXT,
+        customers TEXT,
+        product_types TEXT,
+        run_sheets TEXT,
+        consignment_pallets TEXT,
+        datetime TEXT,
+        access_token TEXT,
+        is_complete INTEGER DEFAULT 0
+      )
+    ''');
     await db.execute('''
-          CREATE TABLE IF NOT EXISTS sync_task(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_name TEXT,
-            task_type TEXT,
-            data TEXT
-          )
-        ''');
-    // Create other tables here...
+      CREATE TABLE IF NOT EXISTS sync_task (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_name TEXT,
+        task_type TEXT,
+        data TEXT
+      )
+    ''');
+  
+  // await _database.execute('''
+  //       CREATE TABLE IF NOT EXISTS deliveryfull (
+  //         device TEXT,
+  //         id INTEGER PRIMARY KEY AUTOINCREMENT,
+  //         cartons INTEGER,
+  //         pallets INTEGER,
+  //         lengthOfDelivery INTEGER,
+  //         space INTEGER,
+  //         weight REAL,
+  //         first_name TEXT,
+  //         last_name TEXT,
+  //         temperature REAL,
+  //         signature TEXT,
+  //         comments TEXT,
+  //         service_window TEXT,
+  //         service_time_start TEXT,
+  //         service_time_end TEXT,
+  //         address_id INTEGER,
+  //         pod_type TEXT,
+  //         customer_reference TEXT,
+  //         pictures TEXT,
+  //         consignments TEXT,
+  //         pictureSources TEXT,
+  //         latitude TEXT,
+  //         longitude TEXT,
+  //         consignment_id INTEGER,
+  //         is_virtual INTEGER,
+  //         manufacturer TEXT,
+  //         model TEXT,
+  //         platform TEXT,
+  //         serial TEXT,
+
+  //         uuid TEXT,
+  //         version TEXT,
+  //         app_version TEXT,
+  //         driver_id INTEGER,
+  //         date_delivered TEXT,
+  //         platforms TEXT,
+  //         current_app_version TEXT
+  //       )
+  //     ''');
+
   }
+Future<void> fullinsertDelivery(Map<String, dynamic> deliveryData) async {
+    try {
+     
+      final String tableName = 'full_delivery';
+      await _database.execute('''
+        CREATE TABLE IF NOT EXISTS $tableName (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          cartons INTEGER,
+          pallets INTEGER,
+          lengthOfDelivery INTEGER,
+          device TEXT,
+          space INTEGER,
+          weight TEXT,
+          first_name TEXT,
+          last_name TEXT,
+          temperature TEXT,
+          signature TEXT,
+          comments TEXT,
+          service_window TEXT,
+          service_time_start TEXT,
+          service_time_end TEXT,
+          address_id INTEGER,
+          pod_type TEXT,
+          customer_reference TEXT,
+          pictures TEXT,
+          consignments TEXT,
+          pictureSources TEXT,
+          latitude TEXT,
+          longitude TEXT,
+          consignment_id INTEGER,
+          is_virtual INTEGER,
+          manufacturer TEXT,
+          model TEXT,
+          platform TEXT,
+          serial TEXT,
+          uuid TEXT,
+          version TEXT,
+          app_version TEXT,
+          driver_id INTEGER,
+          date_delivered TEXT,
+          platforms TEXT,
+          current_app_version TEXT
+        )
+      ''');
+
+      await _database.insert(
+        tableName,
+        deliveryData,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      notifyListeners();
+      print('Saving data to database complete: $deliveryData');
+    } catch (e) {
+      print('Error inserting delivery data: $e');
+    }
+  }
+Future<void> partialinsertDelivery(Map<String, dynamic> deliveryData) async {
+  try {
+    final String tableName = 'partial_delivery';
+    await _database.execute('''
+      CREATE TABLE IF NOT EXISTS $tableName (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cartons INTEGER,
+        pallets INTEGER,
+        lengthofDelivery INTEGER,
+        device TEXT,
+        space TEXT,
+        weight TEXT,
+        first_name TEXT,
+        last_name TEXT,
+        temperature TEXT,
+        signature TEXT,
+        comments TEXT,
+        service_window TEXT,
+        service_time_start TEXT,
+        service_time_end TEXT,
+        address_id INTEGER,
+        pod_type TEXT,
+        customer_reference TEXT,
+        pictures TEXT,
+        consignments TEXT,
+        pictureSources TEXT,
+        latitude TEXT,
+        longitude TEXT,
+        consignment_id INTEGER,
+        is_virtual INTEGER,
+        manufacturer TEXT,
+        model TEXT,
+        platform TEXT,
+        serial TEXT,
+        uuid TEXT,
+        version TEXT,
+        app_version TEXT,
+        driver_id INTEGER,
+        date_delivered TEXT,
+       
+        current_app_version TEXT,
+        reason TEXT,
+        lodgeError TEXT ,
+         platforms TEXT
+      )
+    ''');
+
+    await _database.insert(
+      tableName,
+      deliveryData,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    notifyListeners();
+    print('Saving data to database complete: $deliveryData');
+  } catch (e) {
+    print('Error inserting delivery data: $e');
+  }
+}
+Future<void> NoneinsertDelivery(Map<String, dynamic> deliveryData) async {
+  try {
+    final String tableName = 'None_delivery';
+    await _database.execute('''
+      CREATE TABLE IF NOT EXISTS $tableName (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pod_type TEXT,
+    error_type TEXT,
+    rejection_reason TEXT,
+    comments TEXT,
+    record_error INTEGER, -- boolean represented as INTEGER
+    adhoc_charges INTEGER, -- boolean represented as INTEGER
+    space REAL,
+    weight REAL,
+    consignments TEXT, -- JSON or serialized string
+    device TEXT,
+    date_delivered TEXT,
+    driver_id INTEGER,
+    first_name TEXT,
+    last_name TEXT,
+    customer_probe_temp TEXT,
+    driver_probe_temp TEXT,
+    driver_infrared_temp TEXT,
+    where_temp_checked TEXT,
+    customer_probe_checked INTEGER, -- boolean represented as INTEGER
+    customer_probe_why TEXT,
+    pictures TEXT, -- JSON or serialized string
+    pictureSources TEXT, -- JSON or serialized string
+    app_version TEXT,
+    current_app_version TEXT,
+    platforms TEXT
+      )
+    ''');
+
+    await _database.insert(
+      tableName,
+      deliveryData,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    notifyListeners();
+    print('Saving data to database complete: $deliveryData');
+  } catch (e) {
+    print('Error inserting delivery data: $e');
+  }
+}
+  // Future<void> insertDelivery(Map<String, dynamic> deliveryData) async {
+  //   print('Saving data to database complete: $deliveryData');
+  //   await _database.insert(
+  //     'deliveryfull',
+  //     deliveryData,
+  //   );
+  //   notifyListeners();
+  // }
 
   Future<void> deleteDatabase() async {
     final path = join(await getDatabasesPath(), 'coldxpress.db');
-    databaseFactory.deleteDatabase(path);
+    await databaseFactory.deleteDatabase(path);
   }
 }

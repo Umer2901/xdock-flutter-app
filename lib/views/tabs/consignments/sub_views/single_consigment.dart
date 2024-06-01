@@ -331,7 +331,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   CustomElevatedButton(
                       label: AppText.podCapture,
                       onPressed: () {
-                        Get.toNamed(AppRoutes.proofOfDelivery);
+                         Get.toNamed(AppRoutes.proofOfDelivery, arguments: Get.arguments);
                       }),
                   SizedBox(
                     height: 8.h,

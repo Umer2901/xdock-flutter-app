@@ -84,7 +84,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   @override
   Widget build(BuildContext context) {
       var provider = Provider.of<ProofOfDeliveryProvider>(context);
-  //  print({Get.arguments});
+        var databaseProvider = Provider.of<DatabaseProvider>(context);
+   print({Get.arguments});
   //  print("2 ${pickupAddresses}");
   //  print(productTypes);
   //  print("3${deliveryAddresses}");
@@ -107,109 +108,254 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
         
 }
       //for none only
- Future<void> postData() async {setState(() {
+//  Future<void> postData() async {setState(() {
+//     isLoading = true;
+//   });
+//   AuthenticationState state =
+//       BlocProvider.of<AuthenticationCubit>(context).state;
+//   if (state is Authenticated) {
+//     try {
+//       final Map postData = context.read<ProofOfDeliveryProvider>().data;
+//     //  Map<String, dynamic> requestBody = {};
+//       String url = ''; 
+
+//       switch (provider.selectedDeliveryType) {
+//         case DeliveryType.full:
+//           body: jsonEncode(postData);
+//           url = AppHost.podfull;
+//           break;
+//         case DeliveryType.partial:
+//           body: jsonEncode(postData);
+//           url = AppHost.podpartial;
+//           break;
+//         case DeliveryType.none:
+//   List<String> rejectionReasons =
+//       provider.selectedOrderRejectionReasons as List<String>;
+//   for (String rejectionReason in rejectionReasons) {
+//     print('Rejection Reason: $rejectionReason');
+//     switch (rejectionReason) {
+//       case "Temperature issue":
+//          body: jsonEncode(postData);
+//         url = AppHost.temperateissue;
+//         break;
+//       case "Wrong Address":
+//          body: jsonEncode(postData);
+//         url = AppHost.wrongaddress;
+//         break;
+//       case "Damaged Goods":
+//        body: jsonEncode(postData);
+//         url = AppHost.damagegoods;
+//         break;
+//       case "Receiver Not Open":
+//       body: jsonEncode(postData);
+//         url = AppHost.notopen;
+//         break;
+//       case "Other Rejection":
+//        body: jsonEncode(postData);
+//         url = AppHost.otherrejection;
+//         break;
+//       default:
+//         throw Exception('Invalid rejection reason: $rejectionReason');
+//     }
+//   }
+//   break;
+//       }
+//       print('Request Body: $postData');
+//       final response = await http.post(
+//         Uri.parse(url),
+//         headers: <String, String>{
+//           'Authorization': 'Bearer ${state.token}',
+//           'Content-Type': 'application/json',
+//           'Accept': 'application/json',
+//         },
+//       body: jsonEncode(postData),
+//       );
+
+//       if (response.statusCode == 200) {
+//         showDialog(
+//           context: context,
+//           builder: (BuildContext context) {
+//             return AlertDialog(
+//               icon: SizedBox(
+//                 height: 20.w,
+//                 width: 20.w,
+//                 child: const Image(
+//                   image: AssetImage(AppImages.checkmark),
+//                   color: Colors.green,
+//                 ),
+//               ),
+//               title: Text(
+//                 'Your Proof of Delivery has been submitted successfully.',
+//                 style: Theme.of(context)
+//                     .textTheme
+//                     .bodyLarge
+//                     ?.copyWith(fontWeight: FontWeight.w700),
+//                 textAlign: TextAlign.center,
+//               ),
+//               titlePadding: EdgeInsets.symmetric(
+//                 vertical: 1.h,
+//                 horizontal: 2.w,
+//               ),
+//               iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(10.sp),
+//               ),
+//               backgroundColor: AppColors.white,
+//               actions: <Widget>[
+//                 Center(
+//                   child: Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       CustomButton(
+//                     height: 5.h,
+//                     width: 30.w,
+//                     label: 'Edit',
+//                     //foregroundColor: AppColors.black
+//                     backgroundColor: AppColors.white,
+//                     borderColor: AppColors.black,
+//                     foregroundColor: AppColors.black,
+//                     onPressed: () async {
+//                       Navigator.pop(context);
+//                       Navigator.pop(context);
+//                     },
+//                   ),
+//                       CustomButton(
+//                         height: 5.h,
+//                         width: 30.w,
+//                         label: 'CLOSE',
+//                         backgroundColor: AppColors.blue,
+//                         borderColor: AppColors.blue,
+//                         foregroundColor: AppColors.white,
+//                         onPressed: () async {
+//                           context.read<ProofOfDeliveryProvider>().restoreToDefault();
+//                           Get.offAllNamed(AppRoutes.dashboard);
+//                         },
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ],
+//             );
+//           },
+//         );
+//       } else {
+//         setState(() {
+//           isLoading = false;
+//         });
+//         final Map<String, dynamic> responseData =
+//             json.decode(response.body);
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Row(
+//               children: [
+//                 const Icon(
+//                   Icons.error_outline_rounded,
+//                   color: AppColors.red,
+//                 ),
+//                 SizedBox(width: 2.w),
+//                 Expanded(
+//                   child: Text(
+//                     responseData['message'].trim(),
+//                     style: Theme.of(context)
+//                         .textTheme
+//                         .bodyMedium
+//                         ?.copyWith(color: AppColors.red),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             shape: RoundedRectangleBorder(
+//               borderRadius: BorderRadius.circular(0),
+//             ),
+//             duration: const Duration(seconds: 2),
+//             behavior: SnackBarBehavior.floating,
+//             backgroundColor: AppColors.lightRed,
+//             margin: EdgeInsets.only(bottom: 2.h),
+//           ),
+//         );
+//       }
+//     } catch (e) {
+//       setState(() {
+//         isLoading = false;
+//       });
+//       debugPrint(e.toString());
+//     }
+//   }
+// }
+   
+   
+   Future<void> saveDataToDatabase(Map postData) async {
+  try {
+    final ProofOfDeliveryProvider provider = context.read<ProofOfDeliveryProvider>();
+    if (databaseProvider.database == null) {
+      await databaseProvider.initDatabase();
+    }
+
+    switch (provider.selectedDeliveryType) {
+      case DeliveryType.full:
+        await databaseProvider.fullinsertDelivery(postData.cast<String, dynamic>());
+        break;
+      case DeliveryType.partial:
+        await databaseProvider.partialinsertDelivery(postData.cast<String, dynamic>());
+        break;
+      case DeliveryType.none:
+       await databaseProvider.NoneinsertDelivery(postData.cast<String, dynamic>());
+        break;
+    }
+  } catch (e) {
+    print('Error saving data to database: $e');
+  }
+}
+
+Future<void> submitData() async {
+  setState(() {
     isLoading = true;
   });
-  AuthenticationState state =
-      BlocProvider.of<AuthenticationCubit>(context).state;
-  if (state is Authenticated) {
-    try {
-      final Map postData = context.read<ProofOfDeliveryProvider>().data;
-    //  Map<String, dynamic> requestBody = {};
-      String url = ''; 
 
-      switch (provider.selectedDeliveryType) {
-        case DeliveryType.full:
-          body: jsonEncode(postData);
-          url = AppHost.podfull;
-          break;
-        case DeliveryType.partial:
-          body: jsonEncode(postData);
-          url = AppHost.podpartial;
-          break;
-        case DeliveryType.none:
-  List<String> rejectionReasons =
-      provider.selectedOrderRejectionReasons as List<String>;
-  for (String rejectionReason in rejectionReasons) {
-    print('Rejection Reason: $rejectionReason');
-    switch (rejectionReason) {
-      case "Temperature issue":
-         body: jsonEncode(postData);
-        url = AppHost.temperateissue;
-        break;
-      case "Wrong Address":
-         body: jsonEncode(postData);
-        url = AppHost.wrongaddress;
-        break;
-      case "Damaged Goods":
-       body: jsonEncode(postData);
-        url = AppHost.damagegoods;
-        break;
-      case "Receiver Not Open":
-      body: jsonEncode(postData);
-        url = AppHost.notopen;
-        break;
-      case "Other Rejection":
-       body: jsonEncode(postData);
-        url = AppHost.otherrejection;
-        break;
-      default:
-        throw Exception('Invalid rejection reason: $rejectionReason');
-    }
-  }
-  break;
-      }
-      print('Request Body: $postData');
-      final response = await http.post(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Authorization': 'Bearer ${state.token}',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      body: jsonEncode(postData),
-      );
+  try {
+    final Map postData = context.read<ProofOfDeliveryProvider>().data;
+    await saveDataToDatabase(postData);
 
-      if (response.statusCode == 200) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              icon: SizedBox(
-                height: 20.w,
-                width: 20.w,
-                child: const Image(
-                  image: AssetImage(AppImages.checkmark),
-                  color: Colors.green,
-                ),
-              ),
-              title: Text(
-                'Your Proof of Delivery has been submitted successfully.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
-                textAlign: TextAlign.center,
-              ),
-              titlePadding: EdgeInsets.symmetric(
-                vertical: 1.h,
-                horizontal: 2.w,
-              ),
-              iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.sp),
-              ),
-              backgroundColor: AppColors.white,
-              actions: <Widget>[
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CustomButton(
+    setState(() {
+      isLoading = false;
+    });
+
+    // Show success dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: SizedBox(
+            height: 20.w,
+            width: 20.w,
+            child: const Image(
+              image: AssetImage(AppImages.checkmark),
+              color: Colors.green,
+            ),
+          ),
+          title: Text(
+            'Your Proof of Delivery has been submitted successfully.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+            textAlign: TextAlign.center,
+          ),
+          titlePadding: EdgeInsets.symmetric(
+            vertical: 1.h,
+            horizontal: 2.w,
+          ),
+          iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.sp),
+          ),
+          backgroundColor: AppColors.white,
+          actions: <Widget>[
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomButton(
                     height: 5.h,
                     width: 30.w,
                     label: 'Edit',
-                    //foregroundColor: AppColors.black
                     backgroundColor: AppColors.white,
                     borderColor: AppColors.black,
                     foregroundColor: AppColors.black,
@@ -218,70 +364,33 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                       Navigator.pop(context);
                     },
                   ),
-                      CustomButton(
-                        height: 5.h,
-                        width: 30.w,
-                        label: 'CLOSE',
-                        backgroundColor: AppColors.blue,
-                        borderColor: AppColors.blue,
-                        foregroundColor: AppColors.white,
-                        onPressed: () async {
-                          context.read<ProofOfDeliveryProvider>().restoreToDefault();
-                          Get.offAllNamed(AppRoutes.dashboard);
-                        },
-                      ),
-                    ],
+                  CustomButton(
+                    height: 5.h,
+                    width: 30.w,
+                    label: 'CLOSE',
+                    backgroundColor: AppColors.blue,
+                    borderColor: AppColors.blue,
+                    foregroundColor: AppColors.white,
+                    onPressed: () async {
+                      context.read<ProofOfDeliveryProvider>().restoreToDefault();
+                      Get.offAllNamed(AppRoutes.dashboard);
+                    },
                   ),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        final Map<String, dynamic> responseData =
-            json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(
-                  Icons.error_outline_rounded,
-                  color: AppColors.red,
-                ),
-                SizedBox(width: 2.w),
-                Expanded(
-                  child: Text(
-                    responseData['message'].trim(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.red),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(0),
-            ),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.lightRed,
-            margin: EdgeInsets.only(bottom: 2.h),
-          ),
+          ],
         );
-      }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      debugPrint(e.toString());
-    }
+      },
+    );
+  } catch (e) {
+    setState(() {
+      isLoading = false;
+    });
+    print('Error submitting data: $e');
   }
 }
-   
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -874,66 +983,62 @@ Consumer<ProofOfDeliveryProvider>(
           );
         } else {
           if (_formKey.currentState != null) {
-            final temperature = _formKey.currentState!.fields['temp']!.value.toString();
-            final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
-            final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
-            final comments = _formKey.currentState!.fields['commentspho']?.value.toString();
-            final device = context.read<ProofOfDeliveryProvider>().data['device'];
-            final serviceTimeProvider = Provider.of<TimeProvider>(context, listen: false);
-            final service_time_start = '${serviceTimeProvider.startTime.h}:${serviceTimeProvider.startTime.m}';
-            final service_time_end = '${serviceTimeProvider.endTime.h}:${serviceTimeProvider.endTime.m}';
-            final lengthofDelivery = _formKey.currentState!.fields['length']!.value.toString();
-            final cartons = _formKey.currentState!.fields['cartons']!.value.toString();
-            final pallets = _formKey.currentState!.fields['pallets']!.value.toString();
-            final signature = 'data:image/png;base64, ${base64Encode(provider.signature!)}';
-            final pictureSources = context.read<ProofOfDeliveryProvider>().pictureSources;
-            final latitude = context.read<LocationProvider>().current!.latitude;
-            final longitude = context.read<LocationProvider>().current!.longitude;
-            final images = context.read<ProofOfDeliveryProvider>().base64Images;
-            final consignments =  Get.arguments['consignments'];
-            final driver_id =  Get.arguments['driver_id'];
-            final address_id =  Get.arguments['address_id'];
-            final date_delivered =  Get.arguments['date_delivered'];
-            final space =  Get.arguments['space'];
-            final weight = Get.arguments['weight'];
-            final customer_reference = Get.arguments['customer_reference'];
-            final service_window = Get.arguments['service_window'];
+      final temperature = _formKey.currentState!.fields['temp']?.value?.toString() ?? '';
+        final first_name = _formKey.currentState!.fields['receiverFirstName']?.value?.toString() ?? '';
+        final last_name = _formKey.currentState!.fields['receiverLastName']?.value?.toString() ?? '';
+        final comments = _formKey.currentState!.fields['commentspho']?.value?.toString() ?? '';
+        final device = context.read<ProofOfDeliveryProvider>().data['device'] ?? '';
+        final serviceTimeProvider = Provider.of<TimeProvider>(context, listen: false); 
+        final service_time_start = '${serviceTimeProvider.startTime.h}:${serviceTimeProvider.startTime.m}';
+        final service_time_end = '${serviceTimeProvider.endTime.h}:${serviceTimeProvider.endTime.m}';
+        final lengthofDelivery = int.tryParse(_formKey.currentState!.fields['length']?.value?.toString() ?? '0') ?? 0;
+        final cartons = int.tryParse(_formKey.currentState!.fields['cartons']?.value?.toString() ?? '0') ?? 0;
+        final pallets = int.tryParse(_formKey.currentState!.fields['pallets']?.value?.toString() ?? '0') ?? 0;
+        final signature = provider.signature != null ? 'data:image/png;base64, ${base64Encode(provider.signature!)}' : '';
+        final reason = _formKey.currentState!.fields['Reasonpartial']?.value?.toString() ?? '';
+        final pictureSources = jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources);
+        final latitude = context.read<LocationProvider>().current?.latitude ?? 0.0;
+        final longitude = context.read<LocationProvider>().current?.longitude ?? 0.0;
+        final images = jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images);
+        final consignments = jsonEncode(Get.arguments['consignments']);
+        final driver_id = int.tryParse(Get.arguments['driver_id'].toString()) ?? 0;
+        final address_id = int.tryParse(Get.arguments['address_id'].toString()) ?? 0;
+        final date_delivered = Get.arguments['date_delivered'] ?? '';
+        final space = double.tryParse(Get.arguments['space'].toString()) ?? 0.0;
+        final weight = double.tryParse(Get.arguments['weight'].toString()) ?? 0.0;
+        final customer_reference = Get.arguments['customer_reference'] ?? '';
+        final service_window = Get.arguments['service_window'] ?? '';
+        final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
 
-            final temp = {
-              "pod_type": "full",
-              "temperature": temperature,
-              "first_name": first_name,
-              "last_name": last_name,
-              "device": device,
-              "lengthofDelivery": lengthofDelivery,
-              "cartons": cartons,
-              "pallets": pallets,
-              "service_time_start": service_time_start,
-              "service_time_end": service_time_end,
-              "signature": signature,
-            "pictureSources": pictureSources,
-              "latitude": latitude,
-              "longitude": longitude,
-              "current_app_version": "3.15.2",
-              "app_version": "3.15.2",
-              "platforms": [
-        "android",
-        "cordova",
-        "mobile",
-        "hybrid"
-    ],
-              "consignments": consignments,
-              "driver_id": driver_id,
-              "date_delivered": date_delivered,
-              "space": space,
-              "weight": weight,
-              "address_id": address_id,
-              "service_window": service_window,
-              "customer_reference": customer_reference,
-              "comments": comments,
-             "pictures": images,
-            };
-
+        final temp = {
+          "temperature": temperature,
+          "first_name": first_name,
+          "last_name": last_name,
+          "lengthOfDelivery": lengthofDelivery,
+          "pod_type": "full",
+          "device": device,
+          "cartons": cartons,
+          "pallets": pallets,
+          "service_window": service_window,
+          "service_time_start": service_time_start,
+          "service_time_end": service_time_end,
+          "signature": signature,
+          "pictureSources": pictureSources,
+          "latitude": latitude,
+          "longitude": longitude,
+          "current_app_version": "3.15.2",
+          "app_version": "3.15.2",
+          "consignments": consignments,
+          "driver_id": driver_id,
+          "date_delivered": date_delivered,
+          "space": space,
+          "weight": weight,
+          "customer_reference": customer_reference,
+          "comments": comments,
+          "address_id": address_id,
+          "pictures": images,
+          "platforms": platforms,
+        };
             context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
 
        
@@ -1294,7 +1399,6 @@ Row(
     label: "Next",
     onPressed: () {
       if (_formKey.currentState != null) {
-        
         final temperature = _formKey.currentState!.fields['temp']!.value.toString();
         final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
         final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
@@ -1306,12 +1410,12 @@ Row(
         final lengthofDelivery = _formKey.currentState!.fields['length']!.value.toString();
         final cartons = _formKey.currentState!.fields['cartons']!.value.toString();
         final pallets = _formKey.currentState!.fields['pallets']!.value.toString();
-         final signature = 'data:image/png;base64, ${base64Encode(provider.signature!)}';
+         final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
         final reason = _formKey.currentState!.fields['Reasonpartial']!.value.toString();
-        final pictureSources = context.read<ProofOfDeliveryProvider>().pictureSources;
+        final pictureSources = jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources);
         final latitude = context.read<LocationProvider>().current!.latitude;
         final longitude = context.read<LocationProvider>().current!.longitude;
-        final images = context.read<ProofOfDeliveryProvider>().base64Images;
+        final images = jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images);
         final consignments =  Get.arguments['consignments'];
         final driver_id =  Get.arguments['driver_id'];
         final address_id =  Get.arguments['address_id'];
@@ -1320,6 +1424,7 @@ Row(
         final weight = Get.arguments['weight'];
         final customer_reference = Get.arguments['customer_reference'];
         final service_window = Get.arguments['service_window'];
+      //  final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
 
         final temp = {
           "pod_type": "partial",
@@ -1348,14 +1453,11 @@ Row(
           "customer_reference": customer_reference,
           "comments": comments,
           "address_id": address_id,
-          "pictures": images,
-         "lodgeError": { "comments":  comments, "errorPictures":   images, "errorPictureSources":  pictureSources,  },
-          "platforms": [
-           "android",
-           "cordova",
-           "mobile",
-           "hybrid"
-            ],
+          "pictures": images,       
+      //  "lodgeError": { "comments":  comments, "errorPictures":   images, "errorPictureSources":  pictureSources,  },
+          "lodgeError": comments,
+          "platforms": "android",
+           
         };
 
         context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
@@ -1496,9 +1598,9 @@ Row(
     final weight = Get.arguments['weight'];
     final customer_reference = Get.arguments['customer_reference'];
     final service_window = Get.arguments['service_window'];
-    final pictureSources = provider.pictureSources;
-    final images = provider.base64Images;
-    final device = provider.data['device'];
+    final pictureSources = jsonEncode(provider.pictureSources);
+    final images = jsonEncode(provider.base64Images);
+    final device = jsonEncode(provider.data['device']);
  final commentss = _formKey.currentState!.fields['Order rejection']?.value.toString();
  
       String? comments = '';
@@ -1547,16 +1649,17 @@ Row(
       "pictureSources": pictureSources,
       "app_version": "3.15.2",
       "current_app_version": "3.15.2",
-              "platforms": [
-        "android",
-        "cordova",
-        "mobile",
-        "hybrid"
-    ],
+    //           "platforms": [
+    //     "android",
+    //     "cordova",
+    //     "mobile",
+    //     "hybrid"
+    // ],
     };
 
     provider.addEntities(temp.entries);
-   postData();
+    submitData();
+   //postData();
   } else {
     print("Form key is null");
   }
