@@ -28,6 +28,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   late Map productTypes;
   late Map deliveryAddresses;
   late Map pickupAddresses;
+final dateDeliveredTimestamp = DateTime.now().millisecondsSinceEpoch;
+
+
   @override
   void initState() {
     super.initState();
@@ -42,24 +45,24 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     context.read<LocationProvider>().getCurrentLocation();
   }
 
-  void _setDeviceInfo() async {
+void _setDeviceInfo() async {
   final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
 
   try {
     if (Platform.isAndroid) {
       AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
-     deviceinfo = {
+      deviceinfo = {
         "isVirtual": androidInfo.isPhysicalDevice,
         "manufacturer": androidInfo.manufacturer,
         "model": androidInfo.model,
         "platform": "Android",
         "serial": androidInfo.id,
-        "uuid": androidInfo.id, 
+        "uuid": androidInfo.id,
         "version": androidInfo.version.sdkInt.toString(),
       };
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfoPlugin.iosInfo;
-    deviceinfo = {
+      deviceinfo = {
         "isVirtual": iosInfo.isPhysicalDevice,
         "manufacturer": 'Apple',
         "model": iosInfo.model,
@@ -73,19 +76,21 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   } catch (e) {
     print("Error fetching device info: $e");
   }
+
   if (deviceinfo.isNotEmpty) {
     context.read<ProofOfDeliveryProvider>().setDeviceInfo(deviceinfo);
+    // Debugging line
+    print("Device info set in provider: $deviceinfo");
   } else {
     print("Device info is empty. Cannot set in the provider.");
   }
 }
-
  
   @override
   Widget build(BuildContext context) {
       var provider = Provider.of<ProofOfDeliveryProvider>(context);
-        var databaseProvider = Provider.of<DatabaseProvider>(context);
-   print({Get.arguments});
+      var databaseProvider = Provider.of<DatabaseProvider>(context);
+  //  print({Get.arguments});
   //  print("2 ${pickupAddresses}");
   //  print(productTypes);
   //  print("3${deliveryAddresses}");
@@ -320,7 +325,6 @@ Future<void> submitData() async {
       isLoading = false;
     });
 
-    // Show success dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -983,32 +987,31 @@ Consumer<ProofOfDeliveryProvider>(
           );
         } else {
           if (_formKey.currentState != null) {
-          final temperature = _formKey.currentState!.fields['temp']!.value.toString();
+        final temperature = _formKey.currentState!.fields['temp']!.value.toString();
         final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
         final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
         final comments = _formKey.currentState!.fields['commentspho']?.value.toString();
-        final device = context.read<ProofOfDeliveryProvider>().data['device'];
         final serviceTimeProvider = Provider.of<TimeProvider>(context, listen: false); 
         final service_time_start = '${serviceTimeProvider.startTime.h}:${serviceTimeProvider.startTime.m}';
         final service_time_end = '${serviceTimeProvider.endTime.h}:${serviceTimeProvider.endTime.m}';
         final lengthofDelivery = _formKey.currentState!.fields['length']!.value.toString();
         final cartons = _formKey.currentState!.fields['cartons']!.value.toString();
         final pallets = _formKey.currentState!.fields['pallets']!.value.toString();
-         final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
-        final reason = _formKey.currentState!.fields['Reasonpartial']!.value.toString();
+        final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
         final pictureSources = jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources);
         final latitude = context.read<LocationProvider>().current!.latitude;
         final longitude = context.read<LocationProvider>().current!.longitude;
         final images = jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images);
-        final consignments =  Get.arguments['consignments'];
-        final driver_id =  Get.arguments['driver_id'];
-        final address_id =  Get.arguments['address_id'];
-        final date_delivered =  Get.arguments['date_delivered'];
+        final consignments =  Get.arguments['id'];
+        final driver_id =  Get.arguments['runsheet_id'];
+        final address_id =   pickupAddresses['id'];
         final space =  Get.arguments['space'];
         final weight = Get.arguments['weight'];
         final customer_reference = Get.arguments['customer_reference'];
-        final service_window = Get.arguments['service_window'];
+        final service_window = pickupAddresses['service_window'];
         final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
+        //  final date_delivered =  Get.arguments['date_delivered'];
+        // final device = jsonEncode(Provider.of<ProofOfDeliveryProvider>(context, listen: false).data['device']); 
 
         final temp = {
           "temperature": temperature,
@@ -1016,7 +1019,7 @@ Consumer<ProofOfDeliveryProvider>(
           "last_name": last_name,
           "lengthOfDelivery": lengthofDelivery,
           "pod_type": "full",
-          "device": device,
+          "device":  jsonEncode(deviceinfo),
           "cartons": cartons,
           "pallets": pallets,
           "service_window": service_window,
@@ -1030,7 +1033,7 @@ Consumer<ProofOfDeliveryProvider>(
           "app_version": "3.15.2",
           "consignments": consignments,
           "driver_id": driver_id,
-          "date_delivered": date_delivered,
+          "date_delivered": dateDeliveredTimestamp,
           "space": space,
           "weight": weight,
           "customer_reference": customer_reference,
@@ -1039,9 +1042,8 @@ Consumer<ProofOfDeliveryProvider>(
           "pictures": images,
           "platforms": platforms,
         };
-            context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
 
-       
+            context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
             Get.toNamed(AppRoutes.podphotos, arguments: Get.arguments);
           }
         }
@@ -1403,35 +1405,35 @@ Row(
         final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
         final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
         final comments = _formKey.currentState!.fields['commentspho']?.value.toString();
-        final device = context.read<ProofOfDeliveryProvider>().data['device'];
         final serviceTimeProvider = Provider.of<TimeProvider>(context, listen: false); 
         final service_time_start = '${serviceTimeProvider.startTime.h}:${serviceTimeProvider.startTime.m}';
         final service_time_end = '${serviceTimeProvider.endTime.h}:${serviceTimeProvider.endTime.m}';
         final lengthofDelivery = _formKey.currentState!.fields['length']!.value.toString();
         final cartons = _formKey.currentState!.fields['cartons']!.value.toString();
         final pallets = _formKey.currentState!.fields['pallets']!.value.toString();
-         final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
+        final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
         final reason = _formKey.currentState!.fields['Reasonpartial']!.value.toString();
         final pictureSources = jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources);
         final latitude = context.read<LocationProvider>().current!.latitude;
         final longitude = context.read<LocationProvider>().current!.longitude;
         final images = jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images);
-        final consignments =  Get.arguments['consignments'];
-        final driver_id =  Get.arguments['driver_id'];
-        final address_id =  Get.arguments['address_id'];
-        final date_delivered =  Get.arguments['date_delivered'];
+        final consignments =  Get.arguments['id'];
+        final driver_id =  Get.arguments['runsheet_id'];
+        final address_id =  pickupAddresses['id'];
         final space =  Get.arguments['space'];
         final weight = Get.arguments['weight'];
         final customer_reference = Get.arguments['customer_reference'];
-        final service_window = Get.arguments['service_window'];
-        //final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
+        final service_window = pickupAddresses['service_window'];
+        final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
+        //final device = context.read<ProofOfDeliveryProvider>().data['device'];
+        //final date_delivered =  Get.arguments['date_delivered'];
 
         final temp = {
           "pod_type": "partial",
           "temperature": temperature,
           "first_name": first_name,
           "last_name": last_name,
-          "device": device ,
+          "device":  jsonEncode(deviceinfo),
           "lengthofDelivery": lengthofDelivery,
           "cartons": cartons,
           "pallets": pallets,
@@ -1447,16 +1449,16 @@ Row(
           "app_version": "3.15.2",
           "consignments":  consignments,
           "driver_id":  driver_id,
-          "date_delivered": date_delivered,
+          "date_delivered": dateDeliveredTimestamp,
           "space": space,
           "weight": weight,
           "customer_reference": customer_reference,
           "comments": comments,
           "address_id": address_id,
           "pictures": images,       
-      //  "lodgeError": { "comments":  comments, "errorPictures":   images, "errorPictureSources":  pictureSources,  },
-          "lodgeError": comments,
-          "platforms": "android",
+        "lodgeError": jsonEncode({ "comments":  comments, "errorPictures":   images, "errorPictureSources":  pictureSources,  }),
+        // "lodgeError": comments,
+          "platforms": platforms,
            
         };
 
@@ -1602,6 +1604,7 @@ Row(
     final images = jsonEncode(provider.base64Images);
     final device = jsonEncode(provider.data['device']);
  final commentss = _formKey.currentState!.fields['Order rejection']?.value.toString();
+  final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
  
       String? comments = '';
     int error_type = 1;
@@ -1634,7 +1637,7 @@ Row(
       "space": space,
       "weight": weight,
       "consignments": consignments,
-      "device": device,
+      "device":  jsonEncode(deviceinfo),
       "date_delivered": date_delivered,
       "driver_id": driver_id,
       "first_name": "",
@@ -1649,12 +1652,7 @@ Row(
       "pictureSources": pictureSources,
       "app_version": "3.15.2",
       "current_app_version": "3.15.2",
-    //           "platforms": [
-    //     "android",
-    //     "cordova",
-    //     "mobile",
-    //     "hybrid"
-    // ],
+      "platforms":  platforms,
     };
 
     provider.addEntities(temp.entries);

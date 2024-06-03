@@ -292,7 +292,7 @@ Future<void> partialinsertDelivery(Map<String, dynamic> deliveryData) async {
         current_app_version TEXT,
         reason TEXT,
         lodgeError TEXT ,
-         platforms TEXT
+        platforms TEXT
       )
     ''');
 
