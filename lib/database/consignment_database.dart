@@ -6,6 +6,7 @@ class ConsignmentDatabase {
   final Database _database;
   final String? accessToken;
   late StreamController<List<Map<String, dynamic>>> _streamController;
+  Timer? _timer;
 
   Stream<List<Map<String, dynamic>>> get stream => _streamController.stream;
 
@@ -17,16 +18,13 @@ class ConsignmentDatabase {
 
   Future<void> create(Map<String, dynamic> data) async {
     await _database.insert('consignments', data);
-    _refreshStream();
   }
 
   Future<List<Map<String, dynamic>>> read() async {
     return _database.query(
       'consignments',
-      where: 'access_token = ?',
-      whereArgs: [accessToken],
-      // where: 'access_token = ? AND datetime = ?',
-      // whereArgs: [accessToken, DateFormat('dd/MM/yyyy').format(DateTime.now())],
+      where: 'access_token = ? AND datetime = ?',
+      whereArgs: [accessToken, DateFormat('dd/MM/yyyy').format(DateTime.now())],
       orderBy: 'sort',
     );
   }
@@ -40,20 +38,18 @@ class ConsignmentDatabase {
   }
 
   Future<void> update(int id, Map<String, dynamic> data) async {
-    _database.update(
+    await _database.update(
       'consignments',
       data,
       where: 'id = ?',
       whereArgs: [id],
     );
-    _refreshStream();
   }
 
-  void _startListeningToChanges() async {
-    final result = await read();
-    if (!_streamController.isClosed) {
-      _streamController.add(result);
-    }
+  void _startListeningToChanges() {
+    _timer = Timer.periodic(const Duration(milliseconds: 800), (timer) async {
+      _refreshStream();
+    });
   }
 
   Future<void> _refreshStream() async {
@@ -64,6 +60,7 @@ class ConsignmentDatabase {
   }
 
   void dispose() {
+    _timer!.cancel();
     _streamController.close();
   }
 }

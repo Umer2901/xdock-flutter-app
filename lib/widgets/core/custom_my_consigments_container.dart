@@ -160,19 +160,19 @@ class _CustomMyConsigmentContainerState
                   SizedBox(
                     height: 2.h,
                   ),
-                  // GestureDetector(
-                  //   onTap: () {
-                  //     Get.toNamed(AppRoutes.Stopwatch);
-                  //   },
-                  //   child: CustomProductTypeAndTime(
-                  //     type: productTypes['id'].toString(),
-                  //     time:
-                  //         '${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
-                  //     svgImage: productTypes['id'] == 1
-                  //         ? SvgPicture.asset(AppSvgs.chilled)
-                  //         : SvgPicture.asset(AppSvgs.frozen),
-                  //   ),
-                  // ),
+                  GestureDetector(
+                    onTap: () {
+                      Get.toNamed(AppRoutes.Stopwatch);
+                    },
+                    child: CustomProductTypeAndTime(
+                      type: productTypes['id'].toString(),
+                      time:
+                          '${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
+                      svgImage: productTypes['id'] == 1
+                          ? SvgPicture.asset(AppSvgs.chilled)
+                          : SvgPicture.asset(AppSvgs.frozen),
+                    ),
+                  ),
                   SizedBox(height: 1.h),
                   IntrinsicHeight(
                     child: Row(

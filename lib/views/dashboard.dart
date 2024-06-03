@@ -1,5 +1,4 @@
 import 'package:coldxpress/export.dart';
-import 'package:flutter/material.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});

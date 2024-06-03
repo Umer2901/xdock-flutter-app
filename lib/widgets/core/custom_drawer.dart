@@ -2,7 +2,9 @@ import 'package:coldxpress/export.dart';
 
 class CustomDrawer extends StatefulWidget {
   final String name;
-  const CustomDrawer({super.key, required this.name});
+  final int consignmentCount;
+  const CustomDrawer(
+      {super.key, required this.name, this.consignmentCount = 0});
 
   @override
   State<CustomDrawer> createState() => _CustomDrawerState();
