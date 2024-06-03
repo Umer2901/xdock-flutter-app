@@ -31,6 +31,7 @@ export 'views/tabs/consignments/my_consigments.dart';
 export 'views/tabs/consignments/sub_views/single_consigment.dart';
 export 'views/tabs/consignments/sub_views/consigment_reorder.dart';
 export 'views/tabs/consignments/sub_views/consigment_group.dart';
+export 'views/tabs/consignments/sub_views/group_consigment.dart';
 
 // Constant Exports
 export 'constants/colors.dart';
