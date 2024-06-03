@@ -23,8 +23,10 @@ class ConsignmentDatabase {
   Future<List<Map<String, dynamic>>> read() async {
     return _database.query(
       'consignments',
-      where: 'access_token = ? AND datetime = ?',
-      whereArgs: [accessToken, DateFormat('dd/MM/yyyy').format(DateTime.now())],
+      where: 'access_token = ?',
+      whereArgs: [accessToken],
+      // where: 'access_token = ? AND datetime = ?',
+      // whereArgs: [accessToken, DateFormat('dd/MM/yyyy').format(DateTime.now())],
       orderBy: 'sort',
     );
   }
