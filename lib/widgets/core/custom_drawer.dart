@@ -82,7 +82,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     drawerItem(
                       icon: Icons.article_outlined,
                       title: AppText.consignment,
-                      onTap: () {},
+                      onTap: () {
+                        context.read<BottomNavProvider>().changeTabView(0);
+                      },
                       suffix: Container(
                         height: 2.h,
                         width: 6.w,
@@ -92,7 +94,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         ),
                         child: Center(
                           child: Text(
-                            '8',
+                            widget.consignmentCount.toString(),
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
