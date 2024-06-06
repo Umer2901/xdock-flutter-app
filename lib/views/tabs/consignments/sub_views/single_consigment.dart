@@ -14,6 +14,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
   late Map productTypes;
   late Map deliveryAddresses;
   late Map pickupAddresses;
+  List groupedConsignments = [];
 
   @override
   void initState() {
@@ -21,6 +22,11 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
     productTypes = json.decode(Get.arguments['product_types']);
     deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
     pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+    if (Get.arguments?['grouped_consignments'] != null) {
+      groupedConsignments = json.decode(
+        Get.arguments?['grouped_consignments'],
+      );
+    }
   }
 
   @override
@@ -178,9 +184,8 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                     },
                     child: CustomProductTypeAndTime(
                       type: (productTypes['id']) == 1 ? '1' : '2',
-                      time: Get.arguments['consignment_type'] == 'delivery'
-                          ? '${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}'
-                          : '${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}',
+                      time:
+                          '${(Get.arguments!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(Get.arguments!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
                       svgImage: SvgPicture.asset(AppSvgs.frozen),
                     ),
                   ),
@@ -271,6 +276,20 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      if (Get.arguments!['total_grouped_consignments'] !=
+                          0) ...{
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            AppText.totalDelivery.toUpperCase(),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                          ),
+                        ),
+                        SizedBox(height: 1.h),
+                      },
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -311,20 +330,288 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   SizedBox(
                     height: 4.h,
                   ),
-                  Text(
-                    AppText.specialInstructions,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.black.withOpacity(0.5),
+                  if (Get.arguments!['total_grouped_consignments'] != 0) ...{
+                    const Divider(),
+                    SizedBox(
+                      height: 2.h,
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppText.suppliers.toUpperCase(),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ),
+                    SizedBox(height: 1.h),
+                    for (var subConsignment in groupedConsignments) ...{
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 2.h,
+                          horizontal: 4.w,
                         ),
-                  ),
-                  Text(
-                    Get.arguments['special_instruction'] == ''
-                        ? 'Not Provided'
-                        : Get.arguments['special_instruction'],
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.black,
+                        decoration: BoxDecoration(
+                          color: AppColors.greyWhite,
+                          borderRadius: BorderRadius.circular(10.sp),
                         ),
-                  ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${(subConsignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                  ),
+                                ),
+                                SizedBox(width: 2.w),
+                                SizedBox(
+                                  height: 2.5.h,
+                                  child: VerticalDivider(
+                                    thickness: 0.5.w,
+                                    color: AppColors.black,
+                                  ),
+                                ),
+                                SizedBox(width: 2.w),
+                                Expanded(
+                                  child: Text(
+                                    'ID: ${subConsignment['id']}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 0.5.h),
+                            Text(
+                              '${(subConsignment!['consignment_type'] == 'delivery' ? deliveryAddresses['full_address'] : pickupAddresses['full_address']) ?? 'Not Provided'}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.grey,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            SizedBox(height: 1.h),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 2.h,
+                                horizontal: 4.w,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(10.sp),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    children: [
+                                      Text(
+                                        AppText.cartons,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                      SizedBox(height: 1.h),
+                                      Text(
+                                        '${subConsignment['carton']}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height: 8.h,
+                                    child: VerticalDivider(
+                                      thickness: 0.5.w,
+                                      color: AppColors.greyWhite,
+                                    ),
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        AppText.pallets,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                      SizedBox(height: 1.h),
+                                      Text(
+                                        '${subConsignment['pallet']}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height: 8.h,
+                                    child: VerticalDivider(
+                                      thickness: 0.5.w,
+                                      color: AppColors.greyWhite,
+                                    ),
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        AppText.space,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                      SizedBox(height: 1.h),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${subConsignment['space']}',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                          SizedBox(
+                                            width: 1.w,
+                                          ),
+                                          Text(
+                                            'sqft',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 10.sp),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height: 8.h,
+                                    child: VerticalDivider(
+                                      thickness: 0.5.w,
+                                      color: AppColors.greyWhite,
+                                    ),
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        AppText.weight,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                      SizedBox(height: 1.h),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${subConsignment['weight']}',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                          SizedBox(
+                                            width: 1.w,
+                                          ),
+                                          Text(
+                                            'KG',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 10.sp),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 1.h),
+                            Container(
+                              width: 100.w,
+                              padding: EdgeInsets.symmetric(
+                                vertical: 2.h,
+                                horizontal: 4.w,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(10.sp),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    AppText.specialInstructions,
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                  SizedBox(height: 1.h),
+                                  Text(
+                                    '${subConsignment['special_instruction']}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                    textAlign: TextAlign.justify,
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                    }
+                  } else ...{
+                    Text(
+                      AppText.specialInstructions,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.black.withOpacity(0.5),
+                          ),
+                    ),
+                    Text(
+                      (Get.arguments['special_instruction'] ?? '') == ''
+                          ? 'Not Provided'
+                          : Get.arguments['special_instruction'],
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.black,
+                          ),
+                    ),
+                  },
                   SizedBox(
                     height: 4.h,
                   ),

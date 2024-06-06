@@ -25,9 +25,16 @@ class _CustomMyConsigmentContainerState
   @override
   Widget build(BuildContext context) {
     Map productTypes = json.decode(widget.consignment?['product_types']);
-    Map deliveryAddresses =
-        json.decode(widget.consignment?['delivery_addresses']);
+    Map deliveryAddresses = json.decode(
+      widget.consignment?['delivery_addresses'],
+    );
     Map pickupAddresses = json.decode(widget.consignment?['pickup_addresses']);
+    List groupedConsignments = [];
+    if (widget.consignment?['grouped_consignments'] != null) {
+      groupedConsignments = json.decode(
+        widget.consignment?['grouped_consignments'],
+      );
+    }
     return Padding(
       padding: EdgeInsets.only(top: 2.h),
       child: widget.isLoading
@@ -160,7 +167,7 @@ class _CustomMyConsigmentContainerState
                     child: CustomProductTypeAndTime(
                       type: productTypes['id'].toString(),
                       time:
-                          '${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
+                          '${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
                       svgImage: productTypes['id'] == 1
                           ? SvgPicture.asset(AppSvgs.chilled)
                           : SvgPicture.asset(AppSvgs.frozen),
@@ -209,18 +216,16 @@ class _CustomMyConsigmentContainerState
                                 ),
                                 CustomValueField(
                                   title: AppText.group,
-                                  value:
-                                      widget.consignment!['is_group'] != 'null'
-                                          ? widget.consignment!['is_group']
-                                              .toString()
-                                          : '-',
+                                  value: widget.consignment![
+                                          'total_grouped_consignments']
+                                      .toString(),
                                   svgImage: GestureDetector(
                                       onTap: () {
                                         setState(() {
                                           isExpanded == false &&
                                                   widget.consignment![
-                                                          'is_group'] !=
-                                                      'null'
+                                                          'total_grouped_consignments'] !=
+                                                      0
                                               ? isExpanded = true
                                               : isExpanded = false;
                                         });
@@ -291,98 +296,102 @@ class _CustomMyConsigmentContainerState
                   isExpanded
                       ? Column(
                           children: [
-                            SizedBox(height: 1.5.h),
-                            const Divider(
-                              color: AppColors.belowMidGreyTwo,
-                            ),
-                            ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: AppColors.belowMidGreyTwo,
-                                radius: 8.w,
-                                child: SvgPicture.asset(
-                                  AppSvgs.boundpallets,
-                                  height: 3.h,
+                            for (var subConsignment in groupedConsignments) ...{
+                              SizedBox(height: 1.5.h),
+                              const Divider(
+                                color: AppColors.belowMidGreyTwo,
+                              ),
+                              ListTile(
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                leading: CircleAvatar(
+                                  backgroundColor: AppColors.belowMidGreyTwo,
+                                  radius: 8.w,
+                                  child: SvgPicture.asset(
+                                    AppSvgs.boundpallets,
+                                    height: 3.h,
+                                  ),
+                                ),
+                                title: Text(
+                                  '${AppText.supplier}: ${(subConsignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${AppText.id.toUpperCase()}: ${subConsignment['id']}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.black
+                                                    .withOpacity(0.5),
+                                              ),
+                                        ),
+                                        Text(
+                                          '${AppText.ref.toUpperCase()}: ${subConsignment['customer_reference']}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.black
+                                                    .withOpacity(0.5),
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${AppText.ctn.toUpperCase()}: ${subConsignment['carton']}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.black,
+                                              ),
+                                        ),
+                                        Text(
+                                          '${AppText.plt.toUpperCase()}: ${subConsignment['pallet']}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.black,
+                                              ),
+                                        ),
+                                        Text(
+                                          '${AppText.spc.toUpperCase()}: ${subConsignment['space']}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.black,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              title: Text(
-                                '${AppText.supplier}: ',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${AppText.id.toUpperCase()}: 123456',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.black
-                                                  .withOpacity(0.5),
-                                            ),
-                                      ),
-                                      Text(
-                                        '${AppText.ref.toUpperCase()}: 123456',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.black
-                                                  .withOpacity(0.5),
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${AppText.ctn.toUpperCase()}: 1',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.black,
-                                            ),
-                                      ),
-                                      Text(
-                                        '${AppText.plt.toUpperCase()}: 1',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.black,
-                                            ),
-                                      ),
-                                      Text(
-                                        '${AppText.spc.toUpperCase()}: 1',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.black,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                            }
                           ],
                         )
                       : const SizedBox.shrink(),

@@ -2,7 +2,9 @@ import 'package:coldxpress/export.dart';
 
 class CustomDrawer extends StatefulWidget {
   final String name;
-  const CustomDrawer({super.key, required this.name});
+  final int consignmentCount;
+  const CustomDrawer(
+      {super.key, required this.name, this.consignmentCount = 0});
 
   @override
   State<CustomDrawer> createState() => _CustomDrawerState();
@@ -80,7 +82,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     drawerItem(
                       icon: Icons.article_outlined,
                       title: AppText.consignment,
-                      onTap: () {},
+                      onTap: () {
+                        context.read<BottomNavProvider>().changeTabView(0);
+                      },
                       suffix: Container(
                         height: 2.h,
                         width: 6.w,
@@ -90,7 +94,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         ),
                         child: Center(
                           child: Text(
-                            '8',
+                            widget.consignmentCount.toString(),
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall

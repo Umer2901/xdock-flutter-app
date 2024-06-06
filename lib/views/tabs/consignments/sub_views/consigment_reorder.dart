@@ -132,6 +132,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                           ConsignmentService(
                                   context.read<DatabaseProvider>().database)
                               .reorderConsignments(consignmentIds);
+                          Get.back();
                         }
                       },
                     ),

@@ -13,6 +13,8 @@ class _HomeTabState extends State<HomeTab> {
   late PreCheckDatabase precheck;
   late ConsignmentDatabase consignment;
 
+  int consignmentCount = 0;
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final ScrollController _scrollController = ScrollController();
@@ -40,10 +42,9 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   config(token) async {
-    var data = await PreCheckDatabase(context.read<DatabaseProvider>().database,
+    await PreCheckDatabase(context.read<DatabaseProvider>().database,
             accessToken: token)
         .read();
-    print('My Test Data: $data');
   }
 
   @override
@@ -204,6 +205,8 @@ class _HomeTabState extends State<HomeTab> {
                             ConnectionState.waiting) {
                           return const SizedBox();
                         } else if (consignmentSnapshot.hasData) {
+                          consignmentCount =
+                              consignmentSnapshot.data?.length ?? 0;
                           return Expanded(
                             child: Column(
                               children: [
@@ -217,15 +220,22 @@ class _HomeTabState extends State<HomeTab> {
                                     ),
                                     SizedBox(width: 2.w),
                                     const Spacer(),
-                                    Text(
-                                      AppText.seeAll,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: AppColors.midBlue,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        context
+                                            .read<BottomNavProvider>()
+                                            .changeTabView(0);
+                                      },
+                                      child: Text(
+                                        AppText.seeAll,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: AppColors.midBlue,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -437,6 +447,7 @@ class _HomeTabState extends State<HomeTab> {
             endDrawer: staffSnapshot.hasData
                 ? CustomDrawer(
                     name: staffSnapshot.data[0]['name'],
+                    consignmentCount: consignmentCount,
                   )
                 : const SizedBox(),
           );

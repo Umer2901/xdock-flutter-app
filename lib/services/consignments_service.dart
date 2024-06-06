@@ -23,49 +23,59 @@ class ConsignmentService {
 
         if (response.statusCode == 200) {
           final dynamic data = json.decode(response.body);
-          if (data['status'] == 'success') {
-            // List<dynamic> submissionData = data['data']
-            //         [DateFormat('yyyy-MM-dd').format(DateTime.now())]
-            //     ['consignments'];
-            List<dynamic> submissionData =
-                data['data']['2024-04-04']['consignments'];
-            for (var dataIteration in submissionData) {
-              dataIteration['delivery_addresses'] = json.encode(
-                dataIteration['delivery_addresses'],
-              );
-              dataIteration['pickup_addresses'] = json.encode(
-                dataIteration['pickup_addresses'],
-              );
-              dataIteration['delivery_runs'] = json.encode(
-                dataIteration['delivery_runs'],
-              );
-              dataIteration['customers'] = json.encode(
-                dataIteration['customers'],
-              );
-              dataIteration['product_types'] = json.encode(
-                dataIteration['product_types'],
-              );
-              dataIteration['run_sheets'] = json.encode(
-                dataIteration['run_sheets'],
-              );
-              dataIteration['consignment_pallets'] = json.encode(
-                dataIteration['consignment_pallets'],
-              );
-              dataIteration.addAll({
-                'access_token': accessToken,
-                'datetime': DateFormat('dd/MM/yyyy').format(DateTime.now()),
-                'is_complete': 0,
-              });
-              List consignment = await ConsignmentDatabase(_database)
-                  .readById(dataIteration['id']);
-              if (consignment.isEmpty) {
-                await ConsignmentDatabase(_database).create(dataIteration);
+          try {
+            if (data['status'] == 'success') {
+              // List<dynamic> submissionData = data['data']
+              //         [DateFormat('yyyy-MM-dd').format(DateTime.now())]
+              //     ['consignments'];
+              List<dynamic> submissionData =
+                  data['data']['2024-05-21']['consignments'];
+              for (var dataIteration in submissionData) {
+                dataIteration['delivery_addresses'] = json.encode(
+                  dataIteration['delivery_addresses'],
+                );
+                dataIteration['pickup_addresses'] = json.encode(
+                  dataIteration['pickup_addresses'],
+                );
+                dataIteration['delivery_runs'] = json.encode(
+                  dataIteration['delivery_runs'],
+                );
+                dataIteration['customers'] = json.encode(
+                  dataIteration['customers'],
+                );
+                dataIteration['product_types'] = json.encode(
+                  dataIteration['product_types'],
+                );
+                dataIteration['run_sheets'] = json.encode(
+                  dataIteration['run_sheets'],
+                );
+                dataIteration['consignment_pallets'] = json.encode(
+                  dataIteration['consignment_pallets'],
+                );
+                dataIteration['grouped_consignments'] =
+                    dataIteration.containsKey('grouped_consignments')
+                        ? json.encode(
+                            dataIteration['grouped_consignments'],
+                          )
+                        : null;
+                dataIteration.addAll({
+                  'access_token': accessToken,
+                  'datetime': DateFormat('dd/MM/yyyy').format(DateTime.now()),
+                  'is_complete': 0,
+                });
+                List consignment = await ConsignmentDatabase(_database)
+                    .readById(dataIteration['id']);
+                if (consignment.isEmpty) {
+                  await ConsignmentDatabase(_database).create(dataIteration);
+                }
               }
+            } else {
+              throw Exception(
+                'Unsuccessful to fetch submission data! (Error: ${data['message']})',
+              );
             }
-          } else {
-            throw Exception(
-              'Unsuccessful to fetch submission data! (Error: ${data['message']})',
-            );
+          } catch (e) {
+            print('Data Error: $e');
           }
         } else {
           throw Exception(
