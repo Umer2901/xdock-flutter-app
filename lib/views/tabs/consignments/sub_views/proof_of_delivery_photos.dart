@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:coldxpress/database/delivery_database.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
@@ -12,10 +15,14 @@ class ProofOfDeliveryPhotos extends StatefulWidget {
   State<ProofOfDeliveryPhotos> createState() => _ProofOfDeliveryPhotosState();
 }
 
-bool isLoading = false;
-late Map productTypes;
-late Map deliveryAddresses;
-late Map pickupAddresses;
+ bool isLoading = false;
+  late Map productTypes;
+  late Map deliveryAddresses;
+  late Map pickupAddresses;
+  late final Database _database;
+  DatabaseProvider? databaseProvider;
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+
 
 class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
@@ -24,120 +31,161 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     productTypes = json.decode(Get.arguments['product_types']);
     deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
     pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+   databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+    _initializeDatabase();
+    _subscribeToConnectivityChanges();
+  }
+void _subscribeToConnectivityChanges() {
+  _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    final hasInternet = results.contains(ConnectivityResult.mobile) || results.contains(ConnectivityResult.wifi);
+    if (hasInternet) {
+      postDataToApi();
+    }
+  });
+}
+
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
+  Future<void> _initializeDatabase() async {
+    databaseProvider = context.read<DatabaseProvider>();
+    await databaseProvider?.initDatabase();
+    setState(() {
+      _database = databaseProvider!.database;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
-    var databaseProvider = Provider.of<DatabaseProvider>(context);
+   var databaseProvider = Provider.of<DatabaseProvider>(context);
 
-Future<void> saveDataToDatabase(Map postData) async {
-  try {
-    final ProofOfDeliveryProvider provider = context.read<ProofOfDeliveryProvider>();
-    if (databaseProvider.database == null) {
-      await databaseProvider.initDatabase();
-    }
+   Future<void> saveDataToDatabase(Map postData) async {
+    try {
+      final ProofOfDeliveryProvider provider = context.read<ProofOfDeliveryProvider>();
+      final DeliveryDatabase fullDeliveryDatabase = DeliveryDatabase(_database);
 
-    switch (provider.selectedDeliveryType) {
-      case DeliveryType.full:
-        await databaseProvider.fullinsertDelivery(postData.cast<String, dynamic>());
-        break;
-      case DeliveryType.partial:
-        await databaseProvider.partialinsertDelivery(postData.cast<String, dynamic>());
-        break;
-      case DeliveryType.none:
-       await databaseProvider.NoneinsertDelivery(postData.cast<String, dynamic>());
-        break;
+      Map<String, dynamic> taskData = {};
+
+      switch (provider.selectedDeliveryType) {
+        case DeliveryType.full:
+          await fullDeliveryDatabase.fullcreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+        case DeliveryType.partial:
+          await fullDeliveryDatabase.partialcreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+        case DeliveryType.none:
+          await fullDeliveryDatabase.nonecreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+      }
+ final podType = provider.selectedDeliveryType.toString().split('.').last;
+      final Map<String, dynamic> taskToSave = {
+        'task_name': 'delivery',
+        'task_type': podType,
+        'data': json.encode(taskData),
+      };
+
+      print('Saving the following data to TaskDatabase: $taskToSave');
+
+      TaskDatabase(_database).create(taskToSave);
+    } catch (e) {
+      print('Error saving data to database: $e');
     }
-  } catch (e) {
-    print('Error saving data to database: $e');
   }
-}
 
-Future<void> submitData() async {
-  setState(() {
-    isLoading = true;
-  });
 
-  try {
-    final Map postData = context.read<ProofOfDeliveryProvider>().data;
-    await saveDataToDatabase(postData);
-
+ 
+  Future<void> submitData() async {
     setState(() {
-      isLoading = false;
+      isLoading = true;
     });
 
-    // Show success dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          icon: SizedBox(
-            height: 20.w,
-            width: 20.w,
-            child: const Image(
-              image: AssetImage(AppImages.checkmark),
-              color: Colors.green,
-            ),
-          ),
-          title: Text(
-            'Your Proof of Delivery has been submitted successfully.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-            textAlign: TextAlign.center,
-          ),
-          titlePadding: EdgeInsets.symmetric(
-            vertical: 1.h,
-            horizontal: 2.w,
-          ),
-          iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.sp),
-          ),
-          backgroundColor: AppColors.white,
-          actions: <Widget>[
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomButton(
-                    height: 5.h,
-                    width: 30.w,
-                    label: 'Edit',
-                    backgroundColor: AppColors.white,
-                    borderColor: AppColors.black,
-                    foregroundColor: AppColors.black,
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  CustomButton(
-                    height: 5.h,
-                    width: 30.w,
-                    label: 'CLOSE',
-                    backgroundColor: AppColors.blue,
-                    borderColor: AppColors.blue,
-                    foregroundColor: AppColors.white,
-                    onPressed: () async {
-                      context.read<ProofOfDeliveryProvider>().restoreToDefault();
-                      Get.offAllNamed(AppRoutes.dashboard);
-                    },
-                  ),
-                ],
+    try {
+      final Map postData = context.read<ProofOfDeliveryProvider>().data;
+      await saveDataToDatabase(postData);
+
+      final connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await postDataToApi();
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            icon: SizedBox(
+              height: 20.w,
+              width: 20.w,
+              child: const Image(
+                image: AssetImage(AppImages.checkmark),
+                color: Colors.green,
               ),
             ),
-          ],
-        );
-      },
-    );
-  } catch (e) {
-    setState(() {
-      isLoading = false;
-    });
-    print('Error submitting data: $e');
-  }
-}
-
+            title: Text(
+              'Your Proof of Delivery has been submitted successfully.',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            titlePadding: EdgeInsets.symmetric(
+              vertical: 1.h,
+              horizontal: 2.w,
+            ),
+            iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.sp),
+            ),
+            backgroundColor: AppColors.white,
+            actions: <Widget>[
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CustomButton(
+                      height: 5.h,
+                      width: 30.w,
+                      label: 'Edit',
+                      backgroundColor: AppColors.white,
+                      borderColor: AppColors.black,
+                      foregroundColor: AppColors.black,
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      },
+                    ),
+                    CustomButton(
+                      height: 5.h,
+                      width: 30.w,
+                      label: 'CLOSE',
+                      backgroundColor: AppColors.blue,
+                      borderColor: AppColors.blue,
+                      foregroundColor: AppColors.white,
+                      onPressed: () async {
+                        context.read<ProofOfDeliveryProvider>().restoreToDefault();
+                        Get.offAllNamed(AppRoutes.dashboard);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error submitting data: $e');
+    }}
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -464,4 +512,92 @@ Future<void> submitData() async {
       debugPrint('Error picking image from camera: $e');
     }
   }
+  
+  Future<void> postDataToApi() async {
+  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+  var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+  AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+  
+  if (state is Authenticated) {
+    try {
+      final taskDatabase = TaskDatabase(_database);
+      final tasks = await taskDatabase.read();
+      print(tasks);
+
+      if (tasks.isEmpty) {
+        print('No tasks to send');
+        return;
+      }
+
+      final Map postData = context.read<ProofOfDeliveryProvider>().data;
+
+      String url = '';
+
+      switch (provider.selectedDeliveryType) {
+        case DeliveryType.full:
+          url = AppHost.podfull;
+          break;
+        case DeliveryType.partial:
+          url = AppHost.podpartial;
+          break;
+        case DeliveryType.none:
+          List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+          for (String rejectionReason in rejectionReasons) {
+            print('Rejection Reason: $rejectionReason');
+            switch (rejectionReason) {
+              case "Temperature issue":
+                url = AppHost.temperateissue;
+                break;
+              case "Wrong Address":
+                url = AppHost.wrongaddress;
+                break;
+              case "Damaged Goods":
+                url = AppHost.damagegoods;
+                break;
+              case "Receiver Not Open":
+                url = AppHost.notopen;
+                break;
+              case "Other Rejection":
+                url = AppHost.otherrejection;
+                break;
+              default:
+                throw Exception('Invalid rejection reason: $rejectionReason');
+            }
+          }
+          break;
+      }
+
+     final podType = provider.selectedDeliveryType.toString().split('.').last;
+      final combinedData = {
+        'pod_type': podType,  
+        'tasks': tasks,
+        
+       
+      
+      };
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Authorization': 'Bearer ${state.token}',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(combinedData),  
+      );
+
+      if (response.statusCode == 200) {
+        print('Data posted successfully: ${response.body}');
+        await taskDatabase.deleteAll();
+      } else {
+        print('Failed to post data: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error posting data to API: $e');
+    }
+  }
+}
+
+
 }

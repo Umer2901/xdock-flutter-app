@@ -1,6 +1,5 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:coldxpress/export.dart';
 import 'package:path/path.dart';
-import 'package:flutter/material.dart';
 
 class DatabaseProvider with ChangeNotifier {
   late Database _database;
@@ -47,7 +46,7 @@ class DatabaseProvider with ChangeNotifier {
         is_contractor_storeman INTEGER,
         storeman_id TEXT,
         allow_sort_consignment INTEGER,
-        is_scanning_staff INTEGER,
+        "is_scanning_staff" INTEGER,
         access_token TEXT
       )
     ''');
@@ -146,64 +145,18 @@ class DatabaseProvider with ChangeNotifier {
           )
         ''');
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS sync_task (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        task_name TEXT,
-        task_type TEXT,
-        data TEXT
-      )
-    ''');
-  
-  // await _database.execute('''
-  //       CREATE TABLE IF NOT EXISTS deliveryfull (
-  //         device TEXT,
-  //         id INTEGER PRIMARY KEY AUTOINCREMENT,
-  //         cartons INTEGER,
-  //         pallets INTEGER,
-  //         lengthOfDelivery INTEGER,
-  //         space INTEGER,
-  //         weight REAL,
-  //         first_name TEXT,
-  //         last_name TEXT,
-  //         temperature REAL,
-  //         signature TEXT,
-  //         comments TEXT,
-  //         service_window TEXT,
-  //         service_time_start TEXT,
-  //         service_time_end TEXT,
-  //         address_id INTEGER,
-  //         pod_type TEXT,
-  //         customer_reference TEXT,
-  //         pictures TEXT,
-  //         consignments TEXT,
-  //         pictureSources TEXT,
-  //         latitude TEXT,
-  //         longitude TEXT,
-  //         consignment_id INTEGER,
-  //         is_virtual INTEGER,
-  //         manufacturer TEXT,
-  //         model TEXT,
-  //         platform TEXT,
-  //         serial TEXT,
-
-  //         uuid TEXT,
-  //         version TEXT,
-  //         app_version TEXT,
-  //         driver_id INTEGER,
-  //         date_delivered TEXT,
-  //         platforms TEXT,
-  //         current_app_version TEXT
-  //       )
-  //     ''');
-
-  }
-Future<void> fullinsertDelivery(Map<String, dynamic> deliveryData) async {
-    try {
-     
-      final String tableName = 'full_delivery';
-      await _database.execute('''
-        CREATE TABLE IF NOT EXISTS $tableName (
+          CREATE TABLE IF NOT EXISTS sync_task(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_name TEXT,
+            task_type TEXT,
+            data TEXT
+          )
+        ''');
+    // Create other tables here...
+       await db.execute('''
+        CREATE TABLE IF NOT EXISTS full_delivery (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          pod_type TEXT,
           cartons INTEGER,
           pallets INTEGER,
           lengthOfDelivery INTEGER,
@@ -219,7 +172,7 @@ Future<void> fullinsertDelivery(Map<String, dynamic> deliveryData) async {
           service_time_start TEXT,
           service_time_end TEXT,
           address_id INTEGER,
-          pod_type TEXT,
+         
           customer_reference TEXT,
           pictures TEXT,
           consignments TEXT,
@@ -240,25 +193,9 @@ Future<void> fullinsertDelivery(Map<String, dynamic> deliveryData) async {
           platforms TEXT,
           current_app_version TEXT
         )
-      ''');
-
-      await _database.insert(
-        tableName,
-        deliveryData,
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-
-      notifyListeners();
-      print('Saving data to database complete: $deliveryData');
-    } catch (e) {
-      print('Error inserting delivery data: $e');
-    }
-  }
-Future<void> partialinsertDelivery(Map<String, dynamic> deliveryData) async {
-  try {
-    final String tableName = 'partial_delivery';
-    await _database.execute('''
-      CREATE TABLE IF NOT EXISTS $tableName (
+        ''');
+           await db.execute('''
+        CREATE TABLE IF NOT EXISTS partial_delivery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         cartons INTEGER,
         pallets INTEGER,
@@ -293,32 +230,16 @@ Future<void> partialinsertDelivery(Map<String, dynamic> deliveryData) async {
         app_version TEXT,
         driver_id INTEGER,
         date_delivered TEXT,
-       
         current_app_version TEXT,
         reason TEXT,
-        lodgeError TEXT ,
+        lodgeError TEXT,
         platforms TEXT
-      )
-    ''');
 
-    await _database.insert(
-      tableName,
-      deliveryData,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-
-    notifyListeners();
-    print('Saving data to database complete: $deliveryData');
-  } catch (e) {
-    print('Error inserting delivery data: $e');
-  }
-}
-Future<void> NoneinsertDelivery(Map<String, dynamic> deliveryData) async {
-  try {
-    final String tableName = 'None_delivery';
-    await _database.execute('''
-      CREATE TABLE IF NOT EXISTS $tableName (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
+          )
+        ''');
+           await db.execute('''
+    CREATE TABLE IF NOT EXISTS none_delivery (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     pod_type TEXT,
     error_type TEXT,
     rejection_reason TEXT,
@@ -344,32 +265,12 @@ Future<void> NoneinsertDelivery(Map<String, dynamic> deliveryData) async {
     app_version TEXT,
     current_app_version TEXT,
     platforms TEXT
-      )
-    ''');
-
-    await _database.insert(
-      tableName,
-      deliveryData,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-
-    notifyListeners();
-    print('Saving data to database complete: $deliveryData');
-  } catch (e) {
-    print('Error inserting delivery data: $e');
+          )
+        ''');
   }
-}
-  // Future<void> insertDelivery(Map<String, dynamic> deliveryData) async {
-  //   print('Saving data to database complete: $deliveryData');
-  //   await _database.insert(
-  //     'deliveryfull',
-  //     deliveryData,
-  //   );
-  //   notifyListeners();
-  // }
 
   Future<void> deleteDatabase() async {
     final path = join(await getDatabasesPath(), 'coldxpress.db');
-    await databaseFactory.deleteDatabase(path);
+    databaseFactory.deleteDatabase(path);
   }
 }
