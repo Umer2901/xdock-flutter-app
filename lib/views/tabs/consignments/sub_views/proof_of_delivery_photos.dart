@@ -539,7 +539,29 @@ void _subscribeToConnectivityChanges() {
             url = AppHost.podpartial;
             break;
           case DeliveryType.none:
-            // Handle none case here if needed
+            List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+            for (String rejectionReason in rejectionReasons) {
+              print('Rejection Reason: $rejectionReason');
+              switch (rejectionReason) {
+                case "Temperature issue":
+                  url = AppHost.temperateissue;
+                  break;
+                case "Wrong Address":
+                  url = AppHost.wrongaddress;
+                  break;
+                case "Damaged Goods":
+                  url = AppHost.damagegoods;
+                  break;
+                case "Receiver Not Open":
+                  url = AppHost.notopen;
+                  break;
+                case "Other Rejection":
+                  url = AppHost.otherrejection;
+                  break;
+                default:
+                  throw Exception('Invalid rejection reason: $rejectionReason');
+              }
+            }
             break;
         }
       }
