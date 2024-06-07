@@ -22,6 +22,7 @@ class ProofOfDeliveryPhotos extends StatefulWidget {
   late final Database _database;
   DatabaseProvider? databaseProvider;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  List groupedConsignments = [];
 
 
 class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
@@ -32,6 +33,11 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
     pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
    databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+    if (Get.arguments?['grouped_consignments'] != null) {
+      groupedConsignments = json.decode(
+        Get.arguments?['grouped_consignments'],
+      );
+    }
     _initializeDatabase();
     _subscribeToConnectivityChanges();
   }
@@ -93,6 +99,7 @@ void _subscribeToConnectivityChanges() {
       print('Saving the following data to TaskDatabase: $taskToSave');
 
       TaskDatabase(_database).create(taskToSave);
+     //  await   ConsignmentDatabase(_database).update(taskToSave['id'], {'sort': 1});
     } catch (e) {
       print('Error saving data to database: $e');
     }
@@ -147,20 +154,8 @@ void _subscribeToConnectivityChanges() {
             actions: <Widget>[
               Center(
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CustomButton(
-                      height: 5.h,
-                      width: 30.w,
-                      label: 'Edit',
-                      backgroundColor: AppColors.white,
-                      borderColor: AppColors.black,
-                      foregroundColor: AppColors.black,
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      },
-                    ),
                     CustomButton(
                       height: 5.h,
                       width: 30.w,
@@ -512,15 +507,15 @@ void _subscribeToConnectivityChanges() {
       debugPrint('Error picking image from camera: $e');
     }
   }
-  
-  Future<void> postDataToApi() async {
+   Future<void> postDataToApi() async {
   var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
   var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
   AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
-  
+
   if (state is Authenticated) {
     try {
-      final taskDatabase = TaskDatabase(_database);
+      final taskDatabase = TaskDatabase(_database!);
+      
       final tasks = await taskDatabase.read();
       print(tasks);
 
@@ -533,47 +528,26 @@ void _subscribeToConnectivityChanges() {
 
       String url = '';
 
-      switch (provider.selectedDeliveryType) {
-        case DeliveryType.full:
-          url = AppHost.podfull;
-          break;
-        case DeliveryType.partial:
-          url = AppHost.podpartial;
-          break;
-        case DeliveryType.none:
-          List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
-          for (String rejectionReason in rejectionReasons) {
-            print('Rejection Reason: $rejectionReason');
-            switch (rejectionReason) {
-              case "Temperature issue":
-                url = AppHost.temperateissue;
-                break;
-              case "Wrong Address":
-                url = AppHost.wrongaddress;
-                break;
-              case "Damaged Goods":
-                url = AppHost.damagegoods;
-                break;
-              case "Receiver Not Open":
-                url = AppHost.notopen;
-                break;
-              case "Other Rejection":
-                url = AppHost.otherrejection;
-                break;
-              default:
-                throw Exception('Invalid rejection reason: $rejectionReason');
-            }
-          }
-          break;
+      if (groupedConsignments.isNotEmpty) {
+        url = AppHost.group;
+      } else {
+        switch (provider.selectedDeliveryType) {
+          case DeliveryType.full:
+            url = AppHost.podfull;
+            break;
+          case DeliveryType.partial:
+            url = AppHost.podpartial;
+            break;
+          case DeliveryType.none:
+            // Handle none case here if needed
+            break;
+        }
       }
 
-     final podType = provider.selectedDeliveryType.toString().split('.').last;
+      final podType = provider.selectedDeliveryType.toString().split('.').last;
       final combinedData = {
-        'pod_type': podType,  
+        'pod_type': podType,
         'tasks': tasks,
-        
-       
-      
       };
 
       final response = await http.post(
@@ -583,21 +557,132 @@ void _subscribeToConnectivityChanges() {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode(combinedData),  
+        body: jsonEncode(combinedData),
       );
 
       if (response.statusCode == 200) {
-        print('Data posted successfully: ${response.body}');
-        await taskDatabase.deleteAll();
-      } else {
-        print('Failed to post data: ${response.statusCode}');
+        print('Data posted successfully to URL: $url');
         print('Response body: ${response.body}');
-      }
+         
+        for (var task in tasks) {
+          await taskDatabase.delete(task['id']);
+          print(task['id']);
+          await ConsignmentDatabase(_database).update(task['id'], {'sort': 1});
+        }
+      } else  {
+        print('Failed to post data to URL: $url');
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      };
     } catch (e) {
       print('Error posting data to API: $e');
     }
   }
 }
+
+
+//  Future<void> postDataToApi() async {
+//   var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+//   var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+//   AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+  
+//   if (state is Authenticated) {
+//     try {
+//       final taskDatabase = TaskDatabase(_database!);
+      
+//       final tasks = await taskDatabase.read();
+//       print(tasks);
+
+//       if (tasks.isEmpty) {
+//         print('No tasks to send');
+//         return;
+//       }
+
+//       final Map postData = context.read<ProofOfDeliveryProvider>().data;
+//       final is_group = Get.arguments['is_group'];
+
+//       String url = '';
+
+//       if (is_group != null) {
+//         print("dog: $is_group");
+//         url = AppHost.group;
+//         print('Posting data to group URL: $url');
+//       } else {
+//         switch (provider.selectedDeliveryType) {
+//           case DeliveryType.full:
+//             url = AppHost.podfull;
+//             break;
+//           case DeliveryType.partial:
+//             url = AppHost.podpartial;
+//             break;
+//           case DeliveryType.none:
+//             List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+//             for (String rejectionReason in rejectionReasons) {
+//               print('Rejection Reason: $rejectionReason');
+//               switch (rejectionReason) {
+//                 case "Temperature issue":
+//                   url = AppHost.temperateissue;
+//                   break;
+//                 case "Wrong Address":
+//                   url = AppHost.wrongaddress;
+//                   break;
+//                 case "Damaged Goods":
+//                   url = AppHost.damagegoods;
+//                   break;
+//                 case "Receiver Not Open":
+//                   url = AppHost.notopen;
+//                   break;
+//                 case "Other Rejection":
+//                   url = AppHost.otherrejection;
+//                   break;
+//                 default:
+//                   throw Exception('Invalid rejection reason: $rejectionReason');
+//               }
+//             }
+//             break;
+//         }
+//         print('Posting data to delivery URL: $url');
+//       }
+
+//       final podType = provider.selectedDeliveryType.toString().split('.').last;
+//       final combinedData = {
+//         'pod_type': podType,
+//         'tasks': tasks,
+//       };
+
+//       final response = await http.post(
+//         Uri.parse(url),
+//         headers: <String, String>{
+//           'Authorization': 'Bearer ${state.token}',
+//           'Content-Type': 'application/json',
+//           'Accept': 'application/json',
+//         },
+//         body: jsonEncode(combinedData),
+//       );
+
+//       if (response.statusCode == 200) {
+//         print('Data posted successfully to URL: $url');
+//         print('Response body: ${response.body}');
+         
+//         for (var task in tasks) {
+
+//             await taskDatabase.delete(task['id']);
+//             print(task['id']);
+//           await   ConsignmentDatabase(_database).update(task['id'], {'sort': 1});
+        
+//           }
+//       } else  {
+//         print('Failed to post data to URL: $url');
+//         print('Response status: ${response.statusCode}');
+//         print('Response body: ${response.body}');
+    
+//       };
+//     } catch (e) {
+//       print('Error posting data to API: $e');
+//     }
+//   }
+// }
+
 
 
 }

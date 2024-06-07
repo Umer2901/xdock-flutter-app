@@ -32,6 +32,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
   @override
   Widget build(BuildContext context) {
     print({Get.arguments});
+    
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(

@@ -40,6 +40,16 @@ class DeliveryDatabase {
       print('Error inserting data into the database: $e');
     }
   }
+   Future<void> groupcreate(Map<String, dynamic> data) async {
+    try {
+      await _database.insert('group_delivery', data);
+      print('Data inserted into the database: $data');
+      _refreshStream();
+    } catch (e) {
+      print('Error inserting data into the database: $e');
+    }
+  }
+
 
   Future<List<Map<String, dynamic>>> read() async {
     return _database.query(

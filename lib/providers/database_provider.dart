@@ -171,8 +171,7 @@ class DatabaseProvider with ChangeNotifier {
           service_window TEXT,
           service_time_start TEXT,
           service_time_end TEXT,
-          address_id INTEGER,
-         
+          address_id INTEGER,  
           customer_reference TEXT,
           pictures TEXT,
           consignments TEXT,
@@ -191,7 +190,8 @@ class DatabaseProvider with ChangeNotifier {
           driver_id INTEGER,
           date_delivered TEXT,
           platforms TEXT,
-          current_app_version TEXT
+          current_app_version TEXT,
+          is_group TEXT
         )
         ''');
            await db.execute('''
@@ -244,11 +244,11 @@ class DatabaseProvider with ChangeNotifier {
     error_type TEXT,
     rejection_reason TEXT,
     comments TEXT,
-    record_error INTEGER, -- boolean represented as INTEGER
-    adhoc_charges INTEGER, -- boolean represented as INTEGER
+    record_error INTEGER,
+    adhoc_charges INTEGER, 
     space REAL,
     weight REAL,
-    consignments TEXT, -- JSON or serialized string
+    consignments TEXT, 
     device TEXT,
     date_delivered TEXT,
     driver_id INTEGER,
@@ -258,7 +258,7 @@ class DatabaseProvider with ChangeNotifier {
     driver_probe_temp TEXT,
     driver_infrared_temp TEXT,
     where_temp_checked TEXT,
-    customer_probe_checked INTEGER, -- boolean represented as INTEGER
+    customer_probe_checked INTEGER,
     customer_probe_why TEXT,
     pictures TEXT, -- JSON or serialized string
     pictureSources TEXT, -- JSON or serialized string
@@ -266,6 +266,38 @@ class DatabaseProvider with ChangeNotifier {
     current_app_version TEXT,
     platforms TEXT
           )
+        ''');
+              await db.execute('''
+        CREATE TABLE IF NOT EXISTS group_delivery (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          pod_type TEXT,
+          cartons INTEGER,
+          pallets INTEGER,
+          lengthOfDelivery INTEGER,
+          device TEXT,
+          space INTEGER,
+          weight TEXT,
+          first_name TEXT,
+          last_name TEXT,
+          temperature TEXT,
+          signature TEXT,
+          comments TEXT,
+          service_window TEXT,
+          service_time_start TEXT,
+          service_time_end TEXT,
+          address_id INTEGER,  
+          customer_reference TEXT,
+          pictures TEXT,
+          consignments TEXT,
+          pictureSources TEXT,
+          latitude TEXT,
+          longitude TEXT,
+          consignment_id INTEGER,
+          driver_id INTEGER,
+          date_delivered TEXT,
+          platforms TEXT,
+          current_app_version TEXT
+        )
         ''');
   }
 

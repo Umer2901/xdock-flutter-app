@@ -241,6 +241,5 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   void setDeviceInfo(Map<String, dynamic> deviceInfo) {
     _data['device'] = deviceInfo;
     notifyListeners();
-    print("Device madarcghd: $_data");
   }
 }
