@@ -81,6 +81,7 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.consigmentGroup,
       page: () => const MyConsigmentGroup(),
+      arguments: Get.arguments,
     ),
   ];
 }
