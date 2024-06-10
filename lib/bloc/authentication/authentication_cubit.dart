@@ -14,7 +14,11 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     String? token = prefs.getString('token');
 
     if (token != null) {
-      await onStart(database, token);
+      try {
+        await onStart(database, token);
+      } catch (e) {
+        debugPrint('Error: $e');
+      }
     }
 
     await Future.delayed(
@@ -68,27 +72,33 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
   }
 
   Future<void> onStart(Database database, String token) async {
-    await InternetAddress.lookup('google.com').then((value) async {
-      try {
-        await PreCheckDatabase(database, accessToken: token)
-            .read()
-            .then((submissions) async {
-          if (submissions.isEmpty) {
-            try {
-              await PrecheckStatusService(
-                database,
-              ).fetchAndStore(token);
-            } catch (e) {
-              debugPrint("Not Connected to Network");
+    try {
+      await InternetAddress.lookup('google.com').then((value) async {
+        try {
+          await PreCheckDatabase(database, accessToken: token)
+              .read()
+              .then((submissions) async {
+            if (submissions.isEmpty) {
+              try {
+                await PrecheckStatusService(
+                  database,
+                ).fetchAndStore(token);
+              } catch (e) {
+                debugPrint("Not Connected to Network");
+              }
             }
-          }
-        }).whenComplete(() {
-          ConsignmentService(database).fetchAndStore(token);
-        });
-      } catch (e) {
-        debugPrint('My Error: $e');
-      }
-    });
+          }).whenComplete(() {
+            ConsignmentService(database).fetchAndStore(token);
+          });
+        } catch (e) {
+          debugPrint('My Error: $e');
+        }
+      });
+    } on SocketException catch (e) {
+      throw Exception('No Internet ($e)');
+    } catch (e) {
+      throw Exception('Something went wrong! ($e)');
+    }
     Connectivity().onConnectivityChanged.listen((event) async {
       try {
         if (event.contains(ConnectivityResult.wifi) ||
