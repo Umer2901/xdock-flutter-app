@@ -1,4 +1,6 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
+import 'package:coldxpress/providers/task_sync_provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 
 void main() async {
@@ -33,11 +35,20 @@ class MyApp extends StatelessWidget {
             create: (_) => TimeProvider(),
             child: const EditTime(),
           ),
+          ChangeNotifierProvider(
+            create: (_) => ProofOfDeliveryProvider(),
+          ),
           ChangeNotifierProvider<BottomNavProvider>(
             create: (_) => BottomNavProvider(),
           ),
           ChangeNotifierProvider<DatabaseProvider>(
             create: (_) => DatabaseProvider(),
+          ),
+          ChangeNotifierProvider<DatabaseProvider>(
+            create: (_) => DatabaseProvider(),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => TaskSyncProvider(),
           ),
         ],
         child: Sizer(

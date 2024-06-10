@@ -91,20 +91,20 @@ class ConsignmentService {
     }
   }
 
-  void reorderConsignments(List consignmentIds) {
+  void reorderConsignments(List consignmentIds, String accessToken) async {
     for (int id in consignmentIds) {
-      ConsignmentDatabase(_database).update(
+      await ConsignmentDatabase(_database).update(
         id,
         {'sort': consignmentIds.indexOf(id) + 1},
       );
-      TaskDatabase(_database).create(
-        {
-          'task_name': 'Re-order Consignments',
-          'task_type': 'reorder',
-          'data': json.encode(consignmentIds)
-        },
-      );
     }
-    print('Done ...');
+    await TaskSyncDatabase(_database).create({
+      'task_name': 'Re-order Consignments',
+      'task_type': 'reorder',
+      'data': json.encode(
+        {DateFormat('yyyy-MM-dd').format(DateTime.now()): consignmentIds},
+      ),
+      'access_token': accessToken,
+    });
   }
 }

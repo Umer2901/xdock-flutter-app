@@ -20,38 +20,6 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
     _consignments.addAll(json.decode(json.encode(Get.arguments)));
   }
 
-  // Future<void> reorder(var data) async {
-  //   AuthenticationState state =
-  //       BlocProvider.of<AuthenticationCubit>(context).state;
-  //   if (state is Authenticated) {
-  //     try {
-  //       final response = await http.post(
-  //         Uri.parse(AppHost.reorderConsignments),
-  //         body: jsonEncode(data),
-  //         headers: <String, String>{
-  //           'Authorization': 'Bearer ${state.token}',
-  //           'Content-Type': 'application/json',
-  //           'Accept': 'application/json',
-  //         },
-  //       );
-  //       if (response.statusCode == 200) {
-  //         final dynamic data = json.decode(response.body);
-  //         if (data['status'] == 'success') {
-  //           _consignmentStreamController.add(data);
-  //         } else {
-  //           _consignmentStreamController.addError(data['message']);
-  //         }
-  //       } else {
-  //         _consignmentStreamController.addError('Failed to fetch data');
-  //       }
-  //     } catch (e) {
-  //       if (!_consignmentStreamController.isClosed) {
-  //         _consignmentStreamController.addError(e.toString());
-  //       }
-  //     }
-  //   }
-  // }
-
   @override
   void dispose() {
     super.dispose();
@@ -129,10 +97,18 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                       label: AppText.save.toUpperCase(),
                       onPressed: () {
                         if (consignmentIds.isNotEmpty) {
-                          ConsignmentService(
-                                  context.read<DatabaseProvider>().database)
-                              .reorderConsignments(consignmentIds);
-                          Get.back();
+                          AuthenticationState authState =
+                              BlocProvider.of<AuthenticationCubit>(context)
+                                  .state;
+                          if (authState is Authenticated) {
+                            ConsignmentService(
+                                    context.read<DatabaseProvider>().database)
+                                .reorderConsignments(
+                              consignmentIds,
+                              authState.token,
+                            );
+                            Get.back();
+                          }
                         }
                       },
                     ),

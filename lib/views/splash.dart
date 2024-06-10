@@ -1,4 +1,5 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/providers/task_sync_provider.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -21,6 +22,7 @@ class _SplashViewState extends State<SplashView> {
         .initDatabase()
         .then((database) async {
       context.read<LocationProvider>().getCurrentLocation();
+      context.read<TaskSyncProvider>().checkInternetConnectivity(database);
       await BlocProvider.of<AuthenticationCubit>(context).check(database);
     });
   }

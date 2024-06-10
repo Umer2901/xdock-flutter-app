@@ -149,10 +149,157 @@ class DatabaseProvider with ChangeNotifier {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_name TEXT,
             task_type TEXT,
-            data TEXT
+            data TEXT,
+            access_token TEXT
           )
         ''');
     // Create other tables here...
+    await db.execute('''
+        CREATE TABLE IF NOT EXISTS full_delivery (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          pod_type TEXT,
+          cartons INTEGER,
+          pallets INTEGER,
+          lengthOfDelivery INTEGER,
+          device TEXT,
+          space INTEGER,
+          weight TEXT,
+          first_name TEXT,
+          last_name TEXT,
+          temperature TEXT,
+          signature TEXT,
+          comments TEXT,
+          service_window TEXT,
+          service_time_start TEXT,
+          service_time_end TEXT,
+          address_id INTEGER,  
+          customer_reference TEXT,
+          pictures TEXT,
+          consignments TEXT,
+          pictureSources TEXT,
+          latitude TEXT,
+          longitude TEXT,
+          consignment_id INTEGER,
+          is_virtual INTEGER,
+          manufacturer TEXT,
+          model TEXT,
+          platform TEXT,
+          serial TEXT,
+          uuid TEXT,
+          version TEXT,
+          app_version TEXT,
+          driver_id INTEGER,
+          date_delivered TEXT,
+          platforms TEXT,
+          current_app_version TEXT,
+          is_group TEXT
+        )
+        ''');
+    await db.execute('''
+        CREATE TABLE IF NOT EXISTS partial_delivery (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cartons INTEGER,
+        pallets INTEGER,
+        lengthofDelivery INTEGER,
+        device TEXT,
+        space TEXT,
+        weight TEXT,
+        first_name TEXT,
+        last_name TEXT,
+        temperature TEXT,
+        signature TEXT,
+        comments TEXT,
+        service_window TEXT,
+        service_time_start TEXT,
+        service_time_end TEXT,
+        address_id INTEGER,
+        pod_type TEXT,
+        customer_reference TEXT,
+        pictures TEXT,
+        consignments TEXT,
+        pictureSources TEXT,
+        latitude TEXT,
+        longitude TEXT,
+        consignment_id INTEGER,
+        is_virtual INTEGER,
+        manufacturer TEXT,
+        model TEXT,
+        platform TEXT,
+        serial TEXT,
+        uuid TEXT,
+        version TEXT,
+        app_version TEXT,
+        driver_id INTEGER,
+        date_delivered TEXT,
+        current_app_version TEXT,
+        reason TEXT,
+        lodgeError TEXT,
+        platforms TEXT
+
+          )
+        ''');
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS none_delivery (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pod_type TEXT,
+    error_type TEXT,
+    rejection_reason TEXT,
+    comments TEXT,
+    record_error INTEGER,
+    adhoc_charges INTEGER, 
+    space REAL,
+    weight REAL,
+    consignments TEXT, 
+    device TEXT,
+    date_delivered TEXT,
+    driver_id INTEGER,
+    first_name TEXT,
+    last_name TEXT,
+    customer_probe_temp TEXT,
+    driver_probe_temp TEXT,
+    driver_infrared_temp TEXT,
+    where_temp_checked TEXT,
+    customer_probe_checked INTEGER,
+    customer_probe_why TEXT,
+    pictures TEXT, -- JSON or serialized string
+    pictureSources TEXT, -- JSON or serialized string
+    app_version TEXT,
+    current_app_version TEXT,
+    platforms TEXT
+          )
+        ''');
+    await db.execute('''
+        CREATE TABLE IF NOT EXISTS group_delivery (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          pod_type TEXT,
+          cartons INTEGER,
+          pallets INTEGER,
+          lengthOfDelivery INTEGER,
+          device TEXT,
+          space INTEGER,
+          weight TEXT,
+          first_name TEXT,
+          last_name TEXT,
+          temperature TEXT,
+          signature TEXT,
+          comments TEXT,
+          service_window TEXT,
+          service_time_start TEXT,
+          service_time_end TEXT,
+          address_id INTEGER,  
+          customer_reference TEXT,
+          pictures TEXT,
+          consignments TEXT,
+          pictureSources TEXT,
+          latitude TEXT,
+          longitude TEXT,
+          consignment_id INTEGER,
+          driver_id INTEGER,
+          date_delivered TEXT,
+          platforms TEXT,
+          current_app_version TEXT
+        )
+        ''');
   }
 
   Future<void> deleteDatabase() async {

@@ -1,14 +1,15 @@
 import 'dart:async';
-import 'package:coldxpress/export.dart';
+import 'package:sqflite/sqflite.dart';
 
-class TaskDatabase {
+class TaskSyncDatabase {
   final Database _database;
-  final String? accessToken;
+
   late StreamController<List<Map<String, dynamic>>> _streamController;
+  Timer? _timer;
 
-  StreamController get controller => _streamController;
+  Stream<List<Map<String, dynamic>>> get stream => _streamController.stream;
 
-  TaskDatabase(this._database, {this.accessToken}) {
+  TaskSyncDatabase(this._database) {
     _streamController =
         StreamController<List<Map<String, dynamic>>>.broadcast();
     _startListeningToChanges();
@@ -19,7 +20,19 @@ class TaskDatabase {
   }
 
   Future<List<Map<String, dynamic>>> read() async {
-    return _database.query('sync_task');
+    return _database.query(
+      'sync_task',
+      orderBy: 'id',
+    );
+  }
+
+  Future<void> update(int id, Map<String, dynamic> data) async {
+    await _database.update(
+      'sync_task',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> delete(int id) async {
@@ -31,14 +44,20 @@ class TaskDatabase {
   }
 
   void _startListeningToChanges() {
-    _database.transaction((txn) async {
-      await txn.query('sync_task').then((result) {
-        _streamController.add(result);
-      });
+    _timer = Timer.periodic(const Duration(milliseconds: 800), (timer) async {
+      _refreshStream();
     });
   }
 
+  Future<void> _refreshStream() async {
+    final result = await read();
+    if (!_streamController.isClosed) {
+      _streamController.add(result);
+    }
+  }
+
   void dispose() {
+    _timer!.cancel();
     _streamController.close();
   }
 }
