@@ -35,6 +35,7 @@ class _CustomMyConsigmentContainerState
         widget.consignment?['grouped_consignments'],
       );
     }
+
     return Padding(
       padding: EdgeInsets.only(top: 2.h),
       child: widget.isLoading
@@ -312,6 +313,12 @@ class _CustomMyConsigmentContainerState
                                     height: 3.h,
                                   ),
                                 ),
+                                onTap: () {
+                                  Get.toNamed(
+                                    AppRoutes.singleConsigment,
+                                    arguments: subConsignment,
+                                  );
+                                },
                                 title: Text(
                                   '${AppText.supplier}: ${(subConsignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
                                   style: Theme.of(context)
