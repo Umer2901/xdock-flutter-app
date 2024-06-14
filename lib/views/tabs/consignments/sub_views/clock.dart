@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery_photos.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EditTime extends StatefulWidget {
-  const EditTime({Key? key}) : super(key: key);
+  const EditTime({super.key});
 
   @override
   State<EditTime> createState() => _EditTimeState();
@@ -9,15 +12,53 @@ class EditTime extends StatefulWidget {
 
 class _EditTimeState extends State<EditTime> {
   late TimeProvider _timeProvider;
+  late PickedTime _startTime;
+  late PickedTime _endTime;
+  late Map consignment;
+
+  DateTime? startTime;
+  DateTime? endTime;
+
+  late Map deliveryAddresses;
+  late Map pickupAddresses;
+
+  @override
+  void initState() {
+    consignment = Get.arguments;
+    deliveryAddresses = consignment['pickup_addresses'].runtimeType == String
+        ? json.decode(consignment['pickup_addresses'])
+        : consignment['pickup_addresses'];
+    pickupAddresses = consignment['pickup_addresses'].runtimeType == String
+        ? json.decode(consignment['pickup_addresses'])
+        : consignment['pickup_addresses'];
+    startTime = consignment['consignment_type'] == 'delivery'
+        ? deliveryAddresses['service_time_start'] == null
+            ? null
+            : DateTime.parse(deliveryAddresses['service_time_start'])
+        : pickupAddresses['service_time_start'] == null
+            ? null
+            : DateTime.parse(pickupAddresses['service_time_start']);
+    endTime = consignment['consignment_type'] == 'delivery'
+        ? deliveryAddresses['service_time_end'] == null
+            ? null
+            : DateTime.parse(deliveryAddresses['service_time_end'])
+        : pickupAddresses['service_time_end'] == null
+            ? null
+            : DateTime.parse(pickupAddresses['service_time_end']);
+    _startTime = startTime == null
+        ? PickedTime(h: 6, m: 30)
+        : PickedTime(h: startTime!.hour, m: startTime!.minute);
+    _endTime = endTime == null
+        ? PickedTime(h: 19, m: 30)
+        : PickedTime(h: endTime!.hour, m: endTime!.minute);
+    super.initState();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _timeProvider = Provider.of<TimeProvider>(context);
   }
-
-  PickedTime _startTime = PickedTime(h: 6, m: 30);
-  PickedTime _endTime = PickedTime(h: 19, m: 30);
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +111,10 @@ class _EditTimeState extends State<EditTime> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Ritchies IGA',
+                                (consignment['consignment_type'] == 'delivery'
+                                        ? deliveryAddresses['customer_name']
+                                        : pickupAddresses['customer_name']) ??
+                                    'Not Provided',
                                 style:
                                     Theme.of(context).textTheme.headlineMedium,
                               ),
@@ -81,7 +125,16 @@ class _EditTimeState extends State<EditTime> {
                           height: 1.h,
                         ),
                         InkWell(
-                          onTap: () {},
+                          onTap: () async {
+                            final Uri launchUri = Uri(
+                              scheme: 'tel',
+                              path:
+                                  consignment['consignment_type'] == 'delivery'
+                                      ? deliveryAddresses['telephone']
+                                      : pickupAddresses['telephone'],
+                            );
+                            await launchUrl(launchUri);
+                          },
                           child: Container(
                             width: 9.5.w,
                             height: 4.h,
@@ -198,7 +251,7 @@ class _EditTimeState extends State<EditTime> {
                     height: 1.h,
                   ),
                   Center(
-                    child: Container(
+                    child: SizedBox(
                       height: 31.h,
                       width: 75.w,
                       child: Stack(
@@ -206,7 +259,7 @@ class _EditTimeState extends State<EditTime> {
                         children: [
                           CircleAvatar(
                             backgroundColor: AppColors.white,
-                            backgroundImage: AssetImage(AppImages.clock),
+                            backgroundImage: const AssetImage(AppImages.clock),
                             radius: 76.sp,
                           ),
                           Positioned(
@@ -216,15 +269,17 @@ class _EditTimeState extends State<EditTime> {
                               initTime: _startTime,
                               endTime: _endTime,
                               onSelectionChange: (start, end, isDisableRange) =>
-                                  print(
-                                      'onSelectionChange => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange'),
+                                  debugPrint(
+                                'onSelectionChange => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange',
+                              ),
                               onSelectionEnd: (start, end, isDisableRange) {
                                 setState(() {
                                   _startTime = start;
                                   _endTime = end;
                                 });
-                                print(
-                                    'onSelectionEnd => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange');
+                                debugPrint(
+                                  'onSelectionEnd => init : ${start.h}:${start.m}, end : ${end.h}:${end.m}, isDisableRangeRange: $isDisableRange',
+                                );
                               },
                               decoration: TimePickerDecoration(
                                 sweepDecoration: TimePickerSweepDecoration(
@@ -287,28 +342,135 @@ class _EditTimeState extends State<EditTime> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                          width: 30.w,
-                          child: CustomButton(
-                            label: "Cancel",
-                            onPressed: () {
+                      SizedBox(
+                        width: 30.w,
+                        child: CustomButton(
+                          label: "Cancel",
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          backgroundColor: AppColors.white,
+                          foregroundColor: AppColors.darkGrey,
+                          borderColor: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 30.w,
+                        child: CustomButton(
+                          label: "Save",
+                          onPressed: () async {
+                            await ConsignmentDatabase(
+                                    context.read<DatabaseProvider>().database)
+                                .readById(consignment['id'])
+                                .then((value) {
+                              if (value.isNotEmpty) {
+                                if (consignment['consignment_type'] ==
+                                    'delivery') {
+                                  deliveryAddresses['service_time_start'] =
+                                      startTime != null
+                                          ? startTime!
+                                              .copyWith(
+                                                hour: _startTime.h,
+                                                minute: _startTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first
+                                          : parseDate(consignment['date'])
+                                              .copyWith(
+                                                hour: _startTime.h,
+                                                minute: _startTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first;
+                                  deliveryAddresses['service_time_end'] =
+                                      endTime != null
+                                          ? endTime!
+                                              .copyWith(
+                                                hour: _endTime.h,
+                                                minute: _endTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first
+                                          : parseDate(consignment['date'])
+                                              .copyWith(
+                                                hour: _endTime.h,
+                                                minute: _endTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first;
+
+                                  String temp = json.encode(deliveryAddresses);
+
+                                  ConsignmentDatabase(context
+                                          .read<DatabaseProvider>()
+                                          .database)
+                                      .update(
+                                    consignment['id'],
+                                    {'delivery_addresses': temp},
+                                  );
+                                } else {
+                                  pickupAddresses['service_time_start'] =
+                                      startTime != null
+                                          ? startTime!
+                                              .copyWith(
+                                                hour: _startTime.h,
+                                                minute: _startTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first
+                                          : parseDate(consignment['date'])
+                                              .copyWith(
+                                                hour: _startTime.h,
+                                                minute: _startTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first;
+                                  pickupAddresses['service_time_end'] =
+                                      endTime != null
+                                          ? endTime!
+                                              .copyWith(
+                                                hour: _endTime.h,
+                                                minute: _endTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first
+                                          : parseDate(consignment['date'])
+                                              .copyWith(
+                                                hour: _endTime.h,
+                                                minute: _endTime.m,
+                                              )
+                                              .toString()
+                                              .split('.')
+                                              .first;
+
+                                  String temp = json.encode(pickupAddresses);
+
+                                  ConsignmentDatabase(context
+                                          .read<DatabaseProvider>()
+                                          .database)
+                                      .update(
+                                    consignment['id'],
+                                    {'pickup_addresses': temp},
+                                  );
+                                }
+                              }
+                              var timeProvider = Provider.of<TimeProvider>(
+                                context,
+                                listen: false,
+                              );
+                              timeProvider.updateTimes(_startTime, _endTime);
                               Navigator.pop(context);
-                            },
-                            backgroundColor: AppColors.white,
-                            foregroundColor: AppColors.darkGrey,
-                            borderColor: Colors.grey,
-                          )),
-                      Container(
-                          width: 30.w,
-                          child: CustomButton(
-                              label: "Save",
-                              onPressed: () {
-                                var timeProvider = Provider.of<TimeProvider>(
-                                    context,
-                                    listen: false);
-                                timeProvider.updateTimes(_startTime, _endTime);
-                                Navigator.pop(context);
-                              })),
+                            });
+                          },
+                        ),
+                      ),
                     ],
                   )
                 ],
@@ -318,6 +480,12 @@ class _EditTimeState extends State<EditTime> {
         ),
       ),
     );
+  }
+
+  DateTime parseDate(String date) {
+    List<String> value = date.split('/');
+    return DateTime(
+        int.parse(value[2]), int.parse(value[1]), int.parse(value[0]));
   }
 }
 

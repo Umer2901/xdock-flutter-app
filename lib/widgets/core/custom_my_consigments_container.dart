@@ -163,7 +163,10 @@ class _CustomMyConsigmentContainerState
                   ),
                   GestureDetector(
                     onTap: () {
-                      Get.toNamed(AppRoutes.Stopwatch);
+                      Get.toNamed(
+                        AppRoutes.Stopwatch,
+                        arguments: widget.consignment,
+                      );
                     },
                     child: CustomProductTypeAndTime(
                       type: productTypes['id'].toString(),

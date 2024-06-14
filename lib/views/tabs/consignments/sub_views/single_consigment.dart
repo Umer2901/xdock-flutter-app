@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SingleConsigmentView extends StatefulWidget {
   const SingleConsigmentView({super.key});
@@ -75,40 +76,41 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  IntrinsicHeight(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'ID: ${Get.arguments['id']}',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        VerticalDivider(
-                          color: AppColors.black.withOpacity(0.5),
-                          thickness: 2,
-                        ),
-                        Text(
-                          'REF: ${Get.arguments['customer_reference']}',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        InkWell(
-                          onTap: () {},
-                          child: Container(
-                            width: 13.5.w,
-                            height: 6.h,
-                            decoration: BoxDecoration(
-                                color: AppColors.white,
-                                borderRadius: BorderRadius.circular(50.sp),
-                                border: Border.all()),
-                            child: SvgPicture.asset(
-                              AppSvgs.mapMarker,
-                              color: AppColors.black,
+                  if (groupedConsignments.isEmpty)
+                    IntrinsicHeight(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'ID: ${Get.arguments['id']}',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          VerticalDivider(
+                            color: AppColors.black.withOpacity(0.5),
+                            thickness: 2,
+                          ),
+                          Text(
+                            'REF: ${Get.arguments['customer_reference']}',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          InkWell(
+                            onTap: () {},
+                            child: Container(
+                              width: 13.5.w,
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: BorderRadius.circular(50.sp),
+                                  border: Border.all()),
+                              child: SvgPicture.asset(
+                                AppSvgs.mapMarker,
+                                color: AppColors.black,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                   SizedBox(
                     height: 2.h,
                   ),
@@ -164,7 +166,16 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                         ),
                       ),
                       InkWell(
-                        onTap: () {},
+                        onTap: () async {
+                          final Uri launchUri = Uri(
+                            scheme: 'tel',
+                            path:
+                                Get.arguments['consignment_type'] == 'delivery'
+                                    ? deliveryAddresses['telephone']
+                                    : pickupAddresses['telephone'],
+                          );
+                          await launchUrl(launchUri);
+                        },
                         child: Container(
                           width: 13.5.w,
                           height: 6.h,
@@ -186,7 +197,10 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Get.toNamed(AppRoutes.Stopwatch);
+                      Get.toNamed(
+                        AppRoutes.Stopwatch,
+                        arguments: Get.arguments,
+                      );
                     },
                     child: CustomProductTypeAndTime(
                       type: (productTypes['id']) == 1 ? '1' : '2',
@@ -234,15 +248,16 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                         SizedBox(
                           height: 2.h,
                         ),
-                        CustomOrderTracking(
-                            title: "Supplier",
-                            subText: 'Acme Corporation',
-                            isLastStep: false,
-                            currentStep:
-                                Get.arguments['consignment_type'] == 'delivery'
-                                    ? 3
-                                    : 1,
-                            stepIndex: 1),
+                        if (groupedConsignments.isEmpty)
+                          CustomOrderTracking(
+                              title: "Supplier",
+                              subText: 'Acme Corporation',
+                              isLastStep: false,
+                              currentStep: Get.arguments['consignment_type'] ==
+                                      'delivery'
+                                  ? 3
+                                  : 1,
+                              stepIndex: 1),
                         CustomOrderTracking(
                           title: "Pickup",
                           isLastStep: false,
@@ -282,8 +297,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (Get.arguments!['total_grouped_consignments'] !=
-                          0) ...{
+                      if (groupedConsignments.isNotEmpty != 0) ...{
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
@@ -336,7 +350,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   SizedBox(
                     height: 4.h,
                   ),
-                  if (Get.arguments!['total_grouped_consignments'] != 0) ...{
+                  if (groupedConsignments.isNotEmpty) ...{
                     const Divider(),
                     SizedBox(
                       height: 2.h,
