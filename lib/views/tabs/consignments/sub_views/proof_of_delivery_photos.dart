@@ -28,7 +28,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
   void initState() {
     super.initState();
-       productTypes = Get.arguments['product_types'].runtimeType == String
+    productTypes = Get.arguments['product_types'].runtimeType == String
         ? json.decode(Get.arguments['product_types'])
         : Get.arguments['product_types'];
     deliveryAddresses =
@@ -44,7 +44,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       );
     }
     databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
-   
+
     print("our group data: ${Get.arguments['is_group']}");
     _initializeDatabase();
     _subscribeToConnectivityChanges();
@@ -530,6 +530,87 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     );
   }
 
+  Future<void> submitGroupAsIndividual(int id) async {
+    List<Map<String, dynamic>> individualConsignments = [];
+    int carton = 0;
+    int pallet = 0;
+    int space = 0;
+    double weight = 0.0;
+    await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+        .readById(id)
+        .then((value) async {
+      Map<String, dynamic> consignment = value.first;
+      if (consignment['grouped_consignments'] != null) {
+        groupedConsignments = json.decode(
+          consignment['grouped_consignments'],
+        );
+        for (var temp in groupedConsignments) {
+          if (temp['id'] != id) {
+            individualConsignments.add(temp);
+            carton = carton + int.parse(temp['carton'].toString());
+            pallet = pallet + int.parse(temp['pallet'].toString());
+            space = space + int.parse(temp['space'].toString());
+            weight = weight + double.parse(temp['weight'].toString());
+          }
+        }
+        await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+            .update(id, {
+          'grouped_consignments': json.encode(individualConsignments),
+          'total_grouped_consignments': individualConsignments.length,
+          'carton': carton,
+          'pallet': pallet,
+          'space': space,
+          'weight': weight,
+        });
+      }
+    });
+  }
+
+  Future<void> addNewConsignment(Map<String, dynamic> myConsignment) async {
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
+    if (state is Authenticated) {
+      Map<String, dynamic> dataIteration = myConsignment;
+      dataIteration['delivery_addresses'] = json.encode(
+        dataIteration['delivery_addresses'],
+      );
+      dataIteration['pickup_addresses'] = json.encode(
+        dataIteration['pickup_addresses'],
+      );
+      dataIteration['delivery_runs'] = json.encode(
+        dataIteration['delivery_runs'],
+      );
+      dataIteration['customers'] = json.encode(
+        dataIteration['customers'],
+      );
+      dataIteration['product_types'] = json.encode(
+        dataIteration['product_types'],
+      );
+      dataIteration['run_sheets'] = json.encode(
+        dataIteration['run_sheets'],
+      );
+      dataIteration['consignment_pallets'] = json.encode(
+        dataIteration['consignment_pallets'],
+      );
+      dataIteration['grouped_consignments'] =
+          dataIteration.containsKey('grouped_consignments')
+              ? json.encode(
+                  dataIteration['grouped_consignments'],
+                )
+              : null;
+      dataIteration.addAll({
+        'access_token': state.token,
+        'datetime': DateFormat('dd/MM/yyyy').format(DateTime.now()),
+        'is_complete': 1,
+      });
+      List consignment =
+          await ConsignmentDatabase(_database).readById(dataIteration['id']);
+      if (consignment.isEmpty) {
+        await ConsignmentDatabase(_database).create(dataIteration);
+      }
+    }
+  }
+
   Future<void> _takePhoto() async {
     final ImagePicker picker = ImagePicker();
     try {
@@ -553,105 +634,124 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       debugPrint('Error picking image from camera: $e');
     }
   }
+
   Future<void> postDataToApi() async {
-  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-  var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
-  AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+    var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+    var databaseProvider =
+        Provider.of<DatabaseProvider>(context, listen: false);
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
 
-  if (state is Authenticated) {
-    try {
-      final taskDatabase = TaskSyncDatabase(_database!);
-      
-      final tasks = await taskDatabase.read();
-      print(tasks);
+    if (state is Authenticated) {
+      try {
+        final taskDatabase = TaskSyncDatabase(_database!);
 
-      if (tasks.isEmpty) {
-        print('No tasks to send');
-        return;
-      }
+        final tasks = await taskDatabase.read();
+        print(tasks);
 
-      final Map postData = context.read<ProofOfDeliveryProvider>().data;
-      String url = '';
-      final consignmentId = Get.arguments?['id'];
+        if (tasks.isEmpty) {
+          print('No tasks to send');
+          return;
+        }
 
-      if (groupedConsignments.isNotEmpty) {
-        url = AppHost.group;
-      } else {
-        switch (provider.selectedDeliveryType) {
-          case DeliveryType.full:
-            final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
-            if (consignmentType == 'delivery') {
-               url = '${AppHost.podfull}$consignmentId';
-            } else {
-               url = '${AppHost.singlepop}$consignmentId';
-            }
-            break;
-          case DeliveryType.partial:
-             url = '${AppHost.podpartial}$consignmentId';
-            break;
-          case DeliveryType.none:
-            List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
-            for (String rejectionReason in rejectionReasons) {
-              print('Rejection Reason: $rejectionReason');
-              switch (rejectionReason) {
-                case "Temperature issue":
-        url = '${AppHost.temperateissue}$consignmentId';
-        break;
-      case "Wrong Address":
-        url = '${AppHost.wrongaddress}$consignmentId';
-        break;
-      case "Damaged Goods":
-        url = '${AppHost.damagegoods}$consignmentId';
-        break;
-      case "Receiver Not Open":
-        url = '${AppHost.notopen}$consignmentId';
-        break;
-      case "Other Rejection":
-        url = '${AppHost.otherrejection}$consignmentId';
-        break;
-                default:
-                  throw Exception('Invalid rejection reason: $rejectionReason');
+        final Map postData = context.read<ProofOfDeliveryProvider>().data;
+        String url = '';
+        final consignmentId = Get.arguments?['id'];
+
+        if (groupedConsignments.isNotEmpty) {
+          url = AppHost.group;
+        } else {
+          switch (provider.selectedDeliveryType) {
+            case DeliveryType.full:
+              final consignmentType =
+                  Get.arguments?['consignment_type'] ?? 'delivery';
+              if (consignmentType == 'delivery') {
+                url = '${AppHost.podfull}$consignmentId';
+              } else {
+                url = '${AppHost.singlepop}$consignmentId';
               }
+              break;
+            case DeliveryType.partial:
+              url = '${AppHost.podpartial}$consignmentId';
+              break;
+            case DeliveryType.none:
+              List<String> rejectionReasons =
+                  provider.selectedOrderRejectionReasons as List<String>;
+              for (String rejectionReason in rejectionReasons) {
+                print('Rejection Reason: $rejectionReason');
+                switch (rejectionReason) {
+                  case "Temperature issue":
+                    url = '${AppHost.temperateissue}$consignmentId';
+                    break;
+                  case "Wrong Address":
+                    url = '${AppHost.wrongaddress}$consignmentId';
+                    break;
+                  case "Damaged Goods":
+                    url = '${AppHost.damagegoods}$consignmentId';
+                    break;
+                  case "Receiver Not Open":
+                    url = '${AppHost.notopen}$consignmentId';
+                    break;
+                  case "Other Rejection":
+                    url = '${AppHost.otherrejection}$consignmentId';
+                    break;
+                  default:
+                    throw Exception(
+                        'Invalid rejection reason: $rejectionReason');
+                }
+              }
+              break;
+          }
+        }
+
+        final podType =
+            provider.selectedDeliveryType.toString().split('.').last;
+        final combinedData = {
+          'pod_type': podType,
+          'tasks': tasks,
+        };
+
+        final response = await http.post(
+          Uri.parse(url),
+          headers: <String, String>{
+            'Authorization': 'Bearer ${state.token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode(combinedData),
+        );
+
+        if (response.statusCode == 200) {
+          print('Data posted successfully to URL: $url');
+          print('Response body: ${response.body}');
+          debugPrint('Response body: ${response.body}');
+          for (var task in tasks) {
+            await taskDatabase.delete(task['id']);
+            print(task['id']);
+            await ConsignmentDatabase(_database)
+                .update(task['id'], {'is_complete': 1});
+          }
+          if (Get.arguments['is_group'] != null) {
+            if (Get.arguments['is_group'] != 'parent') {
+              await submitGroupAsIndividual(
+                int.parse(
+                  Get.arguments['is_group'],
+                ),
+              );
+              await addNewConsignment(Get.arguments);
             }
-            break;
+          }
+        } else {
+          print('Failed to post data to URL: $url');
+          print('Response status: ${response.statusCode}');
+          print('Response body: ${response.body}');
         }
+        ;
+      } catch (e) {
+        print('Error posting data to API: $e');
       }
-
-      final podType = provider.selectedDeliveryType.toString().split('.').last;
-      final combinedData = {
-        'pod_type': podType,
-        'tasks': tasks,
-      };
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Authorization': 'Bearer ${state.token}',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(combinedData),
-      );
-
-      if (response.statusCode == 200) {
-        print('Data posted successfully to URL: $url');
-        print('Response body: ${response.body}');
-        debugPrint('Response body: ${response.body}'); 
-        for (var task in tasks ) {
-          await taskDatabase.delete(task['id']);
-          print(task['id']);
-          await ConsignmentDatabase(_database).update(task['id'], {'is_complete': 1});
-        }
-      } else  {
-        print('Failed to post data to URL: $url');
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-      };
-    } catch (e) {
-      print('Error posting data to API: $e');
     }
   }
-}
 
 //   Future<void> postDataToApi() async {
 //   var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
@@ -661,7 +761,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 //   if (state is Authenticated) {
 //     try {
 //       final taskDatabase = TaskSyncDatabase(_database!);
-      
+
 //       final tasks = await taskDatabase.read();
 //       print(tasks);
 
@@ -696,27 +796,26 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 //   for (String rejectionReason in rejectionReasons) {
 //     print('Rejection Reason: $rejectionReason');
 //     switch (rejectionReason) {
-      // case "Temperature issue":
-      //   url = '${AppHost.temperateissue}$consignmentId';
-      //   break;
-      // case "Wrong Address":
-      //   url = '${AppHost.wrongaddress}$consignmentId';
-      //   break;
-      // case "Damaged Goods":
-      //   url = '${AppHost.damagegoods}$consignmentId';
-      //   break;
-      // case "Receiver Not Open":
-      //   url = '${AppHost.notopen}$consignmentId';
-      //   break;
-      // case "Other Rejection":
-      //   url = '${AppHost.otherrejection}$consignmentId';
-      //   break;
+  // case "Temperature issue":
+  //   url = '${AppHost.temperateissue}$consignmentId';
+  //   break;
+  // case "Wrong Address":
+  //   url = '${AppHost.wrongaddress}$consignmentId';
+  //   break;
+  // case "Damaged Goods":
+  //   url = '${AppHost.damagegoods}$consignmentId';
+  //   break;
+  // case "Receiver Not Open":
+  //   url = '${AppHost.notopen}$consignmentId';
+  //   break;
+  // case "Other Rejection":
+  //   url = '${AppHost.otherrejection}$consignmentId';
+  //   break;
 //       default:
 //         throw Exception('Invalid rejection reason: $rejectionReason');
 //     }
 //   }
 // }
-
 
 //       final podType = provider.selectedDeliveryType.toString().split('.').last;
 //       final combinedData = {
@@ -737,7 +836,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 //       if (response.statusCode == 200) {
 //         print('Data posted successfully to URL: $url');
 //         print('Response body: ${response.body}');
-         
+
 //         for (var task in tasks) {
 //           await taskDatabase.delete(task['id']);
 //           print(task['id']);
@@ -781,7 +880,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 //       }
 
 //       final consignmentType = Get.arguments?['consignment_type'] ?? '';
-//       final groupedConsignments = []; 
+//       final groupedConsignments = [];
 //       String url = '';
 //       final consignmentId = Get.arguments?['id'];
 //  if (groupedConsignments.isNotEmpty) {
@@ -920,5 +1019,4 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 //     }
 //   }
 // }
-
 }
