@@ -42,14 +42,22 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     super.initState();
     _setDeviceInfo();
     config();
-    productTypes = json.decode(Get.arguments['product_types']);
-    deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
-    pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+       productTypes = Get.arguments['product_types'].runtimeType == String
+        ? json.decode(Get.arguments['product_types'])
+        : Get.arguments['product_types'];
+    deliveryAddresses =
+        Get.arguments['delivery_addresses'].runtimeType == String
+            ? json.decode(Get.arguments['delivery_addresses'])
+            : Get.arguments['delivery_addresses'];
+    pickupAddresses = Get.arguments['pickup_addresses'].runtimeType == String
+        ? json.decode(Get.arguments['pickup_addresses'])
+        : Get.arguments['pickup_addresses'];
     if (Get.arguments?['grouped_consignments'] != null) {
       groupedConsignments = json.decode(
         Get.arguments?['grouped_consignments'],
       );
     }
+    print("our group data: ${Get.arguments['is_group']}");
     _initializeDatabase();
     _subscribeToConnectivityChanges();
   }

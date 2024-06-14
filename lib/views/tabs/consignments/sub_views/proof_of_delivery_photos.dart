@@ -28,15 +28,24 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
   void initState() {
     super.initState();
-    productTypes = json.decode(Get.arguments['product_types']);
-    deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
-    pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
-    databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+       productTypes = Get.arguments['product_types'].runtimeType == String
+        ? json.decode(Get.arguments['product_types'])
+        : Get.arguments['product_types'];
+    deliveryAddresses =
+        Get.arguments['delivery_addresses'].runtimeType == String
+            ? json.decode(Get.arguments['delivery_addresses'])
+            : Get.arguments['delivery_addresses'];
+    pickupAddresses = Get.arguments['pickup_addresses'].runtimeType == String
+        ? json.decode(Get.arguments['pickup_addresses'])
+        : Get.arguments['pickup_addresses'];
     if (Get.arguments?['grouped_consignments'] != null) {
       groupedConsignments = json.decode(
         Get.arguments?['grouped_consignments'],
       );
     }
+    databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+   
+    print("our group data: ${Get.arguments['is_group']}");
     _initializeDatabase();
     _subscribeToConnectivityChanges();
   }
@@ -570,7 +579,6 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       } else {
         switch (provider.selectedDeliveryType) {
           case DeliveryType.full:
-            // Check if consignment type is provided, default to 'delivery'
             final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
             if (consignmentType == 'delivery') {
                url = '${AppHost.podfull}$consignmentId';
@@ -628,11 +636,11 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       if (response.statusCode == 200) {
         print('Data posted successfully to URL: $url');
         print('Response body: ${response.body}');
-         
-        for (var task in tasks) {
+        debugPrint('Response body: ${response.body}'); 
+        for (var task in tasks ) {
           await taskDatabase.delete(task['id']);
           print(task['id']);
-          await ConsignmentDatabase(_database).update(task['id'], {'sort': 1});
+          await ConsignmentDatabase(_database).update(task['id'], {'is_complete': 1});
         }
       } else  {
         print('Failed to post data to URL: $url');
