@@ -544,119 +544,117 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       debugPrint('Error picking image from camera: $e');
     }
   }
-
   Future<void> postDataToApi() async {
-    var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-    var databaseProvider =
-        Provider.of<DatabaseProvider>(context, listen: false);
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
+  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+  var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+  AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
 
-    if (state is Authenticated) {
-      try {
-        final TaskDatabase = TaskSyncDatabase(_database);
+  if (state is Authenticated) {
+    try {
+      final taskDatabase = TaskSyncDatabase(_database!);
+      
+      final tasks = await taskDatabase.read();
+      print(tasks);
 
-        final tasks = await TaskDatabase.read();
-        print(tasks);
-
-        if (tasks.isEmpty) {
-          print('No tasks to send');
-          return;
-        }
-
-        final Map postData = context.read<ProofOfDeliveryProvider>().data;
-
-        String url = '';
-
-        if (groupedConsignments.isNotEmpty) {
-          url = AppHost.group;
-        } else {
-          switch (provider.selectedDeliveryType) {
-            case DeliveryType.full:
-              url = AppHost.podfull;
-              break;
-            case DeliveryType.partial:
-              url = AppHost.podpartial;
-              break;
-            case DeliveryType.none:
-              List<String> rejectionReasons =
-                  provider.selectedOrderRejectionReasons as List<String>;
-              for (String rejectionReason in rejectionReasons) {
-                print('Rejection Reason: $rejectionReason');
-                switch (rejectionReason) {
-                  case "Temperature issue":
-                    url = AppHost.temperateissue;
-                    break;
-                  case "Wrong Address":
-                    url = AppHost.wrongaddress;
-                    break;
-                  case "Damaged Goods":
-                    url = AppHost.damagegoods;
-                    break;
-                  case "Receiver Not Open":
-                    url = AppHost.notopen;
-                    break;
-                  case "Other Rejection":
-                    url = AppHost.otherrejection;
-                    break;
-                  default:
-                    throw Exception(
-                        'Invalid rejection reason: $rejectionReason');
-                }
-              }
-              break;
-          }
-        }
-
-        final podType =
-            provider.selectedDeliveryType.toString().split('.').last;
-        final combinedData = {
-          'pod_type': podType,
-          'tasks': tasks,
-        };
-
-        final response = await http.post(
-          Uri.parse(url),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: jsonEncode(combinedData),
-        );
-
-        if (response.statusCode == 200) {
-          print('Data posted successfully to URL: $url');
-          print('Response body: ${response.body}');
-
-          for (var task in tasks) {
-            await TaskDatabase.delete(task['id']);
-            print(task['id']);
-            await ConsignmentDatabase(_database)
-                .update(task['id'], {'sort': 1});
-          }
-        } else {
-          print('Failed to post data to URL: $url');
-          print('Response status: ${response.statusCode}');
-          print('Response body: ${response.body}');
-        }
-        ;
-      } catch (e) {
-        print('Error posting data to API: $e');
+      if (tasks.isEmpty) {
+        print('No tasks to send');
+        return;
       }
+
+      final Map postData = context.read<ProofOfDeliveryProvider>().data;
+      String url = '';
+      final consignmentId = Get.arguments?['id'];
+
+      if (groupedConsignments.isNotEmpty) {
+        url = AppHost.group;
+      } else {
+        switch (provider.selectedDeliveryType) {
+          case DeliveryType.full:
+            // Check if consignment type is provided, default to 'delivery'
+            final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
+            if (consignmentType == 'delivery') {
+               url = '${AppHost.podfull}$consignmentId';
+            } else {
+               url = '${AppHost.singlepop}$consignmentId';
+            }
+            break;
+          case DeliveryType.partial:
+             url = '${AppHost.podpartial}$consignmentId';
+            break;
+          case DeliveryType.none:
+            List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+            for (String rejectionReason in rejectionReasons) {
+              print('Rejection Reason: $rejectionReason');
+              switch (rejectionReason) {
+                case "Temperature issue":
+        url = '${AppHost.temperateissue}$consignmentId';
+        break;
+      case "Wrong Address":
+        url = '${AppHost.wrongaddress}$consignmentId';
+        break;
+      case "Damaged Goods":
+        url = '${AppHost.damagegoods}$consignmentId';
+        break;
+      case "Receiver Not Open":
+        url = '${AppHost.notopen}$consignmentId';
+        break;
+      case "Other Rejection":
+        url = '${AppHost.otherrejection}$consignmentId';
+        break;
+                default:
+                  throw Exception('Invalid rejection reason: $rejectionReason');
+              }
+            }
+            break;
+        }
+      }
+
+      final podType = provider.selectedDeliveryType.toString().split('.').last;
+      final combinedData = {
+        'pod_type': podType,
+        'tasks': tasks,
+      };
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Authorization': 'Bearer ${state.token}',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(combinedData),
+      );
+
+      if (response.statusCode == 200) {
+        print('Data posted successfully to URL: $url');
+        print('Response body: ${response.body}');
+         
+        for (var task in tasks) {
+          await taskDatabase.delete(task['id']);
+          print(task['id']);
+          await ConsignmentDatabase(_database).update(task['id'], {'sort': 1});
+        }
+      } else  {
+        print('Failed to post data to URL: $url');
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      };
+    } catch (e) {
+      print('Error posting data to API: $e');
     }
   }
+}
 
-//  Future<void> postDataToApi() async {
+//   Future<void> postDataToApi() async {
 //   var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
 //   var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
 //   AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
 
 //   if (state is Authenticated) {
 //     try {
-//       final TaskSyncDatabase = TaskSyncDatabase(_database!);
-
-//       final tasks = await TaskSyncDatabase.read();
+//       final taskDatabase = TaskSyncDatabase(_database!);
+      
+//       final tasks = await taskDatabase.read();
 //       print(tasks);
 
 //       if (tasks.isEmpty) {
@@ -665,50 +663,52 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 //       }
 
 //       final Map postData = context.read<ProofOfDeliveryProvider>().data;
-//       final is_group = Get.arguments['is_group'];
 
-//       String url = '';
+//        String url = '';
+//       final consignmentId = Get.arguments?['id'];
+//  final consignmentType = Get.arguments?['consignment_type'] ?? '';
+//      if (provider.selectedDeliveryType == DeliveryType.full) {
+//   if (groupedConsignments.isNotEmpty) {
+//     if (consignmentType == 'delivery') {
+//       url = '${AppHost.group}';
+//     } else {
+//       url = '${AppHost.grouppop}';
+//     }
+//   } else {
+//     if (consignmentType == 'delivery') {
+//       url = '${AppHost.podfull}$consignmentId';
+//     } else {
+//       url = '${AppHost.singlepop}';
+//     }
+//   }
+// } else if (provider.selectedDeliveryType == DeliveryType.partial) {
+//   url = '${AppHost.podpartial}$consignmentId';
+// } else {
+//   List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+//   for (String rejectionReason in rejectionReasons) {
+//     print('Rejection Reason: $rejectionReason');
+//     switch (rejectionReason) {
+      // case "Temperature issue":
+      //   url = '${AppHost.temperateissue}$consignmentId';
+      //   break;
+      // case "Wrong Address":
+      //   url = '${AppHost.wrongaddress}$consignmentId';
+      //   break;
+      // case "Damaged Goods":
+      //   url = '${AppHost.damagegoods}$consignmentId';
+      //   break;
+      // case "Receiver Not Open":
+      //   url = '${AppHost.notopen}$consignmentId';
+      //   break;
+      // case "Other Rejection":
+      //   url = '${AppHost.otherrejection}$consignmentId';
+      //   break;
+//       default:
+//         throw Exception('Invalid rejection reason: $rejectionReason');
+//     }
+//   }
+// }
 
-//       if (is_group != null) {
-//         print("dog: $is_group");
-//         url = AppHost.group;
-//         print('Posting data to group URL: $url');
-//       } else {
-//         switch (provider.selectedDeliveryType) {
-//           case DeliveryType.full:
-//             url = AppHost.podfull;
-//             break;
-//           case DeliveryType.partial:
-//             url = AppHost.podpartial;
-//             break;
-//           case DeliveryType.none:
-//             List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
-//             for (String rejectionReason in rejectionReasons) {
-//               print('Rejection Reason: $rejectionReason');
-//               switch (rejectionReason) {
-//                 case "Temperature issue":
-//                   url = AppHost.temperateissue;
-//                   break;
-//                 case "Wrong Address":
-//                   url = AppHost.wrongaddress;
-//                   break;
-//                 case "Damaged Goods":
-//                   url = AppHost.damagegoods;
-//                   break;
-//                 case "Receiver Not Open":
-//                   url = AppHost.notopen;
-//                   break;
-//                 case "Other Rejection":
-//                   url = AppHost.otherrejection;
-//                   break;
-//                 default:
-//                   throw Exception('Invalid rejection reason: $rejectionReason');
-//               }
-//             }
-//             break;
-//         }
-//         print('Posting data to delivery URL: $url');
-//       }
 
 //       final podType = provider.selectedDeliveryType.toString().split('.').last;
 //       final combinedData = {
@@ -729,23 +729,188 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
 //       if (response.statusCode == 200) {
 //         print('Data posted successfully to URL: $url');
 //         print('Response body: ${response.body}');
-
+         
 //         for (var task in tasks) {
-
-//             await TaskSyncDatabase.delete(task['id']);
-//             print(task['id']);
-//           await   ConsignmentDatabase(_database).update(task['id'], {'sort': 1});
-
-//           }
+//           await taskDatabase.delete(task['id']);
+//           print(task['id']);
+//           await ConsignmentDatabase(_database).update(task['id'], {'sort': 1});
+//         }
 //       } else  {
 //         print('Failed to post data to URL: $url');
 //         print('Response status: ${response.statusCode}');
 //         print('Response body: ${response.body}');
-
 //       };
 //     } catch (e) {
 //       print('Error posting data to API: $e');
 //     }
 //   }
 // }
+
+// Future<void> postDataToApi() async {
+//   var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+//   var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+//   AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+
+//   if (state is Authenticated) {
+//     try {
+//       final TaskDatabase = TaskSyncDatabase(_database);
+//       final tasks = await TaskDatabase.read();
+//       print(tasks);
+
+//       if (tasks.isEmpty) {
+//         print('No tasks to send');
+//         return;
+//       }
+
+//       bool hasGroupTask = false;
+
+//       for (var task in tasks) {
+//         var taskData = jsonDecode(task['data']);
+//         if (taskData['is_group'] != null) {
+//           hasGroupTask = true;
+//           print('is_group: ${taskData['is_group']}');
+//         }
+//       }
+
+//       final consignmentType = Get.arguments?['consignment_type'] ?? '';
+//       final groupedConsignments = []; 
+//       String url = '';
+//       final consignmentId = Get.arguments?['id'];
+//  if (groupedConsignments.isNotEmpty) {
+//         url = AppHost.group;
+//       } else {
+//         switch (provider.selectedDeliveryType) {
+//           case DeliveryType.full:
+//             if (groupedConsignments.isEmpty && consignmentType == 'delivery') {
+//           url = '${AppHost.podfull}$consignmentId';
+//         } else if (groupedConsignments.isNotEmpty && consignmentType == 'delivery') {
+//           url = '${AppHost.group}$consignmentId';
+//         } else if (groupedConsignments.isNotEmpty && consignmentType == 'pickup') {
+//           url = '${AppHost.grouppop}$consignmentId';
+//         } else if (groupedConsignments.isEmpty && consignmentType == 'pickup') {
+//           url = '${AppHost.singlepop}$consignmentId';
+//         }
+//             break;
+//           case DeliveryType.partial:
+//              url = '${AppHost.podpartial}$consignmentId';
+//             break;
+//           case DeliveryType.none:
+//             List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+//             for (String rejectionReason in rejectionReasons) {
+//               print('Rejection Reason: $rejectionReason');
+//               switch (rejectionReason) {
+//                  case "Temperature issue":
+//                  url = '${AppHost.temperateissue}$consignmentId';
+//                   break;
+//                 case "Wrong Address":
+//                   url = '${AppHost.wrongaddress}$consignmentId';
+//                   break;
+//                 case "Damaged Goods":
+//                   url = '${AppHost.damagegoods}$consignmentId';
+//                   break;
+//                 case "Receiver Not Open":
+//                   url = '${AppHost.notopen}$consignmentId';
+//                   break;
+//                 case "Other Rejection":
+//                   url = '${AppHost.otherrejection}$consignmentId';
+//                   break;
+//                 default:
+//                   throw Exception('Invalid rejection reason: $rejectionReason');
+//               }
+//             }
+//             break;
+//         }
+//       }
+
+//       // if (provider.selectedDeliveryType == DeliveryType.full) {
+//       //   if (groupedConsignments.isEmpty && consignmentType == 'delivery') {
+//       //     url = '${AppHost.podfull}$consignmentId';
+//       //   } else if (groupedConsignments.isNotEmpty && consignmentType == 'delivery') {
+//       //     url = '${AppHost.group}$consignmentId';
+//       //   } else if (groupedConsignments.isNotEmpty && consignmentType == 'pickup') {
+//       //     url = '${AppHost.grouppop}$consignmentId';
+//       //   } else if (groupedConsignments.isEmpty && consignmentType == 'pickup') {
+//       //     url = '${AppHost.singlepop}$consignmentId';
+//       //   }
+//       // } else {
+//       //   switch (provider.selectedDeliveryType) {
+//       //     case DeliveryType.partial:
+//       //       url = '${AppHost.podpartial}$consignmentId';
+//       //       break;
+//       //     case DeliveryType.none:
+//       //       List<String> rejectionReasons =
+//       //           provider.selectedOrderRejectionReasons as List<String>;
+//       //       for (String rejectionReason in rejectionReasons) {
+//       //         print('Rejection Reason: $rejectionReason');
+//       //         switch (rejectionReason) {
+//       //           case "Temperature issue":
+//       //            url = '${AppHost.temperateissue}$consignmentId';
+//       //             break;
+//       //           case "Wrong Address":
+//       //             url = '${AppHost.wrongaddress}$consignmentId';
+//       //             break;
+//       //           case "Damaged Goods":
+//       //             url = '${AppHost.damagegoods}$consignmentId';
+//       //             break;
+//       //           case "Receiver Not Open":
+//       //             url = '${AppHost.notopen}$consignmentId';
+//       //             break;
+//       //           case "Other Rejection":
+//       //             url = '${AppHost.otherrejection}$consignmentId';
+//       //             break;
+//       //           default:
+//       //             throw Exception('Invalid rejection reason: $rejectionReason');
+//       //         }
+//       //       }
+//       //       break;
+//       //     case DeliveryType.full:
+//       //       if (groupedConsignments.isEmpty && consignmentType == 'delivery') {
+//       //     url = '${AppHost.podfull}$consignmentId';
+//       //   } else if (groupedConsignments.isNotEmpty && consignmentType == 'delivery') {
+//       //     url = '${AppHost.group}';
+//       //   } else if (groupedConsignments.isNotEmpty && consignmentType == 'pickup') {
+//       //     url = '${AppHost.grouppop}';
+//       //   } else if (groupedConsignments.isEmpty && consignmentType == 'pickup') {
+//       //     url = '${AppHost.singlepop}$consignmentId';
+//       //   }
+//       //   }
+//       // }
+
+//       final podType = provider.selectedDeliveryType.toString().split('.').last;
+//       final combinedData = {
+//         'pod_type': podType,
+//         'tasks': tasks,
+//         "message": {},
+//       };
+
+//       final response = await http.post(
+//         Uri.parse(url),
+//         headers: <String, String>{
+//           'Authorization': 'Bearer ${state.token}',
+//           'Content-Type': 'application/json',
+//           'Accept': 'application/json',
+//         },
+//         body: jsonEncode(combinedData),
+//       );
+
+//       if (response.statusCode == 200) {
+//         print('Data posted successfully to URL: $url');
+//         print('Response body: ${response.body}');
+
+//         for (var task in tasks) {
+//           await TaskDatabase.delete(task['id']);
+//           print(task['id']);
+//           await ConsignmentDatabase(_database).update(task['id'], {'sort': 1});
+//         }
+//       } else {
+//         print('Failed to post data to URL: $url');
+//         print('Response status: ${response.statusCode}');
+//         print('Response body: ${response.body}');
+//       }
+//     } catch (e) {
+//       print('Error posting data to API: $e');
+//     }
+//   }
+// }
+
 }

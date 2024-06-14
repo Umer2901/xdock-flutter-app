@@ -128,6 +128,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
     print({Get.arguments});
+    // print('Delivery Addresses: $deliveryAddresses');
+    // print('Pickup Addresses: $pickupAddresses');
     bool isGroupedConsignment = groupedConsignments.isNotEmpty;
 
     bool _isValid() {
@@ -456,7 +458,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                           context
                               .read<ProofOfDeliveryProvider>()
                               .updateSelectedDeliveryType(newValue!);
-                          provider.lpc(context, controller);
+                          // provider.lpc(context, controller);
                         },
                         items: [
                           DropdownMenuItem(
@@ -475,6 +477,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             ),
                           ),
                           if (!isGroupedConsignment)
+                          if (Get.arguments?['consignment_type'] != 'pickup')
                             DropdownMenuItem(
                               value: DeliveryType.partial,
                               child: Row(
@@ -490,6 +493,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                 ],
                               ),
                             ),
+                             if (!isGroupedConsignment)
+                            if (Get.arguments?['consignment_type'] != 'pickup')
                           DropdownMenuItem(
                             value: DeliveryType.none,
                             child: Row(
@@ -1913,110 +1918,106 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   // }
   // }
   Future<void> postDataToApi() async {
-    var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-    var databaseProvider =
-        Provider.of<DatabaseProvider>(context, listen: false);
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
+  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+  var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
+  AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
 
-    if (state is Authenticated) {
-      try {
-        final TaskDatabase = TaskSyncDatabase(_database!);
+  if (state is Authenticated) {
+    try {
+      final taskDatabase = TaskSyncDatabase(_database!);
+      
+      final tasks = await taskDatabase.read();
+      print(tasks);
 
-        final tasks = await TaskDatabase.read();
-        print(tasks);
-
-        if (tasks.isEmpty) {
-          print('No tasks to send');
-          return;
-        }
-
-        final Map postData = context.read<ProofOfDeliveryProvider>().data;
-        final is_group = Get.arguments['is_group'];
-
-        String url = '';
-
-        if (is_group != null) {
-          print(is_group);
-          url = AppHost.group;
-          print('Posting data to group URL: $url');
-        } else {
-          switch (provider.selectedDeliveryType) {
-            case DeliveryType.full:
-              url = AppHost.podfull;
-              break;
-            case DeliveryType.partial:
-              url = AppHost.podpartial;
-              break;
-            case DeliveryType.none:
-              List<String> rejectionReasons =
-                  provider.selectedOrderRejectionReasons as List<String>;
-              for (String rejectionReason in rejectionReasons) {
-                print('Rejection Reason: $rejectionReason');
-                switch (rejectionReason) {
-                  case "Temperature issue":
-                    url = AppHost.temperateissue;
-                    break;
-                  case "Wrong Address":
-                    url = AppHost.wrongaddress;
-                    break;
-                  case "Damaged Goods":
-                    url = AppHost.damagegoods;
-                    break;
-                  case "Receiver Not Open":
-                    url = AppHost.notopen;
-                    break;
-                  case "Other Rejection":
-                    url = AppHost.otherrejection;
-                    break;
-                  default:
-                    throw Exception(
-                        'Invalid rejection reason: $rejectionReason');
-                }
-              }
-              break;
-          }
-          print('Posting data to delivery URL: $url');
-        }
-
-        final podType =
-            provider.selectedDeliveryType.toString().split('.').last;
-        final combinedData = {
-          'pod_type': podType,
-          'tasks': tasks,
-        };
-
-        final response = await http.post(
-          Uri.parse(url),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: jsonEncode(combinedData),
-        );
-
-        if (response.statusCode == 200) {
-          print('Data posted successfully to URL: $url');
-          print('Response body: ${response.body}');
-          for (var task in tasks) {
-            await TaskDatabase.delete(task['id']);
-
-            await ConsignmentDatabase(_database!)
-                .update(task['id'], {'sort': 1});
-          }
-        } else
-          (e) {
-            print('Failed to post data to URL: $url');
-            print('Response status: ${response.statusCode}');
-            print('Response body: ${response.body}');
-            print('Error posting data to API: $e');
-          };
-      } catch (e) {
-        print('Error posting data to API: $e');
+      if (tasks.isEmpty) {
+        print('No tasks to send');
+        return;
       }
+
+      final Map postData = context.read<ProofOfDeliveryProvider>().data;
+      String url = '';
+      final consignmentId = Get.arguments?['id'];
+
+      if (groupedConsignments.isNotEmpty) {
+        url = AppHost.group;
+      } else {
+        switch (provider.selectedDeliveryType) {
+          case DeliveryType.full:
+            // Check if consignment type is provided, default to 'delivery'
+            final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
+            if (consignmentType == 'delivery') {
+               url = '${AppHost.podfull}$consignmentId';
+            } else {
+               url = '${AppHost.singlepop}$consignmentId';
+            }
+            break;
+          case DeliveryType.partial:
+             url = '${AppHost.podpartial}$consignmentId';
+            break;
+          case DeliveryType.none:
+            List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+            for (String rejectionReason in rejectionReasons) {
+              print('Rejection Reason: $rejectionReason');
+              switch (rejectionReason) {
+                case "Temperature issue":
+        url = '${AppHost.temperateissue}$consignmentId';
+        break;
+      case "Wrong Address":
+        url = '${AppHost.wrongaddress}$consignmentId';
+        break;
+      case "Damaged Goods":
+        url = '${AppHost.damagegoods}$consignmentId';
+        break;
+      case "Receiver Not Open":
+        url = '${AppHost.notopen}$consignmentId';
+        break;
+      case "Other Rejection":
+        url = '${AppHost.otherrejection}$consignmentId';
+        break;
+                default:
+                  throw Exception('Invalid rejection reason: $rejectionReason');
+              }
+            }
+            break;
+        }
+      }
+
+      final podType = provider.selectedDeliveryType.toString().split('.').last;
+      final combinedData = {
+        'pod_type': podType,
+        'tasks': tasks,
+      };
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Authorization': 'Bearer ${state.token}',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(combinedData),
+      );
+
+      if (response.statusCode == 200) {
+        print('Data posted successfully to URL: $url');
+        print('Response body: ${response.body}');
+         
+        for (var task in tasks) {
+          await taskDatabase.delete(task['id']);
+          print(task['id']);
+          await ConsignmentDatabase(_database!).update(task['id'], {'sort': 1});
+        }
+      } else  {
+        print('Failed to post data to URL: $url');
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      };
+    } catch (e) {
+      print('Error posting data to API: $e');
     }
   }
+}
+
 }
 
 class CustomContainer extends StatefulWidget {

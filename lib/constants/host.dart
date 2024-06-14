@@ -36,18 +36,25 @@ class AppHost {
   static const String consignmentDetail =
       '$hostURL/api/driver/consignments/v6/';
   static const String podfull =
-      '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250955';
+      '$hostURL/api/driver/runSheet/v6/singlePodRecord/';
   static const String podpartial =
-      '$hostURL/api/driver/runSheet/v6/singlePodRecord/2250956';
+      '$hostURL/api/driver/runSheet/v6/singlePodRecord/';
   static const String notopen =
-      '$hostURL/api/driver/runSheet/v6/podErrorRecord/2289768';
+      '$hostURL/api/driver/runSheet/v6/podErrorRecord/';
   static const String wrongaddress =
-      '$hostURL/api/driver/runSheet/v6/podErrorRecord/2250957';
+      '$hostURL/api/driver/runSheet/v6/podErrorRecord/';
   static const String temperateissue =
-      '$hostURL/api/driver/runSheet/v6/podErrorRecord/2333339';
+      '$hostURL/api/driver/runSheet/v6/podErrorRecord/';
   static const String damagegoods =
-      '$hostURL/api/driver/runSheet/v6/podErrorRecord/2330398';
+      '$hostURL/api/driver/runSheet/v6/podErrorRecord/';
   static const String otherrejection =
-      '$hostURL/api/driver/runSheet/v6/podErrorRecord/2330399';
-  static const String group = '$hostURL/api/driver/runSheet/v6/groupPodRecord';
+      '$hostURL/api/driver/runSheet/v6/podErrorRecord/';
+  static const String group = 
+      '$hostURL/api/driver/runSheet/v6/groupPodRecord';
+      static const String grouppop = 
+      '$hostURL/api/driver/runSheet/v6/groupPodRecord';
+  static const String singlepop = 
+      '$hostURL/api/driver/runSheet/v6/singlePodRecord/';
+
+ 
 }
