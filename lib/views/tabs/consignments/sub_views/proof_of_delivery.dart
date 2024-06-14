@@ -620,7 +620,10 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   '${Provider.of<TimeProvider>(context).startTime.h}:${Provider.of<TimeProvider>(context).startTime.m} - ${Provider.of<TimeProvider>(context).endTime.h}:${Provider.of<TimeProvider>(context).endTime.m}',
                               controller: serviceTimeController,
                               onTap: () {
-                                Get.toNamed(AppRoutes.Stopwatch);
+                                Get.toNamed(
+                                  AppRoutes.Stopwatch,
+                                  arguments: Get.arguments,
+                                );
                               },
                               suffixIcon: Padding(
                                 padding: EdgeInsets.symmetric(

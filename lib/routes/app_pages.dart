@@ -61,7 +61,6 @@ class AppPages extends AppRoutes {
       page: () => const SingleConsigmentView(),
       alignment: Get.arguments,
     ),
-   
     GetPage(
       name: AppRoutes.consigmentReorder,
       page: () => const MyConsigmentReorder(),
@@ -70,20 +69,18 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.Stopwatch,
       page: () => const EditTime(),
-      
+      arguments: Get.arguments,
     ),
-     GetPage(
+    GetPage(
       name: AppRoutes.proofOfDelivery,
       page: () => ProofOfDeliveryView(
-      arguments: Get.arguments,
+        arguments: Get.arguments,
       ),
-      
     ),
-
     GetPage(
       name: AppRoutes.podphotos,
-      page: () =>ProofOfDeliveryPhotos(arguments: Get.arguments,
-        
+      page: () => ProofOfDeliveryPhotos(
+        arguments: Get.arguments,
       ),
     ),
     GetPage(
