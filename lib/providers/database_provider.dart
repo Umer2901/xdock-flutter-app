@@ -191,8 +191,8 @@ class DatabaseProvider with ChangeNotifier {
           driver_id INTEGER,
           date_delivered TEXT,
           platforms TEXT,
-          current_app_version TEXT,
-          is_group TEXT
+          current_app_version TEXT
+         
         )
         ''');
     await db.execute('''

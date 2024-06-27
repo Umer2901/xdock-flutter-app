@@ -49,7 +49,7 @@ class _EditTimeState extends State<EditTime> {
         ? PickedTime(h: 6, m: 30)
         : PickedTime(h: startTime!.hour, m: startTime!.minute);
     _endTime = endTime == null
-        ? PickedTime(h: 19, m: 30)
+        ? PickedTime(h: 15, m: 30)
         : PickedTime(h: endTime!.hour, m: endTime!.minute);
     super.initState();
   }
@@ -465,7 +465,20 @@ class _EditTimeState extends State<EditTime> {
                                 context,
                                 listen: false,
                               );
-                              timeProvider.updateTimes(_startTime, _endTime);
+                              timeProvider.updateTimes(
+                                DateTime(
+                                    DateTime.now().year,
+                                    DateTime.now().month,
+                                    DateTime.now().day,
+                                    _startTime.h,
+                                    _startTime.m),
+                                DateTime(
+                                    DateTime.now().year,
+                                    DateTime.now().month,
+                                    DateTime.now().day,
+                                    _endTime.h,
+                                    _endTime.m),
+                              );
                               Navigator.pop(context);
                             });
                           },
@@ -490,15 +503,29 @@ class _EditTimeState extends State<EditTime> {
 }
 
 class TimeProvider extends ChangeNotifier {
-  PickedTime _startTime = PickedTime(h: 6, m: 30);
-  PickedTime _endTime = PickedTime(h: 19, m: 30);
+  DateTime _startTime = DateTime(
+    DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30
+  );
+  DateTime _endTime = DateTime(
+    DateTime.now().year, DateTime.now().month, DateTime.now().day, 19, 30
+  );
 
-  PickedTime get startTime => _startTime;
-  PickedTime get endTime => _endTime;
+  DateTime get startTime => _startTime;
+  DateTime get endTime => _endTime;
 
-  void updateTimes(PickedTime startTime, PickedTime endTime) {
+  void updateTimes(DateTime startTime, DateTime endTime) {
     _startTime = startTime;
     _endTime = endTime;
     notifyListeners();
   }
+
+  String getFormattedTime(DateTime time) {
+    final hours = time.hour.toString().padLeft(2, '0');
+    final minutes = time.minute.toString().padLeft(2, '0');
+    return '$hours:$minutes';
+  }
+
+  String get formattedStartTime => getFormattedTime(_startTime);
+  String get formattedEndTime => getFormattedTime(_endTime);
 }
+

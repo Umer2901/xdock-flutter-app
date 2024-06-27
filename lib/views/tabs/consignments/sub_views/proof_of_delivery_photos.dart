@@ -657,9 +657,14 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
         final Map postData = context.read<ProofOfDeliveryProvider>().data;
         String url = '';
         final consignmentId = Get.arguments?['id'];
-
+  final consignmentType =
+                  Get.arguments?['consignment_type'] ?? 'delivery';
         if (groupedConsignments.isNotEmpty) {
-          url = AppHost.group;
+           if (consignmentType == 'delivery') {
+      url = '${AppHost.group}';
+    } else {
+      url = '${AppHost.grouppop}';
+    }
         } else {
           switch (provider.selectedDeliveryType) {
             case DeliveryType.full:
