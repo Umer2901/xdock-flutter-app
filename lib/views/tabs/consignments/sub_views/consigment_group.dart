@@ -14,6 +14,7 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
   final List<dynamic> _consignments = [];
   List<int> consignmentIds = [];
   List<dynamic> selectedConsignments = [];
+  
 
   @override
   void initState() {
