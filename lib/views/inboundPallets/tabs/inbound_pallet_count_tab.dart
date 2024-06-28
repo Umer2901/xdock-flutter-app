@@ -106,13 +106,19 @@ class _InboundPalletCountTabState extends State<InboundPalletCountTab> {
                               ),
                               validator: (value) {
                                 setState(() {
-                                  if (int.parse(value ?? '0') >
-                                      widget.data['data']
-                                              ['driver_outstanding_pallet']
-                                          [i - 1]['balance']) {
-                                    palletsCheck[i - 1]['isErrorState'] = true;
-                                  } else {
-                                    palletsCheck[i - 1]['isErrorState'] = false;
+                                  if (widget
+                                      .data['data']['driver_outstanding_pallet']
+                                      .isNotEmpty) {
+                                    if (int.parse(value ?? '0') >
+                                        widget.data['data']
+                                                ['driver_outstanding_pallet']
+                                            [i - 1]['balance']) {
+                                      palletsCheck[i - 1]['isErrorState'] =
+                                          true;
+                                    } else {
+                                      palletsCheck[i - 1]['isErrorState'] =
+                                          false;
+                                    }
                                   }
                                 });
                                 return null;
@@ -397,15 +403,18 @@ class _InboundPalletCountTabState extends State<InboundPalletCountTab> {
   }
 
   void dialogBox(int index) {
-    if (index > widget.data['data']['pallet_types'].entries.length) {
+    if (index > widget.data['data']['pallet_types'].entries.length ||
+        widget.data['data']['driver_outstanding_pallet'].isEmpty) {
       for (int i = 0;
           i < widget.data['data']['pallet_types'].entries.length;
           i++) {
-        context.read<InboundProvider>().addEntities({
-              "pallet_id_$i": "${i + 1}",
-              "pallet_qty_${i + 1}":
-                  _formKey.currentState!.fields['pallet_qty_${i + 1}']!.value,
-            }.entries);
+        context.read<InboundProvider>().addEntities(
+              {
+                "pallet_id_$i": "${i + 1}",
+                "pallet_qty_${i + 1}":
+                    _formKey.currentState!.fields['pallet_qty_${i + 1}']!.value,
+              }.entries,
+            );
       }
       context.read<InboundProvider>().addEntities({
             "total_pallet_types":

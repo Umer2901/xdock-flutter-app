@@ -181,17 +181,17 @@ class _HomeTabState extends State<HomeTab> {
                                   backgroundColor: AppColors.twoBlackGradient,
                                   isLoading: false,
                                 ),
-                              if (data[0]['inbound'] == 0)
-                                SubmissionCheckContainer(
-                                  leadingSVG: AppSvgs.boundpallets,
-                                  title: AppText.inboundPalletsReq,
-                                  subtitle: AppText.inboundPalletSubtext,
-                                  onPressed: () {
-                                    Get.toNamed(AppRoutes.inboundPallet);
-                                  },
-                                  backgroundColor: AppColors.twoBlackGradient,
-                                  isLoading: false,
-                                ),
+                              // if (data[0]['inbound'] == 0)
+                              SubmissionCheckContainer(
+                                leadingSVG: AppSvgs.boundpallets,
+                                title: AppText.inboundPalletsReq,
+                                subtitle: AppText.inboundPalletSubtext,
+                                onPressed: () {
+                                  Get.toNamed(AppRoutes.inboundPallet);
+                                },
+                                backgroundColor: AppColors.twoBlackGradient,
+                                isLoading: false,
+                              ),
                             ],
                           );
                         }

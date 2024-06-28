@@ -20,12 +20,15 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
   @override
   void initState() {
     super.initState();
-    expiryDate =
-        (context.read<PreStartProvider>().data.containsKey('expiryDate')
-                ? (DateTime.parse(
-                    context.read<PreStartProvider>().data['expiryDate']))
-                : DateTime.parse(widget.data['driver_licence_expiry']['value']))
-            .toIso8601String();
+    expiryDate = (context
+                .read<PreStartProvider>()
+                .data
+                .containsKey('expiryDate')
+            ? (DateTime.parse(
+                context.read<PreStartProvider>().data['expiryDate']))
+            : DateTime.tryParse(
+                (widget.data['driver_licence_expiry']?['value']).toString()))
+        ?.toIso8601String();
   }
 
   @override
@@ -93,7 +96,8 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                                 ? context
                                     .read<PreStartProvider>()
                                     .data['licence_number']
-                                : widget.data['driver_licence_number']['value'],
+                                : widget.data['driver_licence_number']
+                                    ?['value'],
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 4.w,
                               vertical: 0,
@@ -139,9 +143,13 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                                         ? (DateTime.parse(context
                                             .read<PreStartProvider>()
                                             .data['expiryDate']))
-                                        : DateTime.parse(
-                                            widget.data['driver_licence_expiry']
-                                                ['value']),
+                                        : widget.data['driver_licence_expiry']
+                                                    ?['value'] !=
+                                                null
+                                            ? DateTime.parse(widget.data[
+                                                    'driver_licence_expiry']
+                                                ['value'])
+                                            : DateTime.now(),
                               );
                             },
                             hintText: expiryDate != null
@@ -155,10 +163,14 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                                         DateTime.parse(context
                                             .read<PreStartProvider>()
                                             .data['expiryDate']))
-                                    : DateFormat('dd/MM/yyyy').format(
-                                        DateTime.parse(
-                                            widget.data['driver_licence_expiry']
-                                                ['value'])),
+                                    : widget.data['driver_licence_expiry']
+                                                ?['value'] !=
+                                            null
+                                        ? DateFormat('dd/MM/yyyy').format(
+                                            DateTime.parse(widget.data[
+                                                    'driver_licence_expiry']
+                                                ?['value']))
+                                        : null,
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 4.w,
                               vertical: 0,

@@ -244,9 +244,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                                   context.read<DatabaseProvider>().database,
                               token: state.token,
                             );
-                            await context
-                                .read<DatabaseProvider>()
-                                .deleteDatabase();
                           }
                         },
                       ),
