@@ -1,6 +1,7 @@
+// ignore_for_file: unused_field
+
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
-import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery_photos.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EditTime extends StatefulWidget {

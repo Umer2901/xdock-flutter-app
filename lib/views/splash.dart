@@ -22,7 +22,7 @@ class _SplashViewState extends State<SplashView> {
         .initDatabase()
         .then((database) async {
       context.read<LocationProvider>().getCurrentLocation();
-      context.read<TaskSyncProvider>().checkInternetConnectivity(database);
+      context.read<TaskSyncProvider>().checkInternetConnectivity(database,context);
       await BlocProvider.of<AuthenticationCubit>(context).check(database);
     });
   }

@@ -1,10 +1,9 @@
-import 'dart:async';
+// ignore_for_file: non_constant_identifier_names, unused_local_variable
+
 import 'dart:convert';
 import 'dart:io';
-import 'package:coldxpress/database/delivery_database.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:coldxpress/providers/pof_services_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:http/http.dart' as http;
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
@@ -31,10 +30,6 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   late Map productTypes;
   late Map deliveryAddresses;
   late Map pickupAddresses;
-  Database? _database;
-  final dateDeliveredTimestamp = DateTime.now().millisecondsSinceEpoch;
-  late final DatabaseProvider databaseProvider;
-  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
   List groupedConsignments = [];
 
   @override
@@ -58,41 +53,111 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
       );
     }
     print("our group data: ${Get.arguments['is_group']}");
-    _initializeDatabase();
-    _subscribeToConnectivityChanges();
   }
 
   config() async {
     context.read<LocationProvider>().getCurrentLocation();
   }
 
-  void _subscribeToConnectivityChanges() {
-    _connectivitySubscription = Connectivity()
-        .onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
-      final hasInternet = results.contains(ConnectivityResult.mobile) ||
-          results.contains(ConnectivityResult.wifi);
-      if (hasInternet) {
-        postDataToApi();
-      }
-    });
+
+
+ void showSignaturePopup( SignatureController controller) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          backgroundColor: Colors.white,
+          child: Transform.rotate(
+            angle: 90 * 3.14159 / 180,
+            child: Container(
+              height: 47.h,
+              width: 80.w,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CupertinoButton(
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                           controller.clear();
+                          context.read<ProofOfDeliveryProvider>().resetSignatureState();
+                        },
+                      ),
+                      Text(
+                        "Signature",
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      CupertinoButton(
+                        child: const Text(
+                          "Done",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                        onPressed: () async {
+                          final bytes = await controller.toPngBytes();
+                          if (bytes != null) {
+                            context.read<ProofOfDeliveryProvider>().updateSignatureData(bytes);
+                            Navigator.pop(context);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  Center(
+                    child: Container(
+                      height: 24.h,
+                      width: 90.w,
+                      alignment: Alignment.center,
+                      child: Signature(
+                        controller: controller,
+                        width: 85.w,
+                        height: 20.h,
+                        backgroundColor: Colors.transparent,
+                      ),
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Center(
+                        child: Divider(
+                          height: 1,
+                          thickness: 2,
+                          color: AppColors.grey,
+                        ),
+                      ),
+                      CupertinoButton(
+                        child: const Text(
+                          "Clear",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                        onPressed: () {
+                          controller.clear();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
-  @override
-  void dispose() {
-    _connectivitySubscription.cancel();
-    super.dispose();
-  }
-
-  Future<void> _initializeDatabase() async {
-    databaseProvider = context.read<DatabaseProvider>();
-    await databaseProvider.initDatabase();
-    setState(() {
-      _database = databaseProvider.database;
-    });
-  }
-
-  void _setDeviceInfo() async {
+ void _setDeviceInfo() async {
     final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
 
     try {
@@ -136,8 +201,6 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
     print({Get.arguments});
-    // print('Delivery Addresses: $deliveryAddresses');
-    // print('Pickup Addresses: $pickupAddresses');
     bool isGroupedConsignment = groupedConsignments.isNotEmpty;
 
     bool _isValid() {
@@ -158,142 +221,6 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
           receiverLastName != null &&
           signature != null;
     }
-
-    Future<void> saveDataToDatabase(Map postData) async {
-      try {
-        final ProofOfDeliveryProvider provider =
-            context.read<ProofOfDeliveryProvider>();
-        final DeliveryDatabase fullDeliveryDatabase =
-            DeliveryDatabase(_database!);
-
-        Map<String, dynamic> taskData = {};
-
-        switch (provider.selectedDeliveryType) {
-          case DeliveryType.full:
-            await fullDeliveryDatabase
-                .fullcreate(postData.cast<String, dynamic>());
-            taskData = postData.cast<String, dynamic>();
-            break;
-          case DeliveryType.partial:
-            await fullDeliveryDatabase
-                .partialcreate(postData.cast<String, dynamic>());
-            taskData = postData.cast<String, dynamic>();
-            break;
-          case DeliveryType.none:
-            await fullDeliveryDatabase
-                .nonecreate(postData.cast<String, dynamic>());
-            taskData = postData.cast<String, dynamic>();
-            break;
-        }
-        final podType =
-            provider.selectedDeliveryType.toString().split('.').last;
-        final Map<String, dynamic> taskToSave = {
-          'task_name': 'delivery',
-          'task_type': podType,
-          'data': json.encode(taskData),
-        };
-
-        print('Saving the following data to TaskSyncDatabase: $taskToSave');
-
-        TaskSyncDatabase(_database!).create(taskToSave);
-      } catch (e) {
-        print('Error saving data to database: $e');
-      }
-    }
-
-    Future<void> submitData() async {
-      setState(() {
-        isLoading = true;
-      });
-
-      try {
-        final Map postData = context.read<ProofOfDeliveryProvider>().data;
-        await saveDataToDatabase(postData);
-
-        final connectivityResult = await (Connectivity().checkConnectivity());
-        if (connectivityResult != ConnectivityResult.none) {
-          await postDataToApi();
-        }
-
-        setState(() {
-          isLoading = false;
-        });
-
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              icon: SizedBox(
-                height: 20.w,
-                width: 20.w,
-                child: const Image(
-                  image: AssetImage(AppImages.checkmark),
-                  color: Colors.green,
-                ),
-              ),
-              title: Text(
-                'Your Proof of Delivery has been submitted successfully.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
-                textAlign: TextAlign.center,
-              ),
-              titlePadding: EdgeInsets.symmetric(
-                vertical: 1.h,
-                horizontal: 2.w,
-              ),
-              iconPadding: EdgeInsets.symmetric(vertical: 1.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.sp),
-              ),
-              backgroundColor: AppColors.white,
-              actions: <Widget>[
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CustomButton(
-                        height: 5.h,
-                        width: 30.w,
-                        label: 'Edit',
-                        backgroundColor: AppColors.white,
-                        borderColor: AppColors.black,
-                        foregroundColor: AppColors.black,
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                        },
-                      ),
-                      CustomButton(
-                        height: 5.h,
-                        width: 30.w,
-                        label: 'CLOSE',
-                        backgroundColor: AppColors.blue,
-                        borderColor: AppColors.blue,
-                        foregroundColor: AppColors.white,
-                        onPressed: () async {
-                          context
-                              .read<ProofOfDeliveryProvider>()
-                              .restoreToDefault();
-                          Get.offAllNamed(AppRoutes.dashboard);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      } catch (e) {
-        setState(() {
-          isLoading = false;
-        });
-        print('Error submitting data: $e');
-      }
-    }
-
     return Scaffold(
         backgroundColor: AppColors.white,
         appBar: AppBar(
@@ -466,7 +393,6 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                           context
                               .read<ProofOfDeliveryProvider>()
                               .updateSelectedDeliveryType(newValue!);
-                          // provider.lpc(context, controller);
                         },
                         items: [
                           DropdownMenuItem(
@@ -544,15 +470,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   heading: AppText.cartons,
                                   icon: SvgPicture.asset(AppSvgs.boundpallets),
                                   hintText: '0',
-                                  initialValue: context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data
-                                          .containsKey('cartons')
-                                      ? int.parse(context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data['cartons'])
-                                      : 0,
-                                  totalPallet: int.tryParse(Get
+                                //  initialValue: int.tryParse(context.read<ProofOfDeliveryProvider>().data['cartons']?.toString() ?? '0') ?? 0,
+                                 initialValue: isGroupedConsignment ? (Get.arguments?['carton'] ?? 0) : (int.tryParse(context.read<ProofOfDeliveryProvider>().data['cartons']?.toString() ?? '0') ?? 0),
+                                 totalPallet: int.tryParse(Get
                                               .arguments?['carton']
                                               ?.toString() ??
                                           '0') ??
@@ -566,14 +486,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   name: 'pallets',
                                   heading: AppText.pallets,
                                   hintText: '0',
-                                  initialValue: context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data
-                                          .containsKey('pallet')
-                                      ? int.parse(context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data['pallet'])
-                                      : 0,
+                                  //initialValue:int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0,
+                                  initialValue: isGroupedConsignment ? (Get.arguments?['pallet'] ?? 0) : (int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0),
                                   totalPallet: int.tryParse(Get
                                               .arguments?['pallet']
                                               ?.toString() ??
@@ -733,8 +647,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                     onTap: () async {
                                       if (!provider.showSignature) {
                                         provider.setShowSignature(true);
-                                        provider.showSignaturePopup(
-                                            context, controller);
+                                       showSignaturePopup( controller);
                                         final bytes =
                                             await controller.toPngBytes();
                                         if (bytes != null) {
@@ -825,10 +738,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                                         color: Colors.blue),
                                                   ),
                                                   onPressed: () {
-                                                    provider
-                                                        .clearSignatureAndShowPopup(
-                                                            context,
-                                                            controller);
+                                                    provider.clearSignatureAndShowPopup(controller);
+                                                      showSignaturePopup( controller);
                                                   },
                                                 ),
                                               ],
@@ -927,52 +838,28 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
               );
             } else {
               if (_formKey.currentState != null) {
-                final temperature = _formKey.currentState!
-                    .fields['temp']!.value.toString();
-                final first_name = _formKey.currentState!
-                    .fields['receiverFirstName']!.value.toString();
-                final last_name = _formKey.currentState!
-                    .fields['receiverLastName']!.value.toString();
-                final comments = _formKey.currentState!
-                    .fields['commentspho']?.value.toString();
-                final serviceTimeProvider =
-                    Provider.of<TimeProvider>(context, listen: false);
-                final service_time_start =
-                    '${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
-                final service_time_end =
-                    '${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
-                final lengthofDelivery = _formKey.currentState!
-                    .fields['length']!.value.toString();
-                final cartons = _formKey.currentState!
-                    .fields['cartons']!.value.toString();
-                final pallets = _formKey.currentState!
-                    .fields['pallets']!.value.toString();
-                final signature = jsonEncode(
-                    'data:image/png;base64, ${base64Encode(provider.signature!)}');
-                final pictureSources = jsonEncode(context
-                    .read<ProofOfDeliveryProvider>()
-                    .pictureSources);
-                final latitude = context
-                    .read<LocationProvider>()
-                    .current!
-                    .latitude;
-                final longitude = context
-                    .read<LocationProvider>()
-                    .current!
-                    .longitude;
-                final images = jsonEncode(context
-                    .read<ProofOfDeliveryProvider>()
-                    .base64Images);
+                final temperature = int.tryParse(_formKey.currentState!.fields['temp']!.value) ?? 0;
+                final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
+                final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
+                final comments = _formKey.currentState!.fields['commentspho']?.value.toString();
+                final serviceTimeProvider =Provider.of<TimeProvider>(context, listen: false);
+                final service_time_start ='${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
+                final service_time_end ='${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
+                final lengthofDelivery =  int.tryParse(_formKey.currentState!.fields['length']!.value) ?? 0;
+                final cartons = int.tryParse(_formKey.currentState!.fields['cartons']!.value) ?? 0;
+                final pallets = int.tryParse(_formKey.currentState!.fields['pallets']!.value) ?? 0;
+                final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
+                final pictureSources = jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources);
+                final latitude = context.read<LocationProvider>().current!.latitude;
+                final longitude = context.read<LocationProvider>().current!.longitude;
+                final images = jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images);
                 final consignments = Get.arguments['id'];
                 final driver_id = Get.arguments['runsheet_id'];
                 final address_id = pickupAddresses['id'];
                 final space = Get.arguments['space'];
                 final weight = Get.arguments['weight'];
-                final customer_reference =
-                    Get.arguments['customer_reference'];
-                final group = Get.arguments['is_group'];
-                final service_window =
-                    pickupAddresses['service_window'];
+                final customer_reference =Get.arguments['customer_reference'];
+                final service_window =pickupAddresses['service_window'];
                 final platforms = jsonEncode([
                   "android",
                   "cordova",
@@ -980,8 +867,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                   "hybrid"
                 ]);
 
-                final consignmentType =
-                    Get.arguments?['consignment_type'] ?? 'delivery';
+                final consignmentType =Get.arguments?['consignment_type'] ?? 'delivery';
                 if (groupedConsignments.isNotEmpty) {
                   provider.data['pod_type'] =
                       consignmentType == 'delivery' ? 2 : 5;
@@ -991,11 +877,10 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                       provider.data['pod_type'] =
                           consignmentType == 'delivery' ? 0 : 4;
                       break;
-                    // Handle other delivery types if needed
                     case DeliveryType.partial:
-                      // TODO: Handle this case.
+                      
                     case DeliveryType.none:
-                      // TODO: Handle this case.
+                     
                   }
                 }
 
@@ -1063,19 +948,12 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                PalletContainer(
+                                 PalletContainer(
                                   name: 'cartons',
                                   heading: AppText.cartons,
                                   icon: SvgPicture.asset(AppSvgs.boundpallets),
                                   hintText: '0',
-                                  initialValue: context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data
-                                          .containsKey('cartons')
-                                      ? int.parse(context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data['cartons'])
-                                      : 0,
+                                  initialValue: int.tryParse(context.read<ProofOfDeliveryProvider>().data['cartons']?.toString() ?? '0') ?? 0,
                                   totalPallet: int.tryParse(Get
                                               .arguments?['carton']
                                               ?.toString() ??
@@ -1090,14 +968,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   name: 'pallets',
                                   heading: AppText.pallets,
                                   hintText: '0',
-                                  initialValue: context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data
-                                          .containsKey('pallet')
-                                      ? int.parse(context
-                                          .read<ProofOfDeliveryProvider>()
-                                          .data['pallet'])
-                                      : 0,
+                                  initialValue:int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0,
                                   totalPallet: int.tryParse(Get
                                               .arguments?['pallet']
                                               ?.toString() ??
@@ -1291,12 +1162,10 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   width: 90.w,
                                   child: GestureDetector(
                                     onTap: () async {
-                                      // Check if the signature is not empty and showSignature is false
                                       if (controller.isEmpty &&
                                           !provider.showSignature) {
                                         provider.setShowSignature(true);
-                                        provider.showSignaturePopup(
-                                            context, controller);
+                                        showSignaturePopup( controller);
                                         final bytes =
                                             await controller.toPngBytes();
                                         if (bytes != null) {
@@ -1387,10 +1256,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                                         color: Colors.blue),
                                                   ),
                                                   onPressed: () {
-                                                    provider
-                                                        .clearSignatureAndShowPopup(
-                                                            context,
-                                                            controller);
+                                                    provider.clearSignatureAndShowPopup(controller);
+                                                      showSignaturePopup( controller);
                                                   },
                                                 ),
                                               ],
@@ -1416,86 +1283,36 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                       label: "Next",
                                       onPressed: () {
                                         if (_formKey.currentState != null) {
-                                          final temperature = _formKey
-                                              .currentState!
-                                              .fields['temp']!
-                                              .value
-                                              .toString();
-                                          final first_name = _formKey
-                                              .currentState!
-                                              .fields['receiverFirstName']!
-                                              .value
-                                              .toString();
-                                          final last_name = _formKey
-                                              .currentState!
-                                              .fields['receiverLastName']!
-                                              .value
-                                              .toString();
-                                          final comments = _formKey
-                                              .currentState!
-                                              .fields['commentspho']
-                                              ?.value
-                                              .toString();
-                                          final serviceTimeProvider =
-                                              Provider.of<TimeProvider>(context,
-                                                  listen: false);
-                                          final service_time_start =
-                                              '${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
-                                          final service_time_end =
-                                              '${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
-                                          final lengthofDelivery = _formKey
-                                              .currentState!
-                                              .fields['length']!
-                                              .value
-                                              .toString();
-                                          final cartons = _formKey.currentState!
-                                              .fields['cartons']!.value
-                                              .toString();
-                                          final pallets = _formKey.currentState!
-                                              .fields['pallets']!.value
-                                              .toString();
-                                          final signature = jsonEncode(
-                                              'data:image/png;base64, ${base64Encode(provider.signature!)}');
-                                          final reason = _formKey.currentState!
-                                              .fields['Reasonpartial']!.value
-                                              .toString();
-                                          final pictureSources = jsonEncode(
-                                              context
-                                                  .read<
-                                                      ProofOfDeliveryProvider>()
-                                                  .pictureSources);
-                                          final latitude = context
-                                              .read<LocationProvider>()
-                                              .current!
-                                              .latitude;
-                                          final longitude = context
-                                              .read<LocationProvider>()
-                                              .current!
-                                              .longitude;
-                                          final images = jsonEncode(context
-                                              .read<ProofOfDeliveryProvider>()
-                                              .base64Images);
-                                          final consignments =
-                                              Get.arguments['id'];
-                                          final driver_id =
-                                              Get.arguments['runsheet_id'];
-                                          final address_id =
-                                              pickupAddresses['id'];
+                                          final temperature =int.tryParse(_formKey.currentState!.fields['temp']!.value) ?? 0;
+                                          final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
+                                          final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
+                                          final comments = _formKey.currentState!.fields['commentspho']?.value.toString();
+                                          final serviceTimeProvider =Provider.of<TimeProvider>(context,listen: false);
+                                          final service_time_start ='${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
+                                          final service_time_end ='${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
+                                          final lengthofDelivery =  int.tryParse(_formKey.currentState!.fields['length']!.value) ?? 0;
+                                          final cartons = int.tryParse(_formKey.currentState!.fields['cartons']!.value) ?? 0;
+                                          final pallets = int.tryParse(_formKey.currentState!.fields['pallets']!.value) ?? 0;  
+                                          final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
+                                          final reason = _formKey.currentState!.fields['Reasonpartial']!.value.toString();
+                                          final pictureSources = jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources);
+                                          final latitude = context.read<LocationProvider>().current!.latitude;
+                                          final longitude = context.read<LocationProvider>().current!.longitude;
+                                          final images = jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images);
+                                          final consignments =Get.arguments['id'];
+                                          final driver_id =Get.arguments['runsheet_id'];
+                                          final address_id =pickupAddresses['id'];
                                           final space = Get.arguments['space'];
-                                          final weight =
-                                              Get.arguments['weight'];
-                                          final customer_reference = Get
-                                              .arguments['customer_reference'];
-                                          final service_window =
-                                              pickupAddresses['service_window'];
+                                          final weight =Get.arguments['weight'];
+                                          final customer_reference = Get.arguments['customer_reference'];
+                                          final service_window =pickupAddresses['service_window'];
                                           final platforms = jsonEncode([
                                             "android",
                                             "cordova",
                                             "mobile",
                                             "hybrid"
-                                          ]);
-                                          //final device = context.read<ProofOfDeliveryProvider>().data['device'];
-                                          //final date_delivered =  Get.arguments['date_delivered'];
+                                          ]
+                                          );
 
                                           final temp = {
                                             "pod_type": "1",
@@ -1503,8 +1320,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             "first_name": first_name,
                                             "last_name": last_name,
                                             "device": jsonEncode(deviceinfo),
-                                            "lengthofDelivery":
-                                                lengthofDelivery,
+                                            "lengthofDelivery":lengthofDelivery,
                                             "cartons": cartons,
                                             "pallets": pallets,
                                             "service_window": service_window,
@@ -1521,8 +1337,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             "app_version": "3.15.2",
                                             "consignments":  jsonEncode([consignments]),
                                             "driver_id": driver_id,
-                                            "date_delivered": DateTime.now()
-                                                .toIso8601String(),
+                                            "date_delivered": DateTime.now().toIso8601String(),
                                             "space": space,
                                             "weight": weight,
                                             "customer_reference":
@@ -1536,7 +1351,6 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               "errorPictureSources":
                                                   pictureSources,
                                             }),
-                                            // "lodgeError": comments,
                                             "platforms": platforms,
                                           };
 
@@ -1678,8 +1492,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                           final consignments = Get.arguments['id'];
                                           final driver_id =
                                               Get.arguments['driver_id'];
-                                          final address_id =
-                                              Get.arguments['address_id'];
+                                          final address_id = Get.arguments['address_id'];
                                           final date_delivered =
                                               Get.arguments['date_delivered'];
                                           final space = Get.arguments['space'];
@@ -1767,8 +1580,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                           };
 
                                           provider.addEntities(temp.entries);
-                                          submitData();
-                                          //postData();
+                                          Provider.of<TaskSyncpofProvider>(context,listen: false).submitData(context);
                                         } else {
                                           print("Form key is null");
                                         }
@@ -1789,191 +1601,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
           ),
         ));
   }
-  //  Future<void> postDataToApi() async {
-  //  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-  //  var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
-  // AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
-
-  // if (state is Authenticated) {
-  //   try {
-  //     final TaskSyncDatabase = TaskSyncDatabase(_database!);
-  //     final tasks = await TaskSyncDatabase.read();
-  //     print(tasks);
-
-  //     if (tasks.isEmpty) {
-  //       print('No tasks to send');
-  //       return;
-  //     }
-
-  //     final Map postData = context.read<ProofOfDeliveryProvider>().data;
-
-  //     String url = '';
-
-  //     switch (provider.selectedDeliveryType) {
-  //       case DeliveryType.full:
-  //         url = AppHost.podfull;
-  //         break;
-  //       case DeliveryType.partial:
-  //         url = AppHost.podpartial;
-  //         break;
-  //       case DeliveryType.none:
-  //         List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
-  //         for (String rejectionReason in rejectionReasons) {
-  //           print('Rejection Reason: $rejectionReason');
-  //           switch (rejectionReason) {
-  //             case "Temperature issue":
-  //               url = AppHost.temperateissue;
-  //               break;
-  //             case "Wrong Address":
-  //               url = AppHost.wrongaddress;
-  //               break;
-  //             case "Damaged Goods":
-  //               url = AppHost.damagegoods;
-  //               break;
-  //             case "Receiver Not Open":
-  //               url = AppHost.notopen;
-  //               break;
-  //             case "Other Rejection":
-  //               url = AppHost.otherrejection;
-  //               break;
-  //             default:
-  //               throw Exception('Invalid rejection reason: $rejectionReason');
-  //           }
-  //         }
-  //         break;
-  //     }
-
-  //    final podType = provider.selectedDeliveryType.toString().split('.').last;
-  //     final combinedData = {
-  //       'pod_type': podType,
-  //       'tasks': tasks,
-
-  //     };
-
-  //     final response = await http.post(
-  //       Uri.parse(url),
-  //       headers: <String, String>{
-  //         'Authorization': 'Bearer ${state.token}',
-  //         'Content-Type': 'application/json',
-  //         'Accept': 'application/json',
-  //       },
-  //       body: jsonEncode(combinedData),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       print('Data posted successfully: ${response.body}');
-  //        for (var task in tasks) {
-  //           await TaskSyncDatabase.delete(task['id']);
-  //         }
-  //     } else {
-  //       print('Failed to post data: ${response.statusCode}');
-  //       print('Response body: ${response.body}');
-  //     }
-  //   } catch (e) {
-  //     print('Error posting data to API: $e');
-  //   }
-  // }
-  // }
-  Future<void> postDataToApi() async {
-  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-  var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
-  AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
-
-  if (state is Authenticated) {
-    try {
-      final taskDatabase = TaskSyncDatabase(_database!);
-      
-      final tasks = await taskDatabase.read();
-      print(tasks);
-
-      if (tasks.isEmpty) {
-        print('No tasks to send');
-        return;
-      }
-
-      final Map postData = context.read<ProofOfDeliveryProvider>().data;
-      String url = '';
-      final consignmentId = Get.arguments?['id'];
-
-      if (groupedConsignments.isNotEmpty) {
-        url = AppHost.group;
-      } else {
-        switch (provider.selectedDeliveryType) {
-          case DeliveryType.full:
-            // Check if consignment type is provided, default to 'delivery'
-            final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
-            if (consignmentType == 'delivery') {
-               url = '${AppHost.podfull}$consignmentId';
-            } else {
-               url = '${AppHost.singlepop}$consignmentId';
-            }
-            break;
-          case DeliveryType.partial:
-             url = '${AppHost.podpartial}$consignmentId';
-            break;
-          case DeliveryType.none:
-            List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
-            for (String rejectionReason in rejectionReasons) {
-              print('Rejection Reason: $rejectionReason');
-              switch (rejectionReason) {
-                case "Temperature issue":
-        url = '${AppHost.temperateissue}$consignmentId';
-        break;
-      case "Wrong Address":
-        url = '${AppHost.wrongaddress}$consignmentId';
-        break;
-      case "Damaged Goods":
-        url = '${AppHost.damagegoods}$consignmentId';
-        break;
-      case "Receiver Not Open":
-        url = '${AppHost.notopen}$consignmentId';
-        break;
-      case "Other Rejection":
-        url = '${AppHost.otherrejection}$consignmentId';
-        break;
-                default:
-                  throw Exception('Invalid rejection reason: $rejectionReason');
-              }
-            }
-            break;
-        }
-      }
-
-      final podType = provider.selectedDeliveryType.toString().split('.').last;
-      final combinedData = {
-        'pod_type': podType,
-        'tasks': tasks,
-      };
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Authorization': 'Bearer ${state.token}',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(combinedData),
-      );
-
-      if (response.statusCode == 200) {
-        print('Data posted successfully to URL: $url');
-        print('Response body: ${response.body}');
-         
-        for (var task in tasks) {
-          await taskDatabase.delete(task['id']);
-          print(task['id']);
-          await ConsignmentDatabase(_database!).update(task['id'], {'sort': 1});
-        }
-      } else  {
-        print('Failed to post data to URL: $url');
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-      };
-    } catch (e) {
-      print('Error posting data to API: $e');
-    }
-  }
-}
+ 
 
 }
 
@@ -2000,14 +1628,14 @@ class _CustomContainerState extends State<CustomContainer> {
 
     return GestureDetector(
       onTap: () {
-        setState(() {
+        
           if (!isChecked) {
             provider.clearOrderRejectionReasons();
             provider.updateOrderRejectionReason(widget.title);
           } else {
             provider.clearOrderRejectionReasons();
           }
-        });
+      
       },
       child: Column(
         children: [

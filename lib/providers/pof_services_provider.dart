@@ -1,0 +1,517 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:coldxpress/database/delivery_database.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:http/http.dart' as http;
+import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
+import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery_photos.dart';
+import 'package:coldxpress/export.dart';
+class TaskSyncpofProvider extends ChangeNotifier {
+  final BuildContext context;
+  late Database _database;
+
+  TaskSyncpofProvider(this.context) {
+    _initializeDatabase();
+  }
+
+  Future<void> _initializeDatabase() async {
+    final databaseProvider = context.read<DatabaseProvider>();
+    await databaseProvider.initDatabase();
+    _database = databaseProvider.database;
+  }
+    Future<void> submitData(BuildContext context) async {
+    
+      try {
+        final Map postData = context.read<ProofOfDeliveryProvider>().data;
+        //await saveDataToDatabase(postData);
+        saveDataToDatabase(postData);
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              icon: SizedBox(
+                height: 20.w,
+                width: 20.w,
+                child: const Image(
+                  image: AssetImage(AppImages.checkmark),
+                  color: Colors.green,
+                ),
+              ),
+              title: Text(
+                'Your Proof of Delivery has been submitted successfully.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+              titlePadding: EdgeInsets.symmetric(
+                vertical: 1.h,
+                horizontal: 2.w,
+              ),
+              iconPadding: EdgeInsets.symmetric(vertical: 1.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.sp),
+              ),
+              backgroundColor: AppColors.white,
+              actions: <Widget>[
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CustomButton(
+                        height: 5.h,
+                        width: 30.w,
+                        label: 'CLOSE',
+                        backgroundColor: AppColors.blue,
+                        borderColor: AppColors.blue,
+                        foregroundColor: AppColors.white,
+                        onPressed: () async {
+                          context
+                              .read<ProofOfDeliveryProvider>()
+                              .restoreToDefault();
+                          Get.offAllNamed(AppRoutes.dashboard);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      } catch (e) {
+       
+        print('Error submitting data: $e');
+      }
+    }
+
+  Future<void> saveDataToDatabase(Map postData) async {
+    try {
+      await _initializeDatabase(); 
+
+      final ProofOfDeliveryProvider provider =
+          context.read<ProofOfDeliveryProvider>();
+      final DeliveryDatabase fullDeliveryDatabase =
+          DeliveryDatabase(_database);
+
+      Map<String, dynamic> taskData = {};
+
+      switch (provider.selectedDeliveryType) {
+        case DeliveryType.full:
+          await fullDeliveryDatabase
+              .fullcreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+        case DeliveryType.partial:
+          await fullDeliveryDatabase
+              .partialcreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+        case DeliveryType.none:
+          await fullDeliveryDatabase
+              .nonecreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+      }
+      final podType =
+          provider.selectedDeliveryType.toString().split('.').last;
+      final Map<String, dynamic> taskToSave = {
+        'task_name': 'delivery',
+        'task_type': podType,
+        'data': json.encode(taskData),
+      };
+
+      print('Saving the following data to TaskSyncDatabase: $taskToSave');
+
+      TaskSyncDatabase(_database).create(taskToSave);
+       final connectivityResult = await (Connectivity().checkConnectivity());
+        if (connectivityResult != ConnectivityResult.none) {
+          final taskDatabase = TaskSyncDatabase(_database);
+      final tasks = await taskDatabase.read();
+          await postDataToApi(tasks);
+        }
+
+    } catch (e) {
+      print('Error saving data to database: $e');
+    }
+  }
+
+  Future<void> postDataToApi(List<Map<String, dynamic>> tasks) async {
+    var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+    AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+
+    if (state is Authenticated) {
+      try {
+        for (var task in tasks) {
+          final taskData = json.decode(task['data']);
+          final consignmentId = taskData['consignments'];
+          final isGroup = taskData['is_group'];
+          print("Consignment ID: $consignmentId");
+
+          final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
+          String url = '';
+
+          if (groupedConsignments.isNotEmpty) {
+            if (consignmentType == 'delivery') {
+              url = '${AppHost.group}';
+            } else {
+              url = '${AppHost.grouppop}';
+            }
+          } else {
+            switch (provider.selectedDeliveryType) {
+              case DeliveryType.full:
+                if (consignmentType == 'delivery') {
+                  url = '${AppHost.podfull}$consignmentId';
+                } else {
+                  url = '${AppHost.singlepop}$consignmentId';
+                }
+                break;
+              case DeliveryType.partial:
+                url = '${AppHost.podpartial}$consignmentId';
+                break;
+              case DeliveryType.none:
+                List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+                for (String rejectionReason in rejectionReasons) {
+                  switch (rejectionReason) {
+                    case "Temperature issue":
+                      url = '${AppHost.temperateissue}$consignmentId';
+                      break;
+                    case "Wrong Address":
+                      url = '${AppHost.wrongaddress}$consignmentId';
+                      break;
+                    case "Damaged Goods":
+                      url = '${AppHost.damagegoods}$consignmentId';
+                      break;
+                    case "Receiver Not Open":
+                      url = '${AppHost.notopen}$consignmentId';
+                      break;
+                    case "Other Rejection":
+                      url = '${AppHost.otherrejection}$consignmentId';
+                      break;
+                    default:
+                      throw Exception('Invalid rejection reason: $rejectionReason');
+                  }
+                }
+                break;
+            }
+          }
+
+          final podType = provider.selectedDeliveryType.toString().split('.').last;
+          final combinedData = {
+            'pod_type': podType,
+            'tasks': tasks,
+            'signature': provider.signature != null ? jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}') : null,
+          };
+
+          final response = await http.post(
+            Uri.parse(url),
+            headers: <String, String>{
+              'Authorization': 'Bearer ${state.token}',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(combinedData),
+          );
+
+          if (response.statusCode == 200) {
+            print('Data posted successfully to URL: $url');
+            await TaskSyncDatabase(_database).delete(task['id']);
+            await ConsignmentDatabase(_database).update(task['id'], {'is_complete': 1});
+
+            if (isGroup != null && isGroup != 'parent') {
+              await submitGroupAsIndividual(int.parse(isGroup));
+              await addNewConsignment(Get.arguments);
+            }
+          } else {
+            print('Failed to post data to URL: $url');
+            print('Response status: ${response.statusCode}');
+            print('Response body: ${response.body}');
+          }
+        }
+      } catch (e) {
+        print('Error posting data to API: $e');
+      }
+    }
+  }
+
+  Future<void> submitGroupAsIndividual(int id) async {
+    List<Map<String, dynamic>> individualConsignments = [];
+    int carton = 0;
+    int pallet = 0;
+    int space = 0;
+    double weight = 0.0;
+
+    await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+        .readById(id)
+        .then((value) async {
+      Map<String, dynamic> consignment = value.first;
+      if (consignment['grouped_consignments'] != null) {
+        groupedConsignments = json.decode(consignment['grouped_consignments']);
+      }
+
+      await Future.forEach(groupedConsignments, (element) async {
+        await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+            .readById(element['id'])
+            .then((value) {
+          individualConsignments.add(value.first);
+        });
+      });
+
+      for (var element in individualConsignments) {
+        element['quantity'] = consignment['quantity'];
+        element['status'] = 3;
+        element['weight'] = consignment['weight'];
+        element['comment'] = consignment['comment'];
+        element['carton'] = consignment['carton'];
+        element['pallet'] = consignment['pallet'];
+        element['space'] = consignment['space'];
+        element['pod_type'] = consignment['pod_type'];
+        await ConsignmentDatabase(context.read<DatabaseProvider>().database).update(element['id'], element);
+      }
+    });
+
+    final updatedConsignment = {
+      'id': id,
+      'carton': carton,
+      'pallet': pallet,
+      'space': space,
+      'weight': weight,
+      'grouped_consignments': '',
+      'status': 3,
+    };
+    await ConsignmentDatabase(context.read<DatabaseProvider>().database).update(id, updatedConsignment);
+  }
+
+  Future<void> addNewConsignment(Map consignmentDetails) async {
+    final provider = context.read<ProofOfDeliveryProvider>();
+    final newConsignment = {
+      'id': consignmentDetails['id'],
+      'carton': 0,
+      'pallet': 0,
+      'space': 0,
+      'weight': 0,
+      'grouped_consignments': '',
+      'status': 1,
+      'comment': '',
+      'signature': '',
+      'pod_type': provider.selectedDeliveryType.toString().split('.').last,
+      'date': DateFormat('dd/MM/yyyy').format(DateTime.now()),
+    };
+    await ConsignmentDatabase(_database).create(newConsignment);
+  }
+}
+
+// class TaskSyncpofProvider extends ChangeNotifier {
+//   final BuildContext context;
+//   late Database _database;
+
+//   TaskSyncpofProvider(this.context);
+//  Future<void> saveDataToDatabase(Map postData) async {
+//       try {
+//         final ProofOfDeliveryProvider provider =
+//             context.read<ProofOfDeliveryProvider>();
+//         final DeliveryDatabase fullDeliveryDatabase =
+//             DeliveryDatabase(_database);
+
+//         Map<String, dynamic> taskData = {};
+
+//         switch (provider.selectedDeliveryType) {
+//           case DeliveryType.full:
+//             await fullDeliveryDatabase
+//                 .fullcreate(postData.cast<String, dynamic>());
+//             taskData = postData.cast<String, dynamic>();
+//             break;
+//           case DeliveryType.partial:
+//             await fullDeliveryDatabase
+//                 .partialcreate(postData.cast<String, dynamic>());
+//             taskData = postData.cast<String, dynamic>();
+//             break;
+//           case DeliveryType.none:
+//             await fullDeliveryDatabase
+//                 .nonecreate(postData.cast<String, dynamic>());
+//             taskData = postData.cast<String, dynamic>();
+//             break;
+//         }
+//         final podType =
+//             provider.selectedDeliveryType.toString().split('.').last;
+//         final Map<String, dynamic> taskToSave = {
+//           'task_name': 'delivery',
+//           'task_type': podType,
+//           'data': json.encode(taskData),
+//         };
+
+//         print('Saving the following data to TaskSyncDatabase: $taskToSave');
+
+//         TaskSyncDatabase(_database).create(taskToSave);
+
+//       } catch (e) {
+//         print('Error saving data to database: $e');
+//       }
+//     }
+//   Future<void> postDataToApi(List<Map<String, dynamic>> tasks) async {
+//     var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+//     AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+
+//     if (state is Authenticated) {
+//       try {
+//         for (var task in tasks) {
+//           final taskData = json.decode(task['data']);
+//           final consignmentId = taskData['consignments'];
+//           final isGroup = taskData['is_group'];
+//           print("Consignment ID: $consignmentId");
+
+//           final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
+//           String url = '';
+
+//           if (groupedConsignments.isNotEmpty) {
+//             if (consignmentType == 'delivery') {
+//               url = '${AppHost.group}';
+//             } else {
+//               url = '${AppHost.grouppop}';
+//             }
+//           } else {
+//             switch (provider.selectedDeliveryType) {
+//               case DeliveryType.full:
+//                 if (consignmentType == 'delivery') {
+//                   url = '${AppHost.podfull}$consignmentId';
+//                 } else {
+//                   url = '${AppHost.singlepop}$consignmentId';
+//                 }
+//                 break;
+//               case DeliveryType.partial:
+//                 url = '${AppHost.podpartial}$consignmentId';
+//                 break;
+//               case DeliveryType.none:
+//                 List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+//                 for (String rejectionReason in rejectionReasons) {
+//                   switch (rejectionReason) {
+//                     case "Temperature issue":
+//                       url = '${AppHost.temperateissue}$consignmentId';
+//                       break;
+//                     case "Wrong Address":
+//                       url = '${AppHost.wrongaddress}$consignmentId';
+//                       break;
+//                     case "Damaged Goods":
+//                       url = '${AppHost.damagegoods}$consignmentId';
+//                       break;
+//                     case "Receiver Not Open":
+//                       url = '${AppHost.notopen}$consignmentId';
+//                       break;
+//                     case "Other Rejection":
+//                       url = '${AppHost.otherrejection}$consignmentId';
+//                       break;
+//                     default:
+//                       throw Exception('Invalid rejection reason: $rejectionReason');
+//                   }
+//                 }
+//                 break;
+//             }
+//           }
+
+//           final podType = provider.selectedDeliveryType.toString().split('.').last;
+//           final combinedData = {
+//             'pod_type': podType,
+//             'tasks': tasks,
+//             'signature': provider.signature != null ? jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}') : null,
+//           };
+
+//           final response = await http.post(
+//             Uri.parse(url),
+//             headers: <String, String>{
+//               'Authorization': 'Bearer ${state.token}',
+//               'Content-Type': 'application/json',
+//               'Accept': 'application/json',
+//             },
+//             body: jsonEncode(combinedData),
+//           );
+
+//           if (response.statusCode == 200) {
+//             print('Data posted successfully to URL: $url');
+//             await TaskSyncDatabase(_database).delete(task['id']);
+//             await ConsignmentDatabase(_database).update(task['id'], {'is_complete': 1});
+
+//             if (isGroup != null && isGroup != 'parent') {
+//               await submitGroupAsIndividual(int.parse(isGroup));
+//               await addNewConsignment(Get.arguments);
+//             }
+//           } else {
+//             print('Failed to post data to URL: $url');
+//             print('Response status: ${response.statusCode}');
+//             print('Response body: ${response.body}');
+//           }
+//         }
+//       } catch (e) {
+//         print('Error posting data to API: $e');
+//       }
+//     }
+//   }
+
+//   Future<void> submitGroupAsIndividual(int id) async {
+//     List<Map<String, dynamic>> individualConsignments = [];
+//     int carton = 0;
+//     int pallet = 0;
+//     int space = 0;
+//     double weight = 0.0;
+
+//     await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+//         .readById(id)
+//         .then((value) async {
+//       Map<String, dynamic> consignment = value.first;
+//       if (consignment['grouped_consignments'] != null) {
+//         groupedConsignments = json.decode(consignment['grouped_consignments']);
+//       }
+
+//       await Future.forEach(groupedConsignments, (element) async {
+//         await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+//             .readById(element['id'])
+//             .then((value) {
+//           individualConsignments.add(value.first);
+//         });
+//       });
+
+//       for (var element in individualConsignments) {
+//         element['quantity'] = consignment['quantity'];
+//         element['status'] = 3;
+//         element['weight'] = consignment['weight'];
+//         element['comment'] = consignment['comment'];
+//         element['carton'] = consignment['carton'];
+//         element['pallet'] = consignment['pallet'];
+//         element['space'] = consignment['space'];
+//         element['pod_type'] = consignment['pod_type'];
+//         await ConsignmentDatabase(context.read<DatabaseProvider>().database).update(element['id'], element);
+//       }
+//     });
+
+//     final updatedConsignment = {
+//       'id': id,
+//       'carton': carton,
+//       'pallet': pallet,
+//       'space': space,
+//       'weight': weight,
+//       'grouped_consignments': '',
+//       'status': 3,
+//     };
+//     await ConsignmentDatabase(context.read<DatabaseProvider>().database).update(id, updatedConsignment);
+//   }
+
+//   Future<void> addNewConsignment(Map consignmentDetails) async {
+//     final provider = context.read<ProofOfDeliveryProvider>();
+//     final newConsignment = {
+//       'id': consignmentDetails['id'],
+//       'carton': 0,
+//       'pallet': 0,
+//       'space': 0,
+//       'weight': 0,
+//       'grouped_consignments': '',
+//       'status': 1,
+//       'comment': '',
+//       'signature': '',
+//       'pod_type': provider.selectedDeliveryType.toString().split('.').last,
+//       'date': DateFormat('dd/MM/yyyy').format(DateTime.now()),
+//     };
+//     await ConsignmentDatabase(_database).create(newConsignment);
+//   }
+
+// }

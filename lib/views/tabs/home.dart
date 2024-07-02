@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
 
+
 class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+  const HomeTab({Key? key}) : super(key: key);
 
   @override
   State<HomeTab> createState() => _HomeTabState();
@@ -16,7 +17,6 @@ class _HomeTabState extends State<HomeTab> {
   int consignmentCount = 0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -37,9 +37,12 @@ class _HomeTabState extends State<HomeTab> {
         context.read<DatabaseProvider>().database,
         accessToken: state.token,
       );
-      config(state.token);
+      config(state.token,);
+  
     }
   }
+
+ 
 
   config(token) async {
     await PreCheckDatabase(context.read<DatabaseProvider>().database,
@@ -57,6 +60,8 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+      
+
     return StreamBuilder<dynamic>(
         stream: staff.controller.stream,
         builder: (context, staffSnapshot) {
