@@ -42,7 +42,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     super.initState();
     _setDeviceInfo();
     config();
-       productTypes = Get.arguments['product_types'].runtimeType == String
+    productTypes = Get.arguments['product_types'].runtimeType == String
         ? json.decode(Get.arguments['product_types'])
         : Get.arguments['product_types'];
     deliveryAddresses =
@@ -485,39 +485,39 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             ),
                           ),
                           if (!isGroupedConsignment)
-                          if (Get.arguments?['consignment_type'] != 'pickup')
-                            DropdownMenuItem(
-                              value: DeliveryType.partial,
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: AppColors.yellow,
-                                    radius: 3.sp,
-                                  ),
-                                  SizedBox(
-                                    width: 2.w,
-                                  ),
-                                  const Text('Partial Delivery'),
-                                ],
-                              ),
-                            ),
-                             if (!isGroupedConsignment)
                             if (Get.arguments?['consignment_type'] != 'pickup')
-                          DropdownMenuItem(
-                            value: DeliveryType.none,
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: AppColors.red,
-                                  radius: 3.sp,
+                              DropdownMenuItem(
+                                value: DeliveryType.partial,
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: AppColors.yellow,
+                                      radius: 3.sp,
+                                    ),
+                                    SizedBox(
+                                      width: 2.w,
+                                    ),
+                                    const Text('Partial Delivery'),
+                                  ],
                                 ),
-                                SizedBox(
-                                  width: 2.w,
+                              ),
+                          if (!isGroupedConsignment)
+                            if (Get.arguments?['consignment_type'] != 'pickup')
+                              DropdownMenuItem(
+                                value: DeliveryType.none,
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: AppColors.red,
+                                      radius: 3.sp,
+                                    ),
+                                    SizedBox(
+                                      width: 2.w,
+                                    ),
+                                    const Text('No Delivery'),
+                                  ],
                                 ),
-                                const Text('No Delivery'),
-                              ],
-                            ),
-                          ),
+                              ),
                         ],
                       ),
                       SizedBox(
@@ -626,48 +626,56 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                               height: 1.h,
                             ),
                             CustomTextField(
-  name: 'service',
-  keyboardType: TextInputType.number,
-  readOnly: true,
-  hintText: serviceTimeController.text =
-      '${Provider.of<TimeProvider>(context).formattedStartTime} - ${Provider.of<TimeProvider>(context).formattedEndTime}',
-  controller: serviceTimeController,
-  onTap: () {
-    Get.toNamed(
-      AppRoutes.Stopwatch,
-      arguments: Get.arguments,
-    );
-  },
-  suffixIcon: Padding(
-    padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          AppText.editHours,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.black.withOpacity(0.5),
-                fontWeight: FontWeight.w500,
-              ),
-        ),
-        Icon(
-          Icons.arrow_forward_ios,
-          size: 2.h,
-          color: AppColors.black.withOpacity(0.5),
-        ),
-      ],
-    ),
-  ),
-  onChanged: (value) {
-    context.read<ProofOfDeliveryProvider>().data['service_time_start'] = value;
-    context.read<ProofOfDeliveryProvider>().data['service_time_end'] = value;
-  },
-),
- SizedBox(
+                              name: 'service',
+                              keyboardType: TextInputType.number,
+                              readOnly: true,
+                              hintText: serviceTimeController.text =
+                                  '${Provider.of<TimeProvider>(context).formattedStartTime} - ${Provider.of<TimeProvider>(context).formattedEndTime}',
+                              controller: serviceTimeController,
+                              onTap: () {
+                                Get.toNamed(
+                                  AppRoutes.Stopwatch,
+                                  arguments: Get.arguments,
+                                );
+                              },
+                              suffixIcon: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 2.h, horizontal: 2.w),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      AppText.editHours,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: AppColors.black
+                                                .withOpacity(0.5),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 2.h,
+                                      color: AppColors.black.withOpacity(0.5),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              onChanged: (value) {
+                                context
+                                    .read<ProofOfDeliveryProvider>()
+                                    .data['service_time_start'] = value;
+                                context
+                                    .read<ProofOfDeliveryProvider>()
+                                    .data['service_time_end'] = value;
+                              },
+                            ),
+                            SizedBox(
                               height: 1.h,
                             ),
-
                             CustomTextField(
                               name: 'length',
                               hintText: AppText.lengthOfDelivery,
@@ -843,208 +851,276 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             SizedBox(
                               height: 1.h,
                             ),
-                          Row(
-  mainAxisAlignment: MainAxisAlignment.end,
-  children: [
-    SizedBox(
-      width: 50.w,
-      child: Consumer<ProofOfDeliveryProvider>(
-        builder: (context, provider, _) => CustomButton(
-          label: "Next",
-          onPressed: () {
-            if (int.parse(_formKey.currentState!
-                        .fields['cartons']!.value
-                        .toString()) <
-                    Get.arguments['carton'] ||
-                int.parse(_formKey.currentState!
-                        .fields['pallets']!.value
-                        .toString()) <
-                    Get.arguments['pallet']) {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.sp),
-                    ),
-                    backgroundColor: AppColors.white,
-                    titlePadding: EdgeInsets.symmetric(
-                      vertical: 1.h,
-                      horizontal: 2.w,
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          height: 20.w,
-                          width: 20.w,
-                          child: Image.asset(
-                            AppImages.brakeWarning,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 1.h,
-                            horizontal: 2.w,
-                          ),
-                          child: Text(
-                            "You are missing cartons or pallets. Please fix this mistake.",
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                SizedBox(
+                                  width: 50.w,
+                                  child: Consumer<ProofOfDeliveryProvider>(
+                                    builder: (context, provider, _) =>
+                                        CustomButton(
+                                      label: "Next",
+                                      onPressed: () {
+                                        if (int.parse(_formKey.currentState!
+                                                    .fields['cartons']!.value
+                                                    .toString()) <
+                                                Get.arguments['carton'] ||
+                                            int.parse(_formKey.currentState!
+                                                    .fields['pallets']!.value
+                                                    .toString()) <
+                                                Get.arguments['pallet']) {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10.sp),
+                                                ),
+                                                backgroundColor:
+                                                    AppColors.white,
+                                                titlePadding:
+                                                    EdgeInsets.symmetric(
+                                                  vertical: 1.h,
+                                                  horizontal: 2.w,
+                                                ),
+                                                contentPadding: EdgeInsets.zero,
+                                                content: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    SizedBox(
+                                                      height: 20.w,
+                                                      width: 20.w,
+                                                      child: Image.asset(
+                                                        AppImages.brakeWarning,
+                                                        fit: BoxFit.contain,
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                        vertical: 1.h,
+                                                        horizontal: 2.w,
+                                                      ),
+                                                      child: Text(
+                                                        "You are missing cartons or pallets. Please fix this mistake.",
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodyLarge
+                                                            ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                            ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                actions: <Widget>[
+                                                  SizedBox(height: 2.h),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceAround,
+                                                    children: [
+                                                      CustomButton(
+                                                        height: 5.h,
+                                                        width: 30.w,
+                                                        label: 'OK',
+                                                        backgroundColor:
+                                                            AppColors.white,
+                                                        borderColor:
+                                                            AppColors.yellow,
+                                                        foregroundColor:
+                                                            AppColors.black,
+                                                        onPressed: () {
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        } else {
+                                          if (_formKey.currentState != null) {
+                                            final temperature = _formKey
+                                                .currentState!
+                                                .fields['temp']!
+                                                .value
+                                                .toString();
+                                            final first_name = _formKey
+                                                .currentState!
+                                                .fields['receiverFirstName']!
+                                                .value
+                                                .toString();
+                                            final last_name = _formKey
+                                                .currentState!
+                                                .fields['receiverLastName']!
+                                                .value
+                                                .toString();
+                                            final comments = _formKey
+                                                .currentState!
+                                                .fields['commentspho']
+                                                ?.value
+                                                .toString();
+                                            final serviceTimeProvider =
+                                                Provider.of<TimeProvider>(
+                                                    context,
+                                                    listen: false);
+                                            final service_time_start =
+                                                '${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
+                                            final service_time_end =
+                                                '${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
+                                            final lengthofDelivery = _formKey
+                                                .currentState!
+                                                .fields['length']!
+                                                .value
+                                                .toString();
+                                            final cartons = _formKey
+                                                .currentState!
+                                                .fields['cartons']!
+                                                .value
+                                                .toString();
+                                            final pallets = _formKey
+                                                .currentState!
+                                                .fields['pallets']!
+                                                .value
+                                                .toString();
+                                            final signature = jsonEncode(
+                                                'data:image/png;base64, ${base64Encode(provider.signature!)}');
+                                            final pictureSources = jsonEncode(
+                                                context
+                                                    .read<
+                                                        ProofOfDeliveryProvider>()
+                                                    .pictureSources);
+                                            final latitude = context
+                                                .read<LocationProvider>()
+                                                .current!
+                                                .latitude;
+                                            final longitude = context
+                                                .read<LocationProvider>()
+                                                .current!
+                                                .longitude;
+                                            final images = jsonEncode(context
+                                                .read<ProofOfDeliveryProvider>()
+                                                .base64Images);
+                                            final consignments =
+                                                Get.arguments['id'];
+                                            final driver_id =
+                                                Get.arguments['runsheet_id'];
+                                            final address_id =
+                                                pickupAddresses['id'];
+                                            final space =
+                                                Get.arguments['space'];
+                                            final weight =
+                                                Get.arguments['weight'];
+                                            final customer_reference =
+                                                Get.arguments[
+                                                    'customer_reference'];
+                                            final group =
+                                                Get.arguments['is_group'];
+                                            final service_window =
+                                                pickupAddresses[
+                                                    'service_window'];
+                                            final platforms = jsonEncode([
+                                              "android",
+                                              "cordova",
+                                              "mobile",
+                                              "hybrid"
+                                            ]);
+
+                                            final consignmentType =
+                                                Get.arguments?[
+                                                        'consignment_type'] ??
+                                                    'delivery';
+                                            if (groupedConsignments
+                                                .isNotEmpty) {
+                                              provider.data['pod_type'] =
+                                                  consignmentType == 'delivery'
+                                                      ? 2
+                                                      : 5;
+                                            } else {
+                                              switch (provider
+                                                  .selectedDeliveryType) {
+                                                case DeliveryType.full:
+                                                  provider.data['pod_type'] =
+                                                      consignmentType ==
+                                                              'delivery'
+                                                          ? 0
+                                                          : 4;
+                                                  break;
+                                                // Handle other delivery types if needed
+                                                case DeliveryType.partial:
+                                                // TODO: Handle this case.
+                                                case DeliveryType.none:
+                                                // TODO: Handle this case.
+                                              }
+                                            }
+
+                                            final temp = {
+                                              "temperature": temperature,
+                                              "first_name": first_name,
+                                              "last_name": last_name,
+                                              "lengthOfDelivery":
+                                                  lengthofDelivery,
+                                              "pod_type":
+                                                  provider.data['pod_type'],
+                                              "device": jsonEncode(deviceinfo),
+                                              "cartons": cartons,
+                                              "pallets": pallets,
+                                              "service_window": service_window,
+                                              "service_time_start":
+                                                  service_time_start,
+                                              "service_time_end":
+                                                  service_time_end,
+                                              "signature": signature,
+                                              "pictureSources": pictureSources,
+                                              "latitude": latitude,
+                                              "longitude": longitude,
+                                              "current_app_version": "3.15.2",
+                                              "app_version": "3.15.2",
+                                              "consignments":
+                                                  jsonEncode([consignments]),
+                                              "driver_id": driver_id,
+                                              "date_delivered": DateTime.now()
+                                                  .toIso8601String(),
+                                              "space": space,
+                                              "weight": weight,
+                                              "customer_reference":
+                                                  customer_reference,
+                                              "comments": comments,
+                                              "address_id": address_id,
+                                              "pictures": images,
+                                              "platforms": platforms,
+                                            };
+
+                                            context
+                                                .read<ProofOfDeliveryProvider>()
+                                                .addEntities(temp.entries);
+                                            Get.toNamed(AppRoutes.podphotos,
+                                                arguments: Get.arguments);
+                                          }
+                                        }
+                                      },
+                                      borderColor: _isValid()
+                                          ? AppColors.blue
+                                          : AppColors.grey,
+                                      backgroundColor: _isValid()
+                                          ? AppColors.blue
+                                          : AppColors.grey,
+                                      enabled: _isValid(),
+                                    ),
+                                  ),
                                 ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                    actions: <Widget>[
-                      SizedBox(height: 2.h),
-                      Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceAround,
-                        children: [
-                          CustomButton(
-                            height: 5.h,
-                            width: 30.w,
-                            label: 'OK',
-                            backgroundColor: AppColors.white,
-                            borderColor: AppColors.yellow,
-                            foregroundColor: AppColors.black,
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              );
-            } else {
-              if (_formKey.currentState != null) {
-                final temperature = _formKey.currentState!
-                    .fields['temp']!.value.toString();
-                final first_name = _formKey.currentState!
-                    .fields['receiverFirstName']!.value.toString();
-                final last_name = _formKey.currentState!
-                    .fields['receiverLastName']!.value.toString();
-                final comments = _formKey.currentState!
-                    .fields['commentspho']?.value.toString();
-                final serviceTimeProvider =
-                    Provider.of<TimeProvider>(context, listen: false);
-                final service_time_start =
-                    '${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
-                final service_time_end =
-                    '${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
-                final lengthofDelivery = _formKey.currentState!
-                    .fields['length']!.value.toString();
-                final cartons = _formKey.currentState!
-                    .fields['cartons']!.value.toString();
-                final pallets = _formKey.currentState!
-                    .fields['pallets']!.value.toString();
-                final signature = jsonEncode(
-                    'data:image/png;base64, ${base64Encode(provider.signature!)}');
-                final pictureSources = jsonEncode(context
-                    .read<ProofOfDeliveryProvider>()
-                    .pictureSources);
-                final latitude = context
-                    .read<LocationProvider>()
-                    .current!
-                    .latitude;
-                final longitude = context
-                    .read<LocationProvider>()
-                    .current!
-                    .longitude;
-                final images = jsonEncode(context
-                    .read<ProofOfDeliveryProvider>()
-                    .base64Images);
-                final consignments = Get.arguments['id'];
-                final driver_id = Get.arguments['runsheet_id'];
-                final address_id = pickupAddresses['id'];
-                final space = Get.arguments['space'];
-                final weight = Get.arguments['weight'];
-                final customer_reference =
-                    Get.arguments['customer_reference'];
-                final group = Get.arguments['is_group'];
-                final service_window =
-                    pickupAddresses['service_window'];
-                final platforms = jsonEncode([
-                  "android",
-                  "cordova",
-                  "mobile",
-                  "hybrid"
-                ]);
-
-                final consignmentType =
-                    Get.arguments?['consignment_type'] ?? 'delivery';
-                if (groupedConsignments.isNotEmpty) {
-                  provider.data['pod_type'] =
-                      consignmentType == 'delivery' ? 2 : 5;
-                } else {
-                  switch (provider.selectedDeliveryType) {
-                    case DeliveryType.full:
-                      provider.data['pod_type'] =
-                          consignmentType == 'delivery' ? 0 : 4;
-                      break;
-                    // Handle other delivery types if needed
-                    case DeliveryType.partial:
-                      // TODO: Handle this case.
-                    case DeliveryType.none:
-                      // TODO: Handle this case.
-                  }
-                }
-
-                final temp = {
-                  "temperature": temperature,
-                  "first_name": first_name,
-                  "last_name": last_name,
-                  "lengthOfDelivery": lengthofDelivery,
-                  "pod_type": provider.data['pod_type'], 
-                  "device": jsonEncode(deviceinfo),
-                  "cartons": cartons,
-                  "pallets": pallets,
-                  "service_window": service_window,
-                  "service_time_start": service_time_start,
-                  "service_time_end": service_time_end,
-                  "signature": signature,
-                  "pictureSources": pictureSources,
-                  "latitude": latitude,
-                  "longitude": longitude,
-                  "current_app_version": "3.15.2",
-                  "app_version": "3.15.2",
-                  "consignments": jsonEncode([consignments]),
-                  "driver_id": driver_id,
-                  "date_delivered": DateTime.now().toIso8601String(),
-                  "space": space,
-                  "weight": weight,
-                  "customer_reference": customer_reference,
-                  "comments": comments,
-                  "address_id": address_id,
-                  "pictures": images,
-                  "platforms": platforms,
-                };
-
-                context
-                    .read<ProofOfDeliveryProvider>()
-                    .addEntities(temp.entries);
-                Get.toNamed(AppRoutes.podphotos, arguments: Get.arguments);
-              }
-            }
-          },
-          borderColor: _isValid() ? AppColors.blue : AppColors.grey,
-          backgroundColor: _isValid() ? AppColors.blue : AppColors.grey,
-          enabled: _isValid(),
-        ),
-      ),
-    ),
-  ],
-),
-
+                              ],
+                            ),
                           ],
                         ),
                       if (Provider.of<ProofOfDeliveryProvider>(context)
@@ -1186,45 +1262,54 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             SizedBox(
                               height: 1.h,
                             ),
-                             CustomTextField(
-  name: 'service',
-  keyboardType: TextInputType.number,
-  readOnly: true,
-  hintText: serviceTimeController.text =
-      '${Provider.of<TimeProvider>(context).formattedStartTime} - ${Provider.of<TimeProvider>(context).formattedEndTime}',
-  controller: serviceTimeController,
-  onTap: () {
-    Get.toNamed(
-      AppRoutes.Stopwatch,
-      arguments: Get.arguments,
-    );
-  },
-  suffixIcon: Padding(
-    padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 2.w),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          AppText.editHours,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.black.withOpacity(0.5),
-                fontWeight: FontWeight.w500,
-              ),
-        ),
-        Icon(
-          Icons.arrow_forward_ios,
-          size: 2.h,
-          color: AppColors.black.withOpacity(0.5),
-        ),
-      ],
-    ),
-  ),
-  onChanged: (value) {
-    context.read<ProofOfDeliveryProvider>().data['service_time_start'] = value;
-    context.read<ProofOfDeliveryProvider>().data['service_time_end'] = value;
-  },
-),
+                            CustomTextField(
+                              name: 'service',
+                              keyboardType: TextInputType.number,
+                              readOnly: true,
+                              hintText: serviceTimeController.text =
+                                  '${Provider.of<TimeProvider>(context).formattedStartTime} - ${Provider.of<TimeProvider>(context).formattedEndTime}',
+                              controller: serviceTimeController,
+                              onTap: () {
+                                Get.toNamed(
+                                  AppRoutes.Stopwatch,
+                                  arguments: Get.arguments,
+                                );
+                              },
+                              suffixIcon: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 2.h, horizontal: 2.w),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      AppText.editHours,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: AppColors.black
+                                                .withOpacity(0.5),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 2.h,
+                                      color: AppColors.black.withOpacity(0.5),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              onChanged: (value) {
+                                context
+                                    .read<ProofOfDeliveryProvider>()
+                                    .data['service_time_start'] = value;
+                                context
+                                    .read<ProofOfDeliveryProvider>()
+                                    .data['service_time_end'] = value;
+                              },
+                            ),
                             SizedBox(
                               height: 1.h,
                             ),
@@ -1519,7 +1604,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             "longitude": longitude,
                                             "current_app_version": "3.15.2",
                                             "app_version": "3.15.2",
-                                            "consignments":  jsonEncode([consignments]),
+                                            "consignments":
+                                                jsonEncode([consignments]),
                                             "driver_id": driver_id,
                                             "date_delivered": DateTime.now()
                                                 .toIso8601String(),
@@ -1675,7 +1761,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               .read<ProofOfDeliveryProvider>();
                                           final rejection_reason =
                                               provider.data['rejection_reason'];
-                                          final consignments = Get.arguments['id'];
+                                          final consignments =
+                                              Get.arguments['id'];
                                           final driver_id =
                                               Get.arguments['driver_id'];
                                           final address_id =
@@ -1746,7 +1833,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             "adhoc_charges": false,
                                             "space": space,
                                             "weight": weight,
-                                            "consignments":  jsonEncode([consignments]),
+                                            "consignments":
+                                                jsonEncode([consignments]),
                                             "device": jsonEncode(deviceinfo),
                                             "date_delivered": DateTime.now()
                                                 .toIso8601String(),
@@ -1875,106 +1963,113 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   // }
   // }
   Future<void> postDataToApi() async {
-  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-  var databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
-  AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+    var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+    var databaseProvider =
+        Provider.of<DatabaseProvider>(context, listen: false);
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
 
-  if (state is Authenticated) {
-    try {
-      final taskDatabase = TaskSyncDatabase(_database!);
-      
-      final tasks = await taskDatabase.read();
-      print(tasks);
+    if (state is Authenticated) {
+      try {
+        final taskDatabase = TaskSyncDatabase(_database!);
 
-      if (tasks.isEmpty) {
-        print('No tasks to send');
-        return;
-      }
+        final tasks = await taskDatabase.read();
+        print(tasks);
 
-      final Map postData = context.read<ProofOfDeliveryProvider>().data;
-      String url = '';
-      final consignmentId = Get.arguments?['id'];
+        if (tasks.isEmpty) {
+          print('No tasks to send');
+          return;
+        }
 
-      if (groupedConsignments.isNotEmpty) {
-        url = AppHost.group;
-      } else {
-        switch (provider.selectedDeliveryType) {
-          case DeliveryType.full:
-            // Check if consignment type is provided, default to 'delivery'
-            final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
-            if (consignmentType == 'delivery') {
-               url = '${AppHost.podfull}$consignmentId';
-            } else {
-               url = '${AppHost.singlepop}$consignmentId';
-            }
-            break;
-          case DeliveryType.partial:
-             url = '${AppHost.podpartial}$consignmentId';
-            break;
-          case DeliveryType.none:
-            List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
-            for (String rejectionReason in rejectionReasons) {
-              print('Rejection Reason: $rejectionReason');
-              switch (rejectionReason) {
-                case "Temperature issue":
-        url = '${AppHost.temperateissue}$consignmentId';
-        break;
-      case "Wrong Address":
-        url = '${AppHost.wrongaddress}$consignmentId';
-        break;
-      case "Damaged Goods":
-        url = '${AppHost.damagegoods}$consignmentId';
-        break;
-      case "Receiver Not Open":
-        url = '${AppHost.notopen}$consignmentId';
-        break;
-      case "Other Rejection":
-        url = '${AppHost.otherrejection}$consignmentId';
-        break;
-                default:
-                  throw Exception('Invalid rejection reason: $rejectionReason');
+        final Map postData = context.read<ProofOfDeliveryProvider>().data;
+        String url = '';
+        final consignmentId = Get.arguments?['id'];
+
+        if (groupedConsignments.isNotEmpty) {
+          url = AppHost.group;
+        } else {
+          switch (provider.selectedDeliveryType) {
+            case DeliveryType.full:
+              // Check if consignment type is provided, default to 'delivery'
+              final consignmentType =
+                  Get.arguments?['consignment_type'] ?? 'delivery';
+              if (consignmentType == 'delivery') {
+                url = '${AppHost.podfull}$consignmentId';
+              } else {
+                url = '${AppHost.singlepop}$consignmentId';
               }
-            }
-            break;
+              break;
+            case DeliveryType.partial:
+              url = '${AppHost.podpartial}$consignmentId';
+              break;
+            case DeliveryType.none:
+              List<String> rejectionReasons =
+                  provider.selectedOrderRejectionReasons as List<String>;
+              for (String rejectionReason in rejectionReasons) {
+                print('Rejection Reason: $rejectionReason');
+                switch (rejectionReason) {
+                  case "Temperature issue":
+                    url = '${AppHost.temperateissue}$consignmentId';
+                    break;
+                  case "Wrong Address":
+                    url = '${AppHost.wrongaddress}$consignmentId';
+                    break;
+                  case "Damaged Goods":
+                    url = '${AppHost.damagegoods}$consignmentId';
+                    break;
+                  case "Receiver Not Open":
+                    url = '${AppHost.notopen}$consignmentId';
+                    break;
+                  case "Other Rejection":
+                    url = '${AppHost.otherrejection}$consignmentId';
+                    break;
+                  default:
+                    throw Exception(
+                        'Invalid rejection reason: $rejectionReason');
+                }
+              }
+              break;
+          }
         }
+
+        final podType =
+            provider.selectedDeliveryType.toString().split('.').last;
+        final combinedData = {
+          'pod_type': podType,
+          'tasks': tasks,
+        };
+
+        final response = await http.post(
+          Uri.parse(url),
+          headers: <String, String>{
+            'Authorization': 'Bearer ${state.token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode(combinedData),
+        );
+
+        if (response.statusCode == 200) {
+          print('Data posted successfully to URL: $url');
+          print('Response body: ${response.body}');
+
+          for (var task in tasks) {
+            await taskDatabase.delete(task['id']);
+            print(task['id']);
+            await ConsignmentDatabase(_database!)
+                .update(task['id'], {'sort': 1});
+          }
+        } else {
+          print('Failed to post data to URL: $url');
+          print('Response status: ${response.statusCode}');
+          print('Response body: ${response.body}');
+        }
+        ;
+      } catch (e) {
+        print('Error posting data to API: $e');
       }
-
-      final podType = provider.selectedDeliveryType.toString().split('.').last;
-      final combinedData = {
-        'pod_type': podType,
-        'tasks': tasks,
-      };
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Authorization': 'Bearer ${state.token}',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(combinedData),
-      );
-
-      if (response.statusCode == 200) {
-        print('Data posted successfully to URL: $url');
-        print('Response body: ${response.body}');
-         
-        for (var task in tasks) {
-          await taskDatabase.delete(task['id']);
-          print(task['id']);
-          await ConsignmentDatabase(_database!).update(task['id'], {'sort': 1});
-        }
-      } else  {
-        print('Failed to post data to URL: $url');
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-      };
-    } catch (e) {
-      print('Error posting data to API: $e');
     }
   }
-}
-
 }
 
 class CustomContainer extends StatefulWidget {
