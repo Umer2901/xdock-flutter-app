@@ -29,9 +29,7 @@ class ConsignmentService {
               //         [DateFormat('yyyy-MM-dd').format(DateTime.now())]
               //     ['consignments'];
               List<dynamic> submissionData =
-                  data['data']['2024-06-27']['consignments'];
-              // List<dynamic> submissionData =
-              //     data['data']['2024-04-04']['consignments'];
+                  data['data']['2024-07-02']['consignments'];
               for (var dataIteration in submissionData) {
                 dataIteration['delivery_addresses'] = json.encode(
                   dataIteration['delivery_addresses'],
