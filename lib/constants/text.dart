@@ -141,10 +141,10 @@ class AppText {
   static const String dashboard = 'Dashboard';
   static const String consignmentMapView = 'Consignment Map View';
   static const String training = 'Training';
-  static const String podHoistory = 'POV History';
+  static const String podHoistory = 'POD History';
   static const String help = 'Help';
   static const String logout = 'Log Out';
-  static const String version = 'Version 3.15.2';
+  static const String version = 'Version 1.0.0';
 
   //phase 2
   //My Consigments

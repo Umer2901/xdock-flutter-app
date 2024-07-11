@@ -125,15 +125,17 @@ class _CustomMyConsigmentContainerState
                                 .longitude
                                 .toString(),
                             destinationLatitude:
-                                widget.consignment!['consignment_type'] ==
-                                        'delivery'
-                                    ? deliveryAddresses['latitude']
-                                    : pickupAddresses['latitude'],
+                                (widget.consignment!['consignment_type'] ==
+                                            'delivery'
+                                        ? deliveryAddresses['latitude']
+                                        : pickupAddresses['latitude'])
+                                    .toString(),
                             destinationLongitude:
-                                widget.consignment!['consignment_type'] ==
-                                        'delivery'
-                                    ? deliveryAddresses['longitude']
-                                    : pickupAddresses['longitude'],
+                                (widget.consignment!['consignment_type'] ==
+                                            'delivery'
+                                        ? deliveryAddresses['longitude']
+                                        : pickupAddresses['longitude'])
+                                    .toString(),
                           );
                         },
                         child: Container(

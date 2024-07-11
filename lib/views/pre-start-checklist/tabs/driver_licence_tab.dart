@@ -104,7 +104,6 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                             ),
                             isErrorState: (isLicenceError),
                             validator: (value) {
-                              debugPrint(value);
                               if (value == null || value == '') {
                                 setState(() {
                                   isLicenceError = true;
@@ -461,7 +460,6 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                               vertical: 0,
                             ),
                             validator: (value) {
-                              debugPrint(value);
                               if (value == null || value == '') {
                                 setState(() {
                                   isOdometerError = true;

@@ -37,6 +37,15 @@ class PreCheckDatabase {
     }
   }
 
+  Future<void> update(Map<String, dynamic> data) async {
+    await _database.update(
+      'precheck_status',
+      data,
+      where: 'access_token = ? AND datetime = ?',
+      whereArgs: [accessToken, DateFormat('dd/MM/yyyy').format(DateTime.now())],
+    );
+  }
+
   void _startListeningToChanges() {
     _timer = Timer.periodic(const Duration(milliseconds: 800), (timer) async {
       _refreshStream();

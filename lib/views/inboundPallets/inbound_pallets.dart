@@ -125,7 +125,6 @@ class _InboundPalletsScreenState extends State<InboundPalletsScreen> {
                       return Expanded(
                         child: Consumer<InboundProvider>(
                           builder: (context, value, child) {
-                            print(snapshot.data);
                             return value.index == 0
                                 ? InboundPalletCountTab(data: snapshot.data)
                                 : const InboundPalletSignatureConfirmationTab();

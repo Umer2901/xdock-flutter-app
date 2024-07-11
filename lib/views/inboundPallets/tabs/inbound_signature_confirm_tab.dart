@@ -49,6 +49,12 @@ class _InboundPalletSignatureConfirmationTabState
             setState(() {
               isLoading = false;
             });
+            PreCheckDatabase(
+              context.read<DatabaseProvider>().database,
+              accessToken: state.token,
+            ).update(
+              {'inbound': 1},
+            );
             showDialog(
               context: context,
               builder: (BuildContext context) {
@@ -156,7 +162,8 @@ class _InboundPalletSignatureConfirmationTabState
             ),
             child: Material(
               color: AppColors.white,
-              child: Padding(
+              child: Container(
+                height: 75.h,
                 padding: EdgeInsets.symmetric(horizontal: 4.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

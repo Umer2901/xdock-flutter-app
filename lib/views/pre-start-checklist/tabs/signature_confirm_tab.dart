@@ -49,6 +49,12 @@ class _PreStartSignatureConfirmationTabState
             isLoading = false;
           });
           if (response.statusCode == 200) {
+            PreCheckDatabase(
+              context.read<DatabaseProvider>().database,
+              accessToken: state.token,
+            ).update(
+              {'checklist': 1},
+            );
             showDialog(
               context: context,
               builder: (BuildContext context) {
@@ -167,7 +173,8 @@ class _PreStartSignatureConfirmationTabState
             ),
             child: Material(
               color: AppColors.white,
-              child: Padding(
+              child: Container(
+                height: 75.h,
                 padding: EdgeInsets.symmetric(horizontal: 4.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,13 +266,13 @@ class _PreStartSignatureConfirmationTabState
                           onPressed: () async {
                             await _controller.toPngBytes().then((bytes) {
                               if (bytes != null) {
-                                  context.read<PreStartProvider>().addEntities(
-                                        {
-                                          "driver_signature":
-                                              'data:image/png;base64, ${base64Encode(bytes).toString()}',
-                                          "total_question": 29.toString(),
-                                        }.entries,
-                                      );
+                                context.read<PreStartProvider>().addEntities(
+                                      {
+                                        "driver_signature":
+                                            'data:image/png;base64, ${base64Encode(bytes).toString()}',
+                                        "total_question": 29.toString(),
+                                      }.entries,
+                                    );
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
@@ -357,7 +364,6 @@ class _PreStartSignatureConfirmationTabState
                         ),
                       ),
                     ),
-                   
                     SizedBox(
                       height: 3.h,
                     ),

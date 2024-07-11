@@ -25,28 +25,28 @@ class CustomPreStartHeader extends StatelessWidget {
               IntrinsicHeight(
                 child: Row(
                   children: [
-                    Text(
-                      AppText.cxf009,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    VerticalDivider(
-                      color: AppColors.white,
-                      thickness: 0.2.w,
-                    ),
-                    Text(
-                      AppText.issue,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    VerticalDivider(
-                      color: AppColors.white,
-                      thickness: 0.2.w,
-                    ),
+                    // Text(
+                    //   AppText.cxf009,
+                    //   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    //         color: AppColors.white,
+                    //         fontWeight: FontWeight.w600,
+                    //       ),
+                    // ),
+                    // VerticalDivider(
+                    //   color: AppColors.white,
+                    //   thickness: 0.2.w,
+                    // ),
+                    // Text(
+                    //   AppText.issue,
+                    //   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    //         color: AppColors.white,
+                    //         fontWeight: FontWeight.w600,
+                    //       ),
+                    // ),
+                    // VerticalDivider(
+                    //   color: AppColors.white,
+                    //   thickness: 0.2.w,
+                    // ),
                     Text(
                       DateFormat('dd/MM/yy').format(
                         DateTime.now(),

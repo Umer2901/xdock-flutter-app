@@ -61,12 +61,15 @@ class SubmissionCheckContainer extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 3.w),
-                      Text(
-                        title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(color: AppColors.white),
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(color: AppColors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),

@@ -60,7 +60,6 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                             return vehicle['vehicle_rego'];
                           }).toList(),
                           validator: (value) {
-                            debugPrint(value);
                             if (value == null || value == '') {
                               setState(() {
                                 isRegistrationError = true;
@@ -404,7 +403,7 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                                               .entries.length;
                                       i++) {
                                     context
-                                        .read<InboundProvider>()
+                                        .read<OutboundProvider>()
                                         .addEntities({
                                           "pallet_id_$i": "${i + 1}",
                                           "pallet_qty_${i + 1}": _formKey

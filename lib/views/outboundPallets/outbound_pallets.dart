@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:coldxpress/export.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
 part 'tabs/outbound_pallet_count_tab.dart';
@@ -85,9 +84,9 @@ class _OutboundPalletsScreenState extends State<OutboundPalletsScreen> {
                 context.read<OutboundProvider>().restoreToDefault();
                 Get.back();
               } else {
-                context
-                    .read<OutboundProvider>()
-                    .setIndex(context.read<OutboundProvider>().index - 1);
+                context.read<OutboundProvider>().setIndex(
+                      context.read<OutboundProvider>().index - 1,
+                    );
               }
             },
             icon: Icon(

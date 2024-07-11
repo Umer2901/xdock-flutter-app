@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
-import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery_photos.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EditTime extends StatefulWidget {
@@ -11,7 +10,6 @@ class EditTime extends StatefulWidget {
 }
 
 class _EditTimeState extends State<EditTime> {
-  late TimeProvider _timeProvider;
   late PickedTime _startTime;
   late PickedTime _endTime;
   late Map consignment;
@@ -25,9 +23,9 @@ class _EditTimeState extends State<EditTime> {
   @override
   void initState() {
     consignment = Get.arguments;
-    deliveryAddresses = consignment['pickup_addresses'].runtimeType == String
-        ? json.decode(consignment['pickup_addresses'])
-        : consignment['pickup_addresses'];
+    deliveryAddresses = consignment['delivery_addresses'].runtimeType == String
+        ? json.decode(consignment['delivery_addresses'])
+        : consignment['delivery_addresses'];
     pickupAddresses = consignment['pickup_addresses'].runtimeType == String
         ? json.decode(consignment['pickup_addresses'])
         : consignment['pickup_addresses'];
@@ -57,7 +55,6 @@ class _EditTimeState extends State<EditTime> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _timeProvider = Provider.of<TimeProvider>(context);
   }
 
   @override
@@ -504,11 +501,9 @@ class _EditTimeState extends State<EditTime> {
 
 class TimeProvider extends ChangeNotifier {
   DateTime _startTime = DateTime(
-    DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30
-  );
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30);
   DateTime _endTime = DateTime(
-    DateTime.now().year, DateTime.now().month, DateTime.now().day, 19, 30
-  );
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 19, 30);
 
   DateTime get startTime => _startTime;
   DateTime get endTime => _endTime;
@@ -528,4 +523,3 @@ class TimeProvider extends ChangeNotifier {
   String get formattedStartTime => getFormattedTime(_startTime);
   String get formattedEndTime => getFormattedTime(_endTime);
 }
-

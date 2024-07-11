@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ConsignmentMapTab extends StatefulWidget {
   const ConsignmentMapTab({super.key});
@@ -73,6 +74,13 @@ class _ConsignmentMapTabState extends State<ConsignmentMapTab> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    consignment.dispose();
+    mapController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder(
         stream: consignment.stream,
@@ -140,9 +148,10 @@ class _ConsignmentMapTabState extends State<ConsignmentMapTab> {
   }
 
   Widget consignmentPopupContainer(Map consignmentDetail) {
-    Map productTypes = json.decode(Get.arguments['product_types']);
-    Map deliveryAddresses = json.decode(Get.arguments['delivery_addresses']);
-    Map pickupAddresses = json.decode(Get.arguments['pickup_addresses']);
+    Map productTypes = json.decode(consignmentDetail['product_types']);
+    Map deliveryAddresses =
+        json.decode(consignmentDetail['delivery_addresses']);
+    Map pickupAddresses = json.decode(consignmentDetail['pickup_addresses']);
     return Container(
       height: 67.5.h,
       width: double.maxFinite,
@@ -237,94 +246,114 @@ class _ConsignmentMapTabState extends State<ConsignmentMapTab> {
                       alignment: Alignment.center,
                       child: IconButton(
                         icon: const Icon(Icons.phone),
-                        onPressed: () {},
+                        onPressed: () async {
+                          final Uri launchUri = Uri(
+                            scheme: 'tel',
+                            path: consignmentDetail['consignment_type'] ==
+                                    'delivery'
+                                ? deliveryAddresses['telephone']
+                                : pickupAddresses['telephone'],
+                          );
+                          await launchUrl(launchUri);
+                        },
                       ),
                     ),
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 2.h,
-                      horizontal: 4.w,
-                    ),
-                    margin: EdgeInsets.symmetric(horizontal: 4.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.lightBlue,
-                      borderRadius: BorderRadius.circular(10.sp),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Image(
-                                image: AssetImage(AppImages.cartons),
-                              ),
-                              SizedBox(width: 2.w),
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10.sp),
-                                  color: AppColors.white,
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isBottomSheetVisible = false;
+                      });
+                      Get.toNamed(
+                        AppRoutes.Stopwatch,
+                        arguments: consignmentDetail,
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2.h,
+                        horizontal: 4.w,
+                      ),
+                      margin: EdgeInsets.symmetric(horizontal: 4.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: BorderRadius.circular(10.sp),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Image(
+                                  image: AssetImage(AppImages.cartons),
                                 ),
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 0.5.h,
-                                  horizontal: 2.w,
-                                ),
-                                child: Text(
-                                  (productTypes['name'])
-                                      .toString()
-                                      .toUpperCase(),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.navyBlue,
-                                      ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          height: 8.h,
-                          child: const VerticalDivider(
-                            color: AppColors.darkGrey,
-                          ),
-                        ),
-                        Expanded(
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10.0,
-                            ),
-                            title: Text(
-                              AppText.time,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: AppColors.white),
-                            ),
-                            subtitle: Text(
-                              consignmentDetail['consignment_type'] ==
-                                      'delivery'
-                                  ? '${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}'
-                                  : '${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    fontSize: 10.sp,
+                                SizedBox(width: 2.w),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.sp),
                                     color: AppColors.white,
                                   ),
-                            ),
-                            trailing: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 10.sp,
-                              color: AppColors.white,
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 0.5.h,
+                                    horizontal: 2.w,
+                                  ),
+                                  child: Text(
+                                    (productTypes['name'])
+                                        .toString()
+                                        .toUpperCase(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.navyBlue,
+                                        ),
+                                  ),
+                                )
+                              ],
                             ),
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            height: 8.h,
+                            child: const VerticalDivider(
+                              color: AppColors.darkGrey,
+                            ),
+                          ),
+                          Expanded(
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10.0,
+                              ),
+                              title: Text(
+                                AppText.time,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: AppColors.white),
+                              ),
+                              subtitle: Text(
+                                consignmentDetail['consignment_type'] ==
+                                        'delivery'
+                                    ? '${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${deliveryAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}'
+                                    : '${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_start'].toString().split(' ').last.split(':')[1]} - ${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[0]}.${pickupAddresses['service_time_end'].toString().split(' ').last.split(':')[1]}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      fontSize: 10.sp,
+                                      color: AppColors.white,
+                                    ),
+                              ),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 10.sp,
+                                color: AppColors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 2.h),
