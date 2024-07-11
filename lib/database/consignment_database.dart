@@ -22,7 +22,7 @@ class ConsignmentDatabase {
   Future<List<Map<String, dynamic>>> read() async {
     return _database.query(
       'consignments',
-      where: 'access_token = ? & is_complete = 0 ',
+      where: 'access_token = ? & is_complete = 0',
       whereArgs: [
         accessToken,
       ],

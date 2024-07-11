@@ -139,6 +139,8 @@ class DatabaseProvider with ChangeNotifier {
             customer_id INTEGER,
             product_type_id INTEGER,
             delivery_run_id INTEGER,
+            pickup_address INTEGER,
+            delivery_address INTEGER,
             datetime TEXT,
             access_token TEXT,
             is_complete INTEGER DEFAULT 0

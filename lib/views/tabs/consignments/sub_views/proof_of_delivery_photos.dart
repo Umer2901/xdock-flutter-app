@@ -46,7 +46,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     databaseProvider = Provider.of<DatabaseProvider>(context, listen: false);
 
     print("our group data: ${Get.arguments['is_group']}");
-    _initializeDatabase();
+    // _initializeDatabase();
     _subscribeToConnectivityChanges();
   }
 
@@ -68,13 +68,13 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     super.dispose();
   }
 
-  Future<void> _initializeDatabase() async {
-    databaseProvider = context.read<DatabaseProvider>();
-    await databaseProvider?.initDatabase();
-    setState(() {
-      _database = databaseProvider!.database;
-    });
-  }
+  // Future<void> _initializeDatabase() async {
+  //   databaseProvider = context.read<DatabaseProvider>();
+  //   await databaseProvider?.initDatabase();
+  //   setState(() {
+  //     _database = databaseProvider!.database;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -365,9 +365,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                   SizedBox(height: 1.h),
                   GestureDetector(
                     onTap: () async {
-                      context.read<ProofOfDeliveryProvider>().image == null
-                          ? _takePhoto()
-                          : null;
+                      _takePhoto();
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -632,6 +630,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       }
     } catch (e) {
       debugPrint('Error picking image from camera: $e');
+      // Handle error, e.g., show an error dialog or log the error
     }
   }
 
