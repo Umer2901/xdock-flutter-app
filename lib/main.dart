@@ -1,4 +1,5 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/providers/pof_services_provider.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/providers/task_sync_provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
@@ -12,6 +13,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+   
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthenticationCubit>(create: (_) => AuthenticationCubit()),
@@ -44,12 +46,13 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider<DatabaseProvider>(
             create: (_) => DatabaseProvider(),
           ),
-          ChangeNotifierProvider<DatabaseProvider>(
-            create: (_) => DatabaseProvider(),
-          ),
           ChangeNotifierProvider(
             create: (_) => TaskSyncProvider(),
           ),
+           ChangeNotifierProvider(
+            create: (context) => TaskSyncpofProvider(context)
+            ),
+         
         ],
         child: Sizer(
           builder: (context, language, child) {
@@ -93,5 +96,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
+    
   }
 }

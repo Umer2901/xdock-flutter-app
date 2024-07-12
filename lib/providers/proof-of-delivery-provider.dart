@@ -52,15 +52,15 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearSignatureAndShowPopup(BuildContext context, SignatureController controller) {
+  clearSignatureAndShowPopup( SignatureController controller) {
     controller.clear();
     _signatureData = null;
     _showSignature = true;
-    showSignaturePopup(context, controller);
+    //showSignaturePopup(context, controller);
     notifyListeners();
-    
   }
-    void lpc(BuildContext context, SignatureController controller) {
+
+    lpc(SignatureController controller) {
     controller.clear();
     _signatureData = null;
     _showSignature = false;
@@ -73,134 +73,39 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     
   }
 
-  void updateSelectedDeliveryType(DeliveryType type) {
+  updateSelectedDeliveryType(DeliveryType type) {
     _selectedDeliveryType = type;
     notifyListeners();
   }
 
-  void updateSignatureData(Uint8List data) {
+  updateSignatureData(Uint8List data) {
     _signatureData = data;
     notifyListeners();
   }
 
-  void setShowSignature(bool value) {
+  setShowSignature(bool value) {
     _showSignature = value;
     notifyListeners();
   }
 
 
-  void updateOrderRejectionReason(String reason) {
+  updateOrderRejectionReason(String reason) {
     _selectedOrderRejectionReasons.clear();
     _selectedOrderRejectionReasons.add(reason);
     data['rejection_reason'] = reason;
     notifyListeners();
   }
 
-  void clearOrderRejectionReasons() {
+  clearOrderRejectionReasons() {
     _selectedOrderRejectionReasons.clear();
     notifyListeners();
   }
- void resetSignatureState() {
+ resetSignatureState() {
     _showSignature = false;
     _signatureData = null;
     notifyListeners();
   }
-  void showSignaturePopup(BuildContext context, SignatureController controller) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          backgroundColor: Colors.white,
-          child: Transform.rotate(
-            angle: 90 * 3.14159 / 180,
-            child: Container(
-              height: 47.h,
-              width: 80.w,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      CupertinoButton(
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                           controller.clear();
-                          context.read<ProofOfDeliveryProvider>().resetSignatureState();
-                        },
-                      ),
-                      Text(
-                        "Signature",
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      CupertinoButton(
-                        child: const Text(
-                          "Done",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () async {
-                          final bytes = await controller.toPngBytes();
-                          if (bytes != null) {
-                            context.read<ProofOfDeliveryProvider>().updateSignatureData(bytes);
-                            Navigator.pop(context);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  Center(
-                    child: Container(
-                      height: 24.h,
-                      width: 90.w,
-                      alignment: Alignment.center,
-                      child: Signature(
-                        controller: controller,
-                        width: 85.w,
-                        height: 20.h,
-                        backgroundColor: Colors.transparent,
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Center(
-                        child: Divider(
-                          height: 1,
-                          thickness: 2,
-                          color: AppColors.grey,
-                        ),
-                      ),
-                      CupertinoButton(
-                        child: const Text(
-                          "Clear",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () {
-                          controller.clear();
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
+ 
   addImage({
     required XFile image,
     required String base64String,
@@ -238,7 +143,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _pictureSources = {};
   }
 
-  void setDeviceInfo(Map<String, dynamic> deviceInfo) {
+  setDeviceInfo(Map<String, dynamic> deviceInfo) {
     _data['device'] = deviceInfo;
     notifyListeners();
   }

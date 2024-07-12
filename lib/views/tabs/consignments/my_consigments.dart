@@ -83,6 +83,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                     if (query != null && query != '') {
                       for (Map<String, dynamic> itr
                           in consignmentSnapshot.data ?? []) {
+                            print("Iteration ${itr["id"]} ${itr["is_complete"]} ");
                         Map deliveryAddresses = json.decode(
                           itr['delivery_addresses'],
                         );
