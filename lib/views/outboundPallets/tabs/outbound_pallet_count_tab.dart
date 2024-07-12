@@ -12,6 +12,16 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
   final _formKey = GlobalKey<FormBuilderState>();
   Map? vehicleRegistration;
   bool isRegistrationError = false;
+  List<DropDownValueModel> vehicleRegoList = [];
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    widget.data['data']['vehicles'].map((vehicle) {
+      vehicleRegoList.add(DropDownValueModel(
+          name: vehicle['vehicle_rego'], value: vehicle['vehicle_rego']));
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,71 +63,141 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                         height: 2.h,
                       ),
                       SizedBox(
-                        height: 6.h,
                         width: 90.w,
-                        child: DropdownSearch(
-                          items: widget.data['data']['vehicles'].map((vehicle) {
-                            return vehicle['vehicle_rego'];
-                          }).toList(),
+                        child: DropDownTextField(
+                          textStyle: Theme.of(context).textTheme.bodyMedium,
+                          textFieldDecoration: InputDecoration(
+                              hintText: 'Please Select',
+                              hintStyle: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    letterSpacing: 1,
+                                    color: AppColors.black.withOpacity(0.5),
+                                  ),
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10.sp)),
+                              focusedBorder: AppColors.kFocuseBorder,
+                              errorBorder: AppColors.kErrorOutlineBorder,
+                              enabledBorder: AppColors.kEnableBorder,
+                              errorStyle: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(fontSize: 0.sp)),
+                          // controller: vehicleRego,
+                          initialValue: context
+                                  .read<OutboundProvider>()
+                                  .data
+                                  .containsKey('vehicle_rego')
+                              ? context
+                                  .read<OutboundProvider>()
+                                  .data['vehicle_rego']
+                              : null,
+                          clearOption: true,
+                          enableSearch: true,
+                          clearIconProperty:
+                              IconProperty(color: AppColors.blue),
+                          searchTextStyle:
+                              const TextStyle(color: AppColors.blue),
+                          searchDecoration: InputDecoration(
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.sp)),
+                            hintText: 'Search',
+                            hintStyle:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      letterSpacing: 1,
+                                      color: AppColors.black.withOpacity(0.5),
+                                    ),
+                          ),
                           validator: (value) {
                             if (value == null || value == '') {
-                              setState(() {
-                                isRegistrationError = true;
-                              });
+                              return '';
                             } else {
-                              setState(() {
-                                isRegistrationError = false;
-                              });
+                              return null;
                             }
-                            return null;
                           },
+                          dropDownList: vehicleRegoList,
                           onChanged: (value) {
-                            vehicleRegistration = widget.data['data']
-                                    ['vehicles']
-                                .firstWhere((vehicle) =>
-                                    vehicle['vehicle_rego'] == value);
+                            if (value != null && value != '') {
+                              print(value);
+                              vehicleRegistration =
+                                  widget.data['data']['vehicles'].firstWhere(
+                                (vehicle) =>
+                                    vehicle['vehicle_rego'] == value.value,
+                              );
+                            } else {
+                              print('------------');
+                            }
                           },
-                          dropdownDecoratorProps: DropDownDecoratorProps(
-                            dropdownSearchDecoration: InputDecoration(
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: isRegistrationError == false
-                                        ? AppColors.black
-                                        : AppColors.red),
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(15),
-                                ),
-                              ),
-                              hintText: 'Please Select',
-                              hintStyle: const TextStyle(
-                                fontSize: 16,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.w400,
-                                color: AppColors.black,
-                              ),
-                            ),
-                          ),
-                          popupProps: const PopupProps.menu(
-                            showSearchBox: true,
-                            searchDelay: Duration.zero,
-                            searchFieldProps: TextFieldProps(
-                              decoration: InputDecoration(
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(10),
-                                  ),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(10),
-                                  ),
-                                ),
-                                hintText: 'Search',
-                              ),
-                            ),
-                          ),
                         ),
                       ),
+                      // SizedBox(
+                      //   height: 6.h,
+                      //   width: 90.w,
+                      //   child: DropdownSearch(
+                      //     items: widget.data['data']['vehicles'].map((vehicle) {
+                      //       return vehicle['vehicle_rego'];
+                      //     }).toList(),
+                      //     validator: (value) {
+                      //       if (value == null || value == '') {
+                      //         setState(() {
+                      //           isRegistrationError = true;
+                      //         });
+                      //       } else {
+                      //         setState(() {
+                      //           isRegistrationError = false;
+                      //         });
+                      //       }
+                      //       return null;
+                      //     },
+                      //     onChanged: (value) {
+                      //       vehicleRegistration = widget.data['data']
+                      //               ['vehicles']
+                      //           .firstWhere((vehicle) =>
+                      //               vehicle['vehicle_rego'] == value);
+                      //     },
+                      //     dropdownDecoratorProps: DropDownDecoratorProps(
+                      //       dropdownSearchDecoration: InputDecoration(
+                      //         enabledBorder: OutlineInputBorder(
+                      //           borderSide: BorderSide(
+                      //               color: isRegistrationError == false
+                      //                   ? AppColors.black
+                      //                   : AppColors.red),
+                      //           borderRadius: const BorderRadius.all(
+                      //             Radius.circular(15),
+                      //           ),
+                      //         ),
+                      //         hintText: 'Please Select',
+                      //         hintStyle: const TextStyle(
+                      //           fontSize: 16,
+                      //           letterSpacing: 1,
+                      //           fontWeight: FontWeight.w400,
+                      //           color: AppColors.black,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //     popupProps: const PopupProps.menu(
+                      //       showSearchBox: true,
+                      //       searchDelay: Duration.zero,
+                      //       searchFieldProps: TextFieldProps(
+                      //         decoration: InputDecoration(
+                      //           enabledBorder: OutlineInputBorder(
+                      //             borderRadius: BorderRadius.all(
+                      //               Radius.circular(10),
+                      //             ),
+                      //           ),
+                      //           border: OutlineInputBorder(
+                      //             borderRadius: BorderRadius.all(
+                      //               Radius.circular(10),
+                      //             ),
+                      //           ),
+                      //           hintText: 'Search',
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       // CustomDropdown(
                       //   name: 'vehicle_rego',
                       //   validator: FormBuilderValidators.required(),
@@ -414,10 +494,23 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                                   }
 
                                   context.read<OutboundProvider>().addEntities({
-                                        "vehicle_rego": vehicleRegistration![
-                                            'vehicle_rego'],
-                                        "selectedVehicle":
-                                            vehicleRegistration.toString(),
+                                        "vehicle_rego": context
+                                                .read<PreStartProvider>()
+                                                .data
+                                                .containsKey('vehicle_rego')
+                                            ? context
+                                                .read<PreStartProvider>()
+                                                .data['vehicle_rego']
+                                            : vehicleRegistration![
+                                                'vehicle_rego'],
+                                        "selectedVehicle": context
+                                                .read<PreStartProvider>()
+                                                .data
+                                                .containsKey('selectedVehicle')
+                                            ? context
+                                                .read<PreStartProvider>()
+                                                .data['selectedVehicle']
+                                            : vehicleRegistration.toString(),
                                         "total_pallet_types": widget
                                             .data['data']['pallet_types']
                                             .entries

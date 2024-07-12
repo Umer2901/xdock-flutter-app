@@ -78,6 +78,7 @@ export 'package:flutter_svg/svg.dart';
 export 'package:dropdown_search/dropdown_search.dart'
     hide ErrorBuilder, defaultScrollNotificationPredicate;
 export 'package:sqflite/sqflite.dart';
+export 'package:dropdown_textfield/dropdown_textfield.dart';
 
 //Provider Exports
 export 'package:provider/provider.dart';
