@@ -494,10 +494,23 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                                   }
 
                                   context.read<OutboundProvider>().addEntities({
-                                        "vehicle_rego": vehicleRegistration![
-                                            'vehicle_rego'],
-                                        "selectedVehicle":
-                                            vehicleRegistration.toString(),
+                                        "vehicle_rego": context
+                                                .read<PreStartProvider>()
+                                                .data
+                                                .containsKey('vehicle_rego')
+                                            ? context
+                                                .read<PreStartProvider>()
+                                                .data['vehicle_rego']
+                                            : vehicleRegistration![
+                                                'vehicle_rego'],
+                                        "selectedVehicle": context
+                                                .read<PreStartProvider>()
+                                                .data
+                                                .containsKey('selectedVehicle')
+                                            ? context
+                                                .read<PreStartProvider>()
+                                                .data['selectedVehicle']
+                                            : vehicleRegistration.toString(),
                                         "total_pallet_types": widget
                                             .data['data']['pallet_types']
                                             .entries
