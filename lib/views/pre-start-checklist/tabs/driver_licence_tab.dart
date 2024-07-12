@@ -638,7 +638,6 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                                             .image!
                                             .readAsBytes()
                                             .then((bytes) {
-                                          print(vehicleRegistration.toString());
                                           final temp = {
                                             "vehicle_rego": context
                                                     .read<PreStartProvider>()

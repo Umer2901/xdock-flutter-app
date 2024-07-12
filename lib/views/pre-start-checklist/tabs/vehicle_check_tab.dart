@@ -13,6 +13,7 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
 
   @override
   Widget build(BuildContext context) {
+    print(context.read<PreStartProvider>().data['selectedVehicle']);
     return SingleChildScrollView(
       child: Column(
         children: [
