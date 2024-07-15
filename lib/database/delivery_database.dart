@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 
@@ -7,7 +9,7 @@ class DeliveryDatabase {
 
   Stream<List<Map<String, dynamic>>> get stream => _streamController.stream;
 
- DeliveryDatabase(this._database) {
+  DeliveryDatabase(this._database) {
     _streamController =
         StreamController<List<Map<String, dynamic>>>.broadcast();
     _startListeningToChanges();
@@ -22,7 +24,8 @@ class DeliveryDatabase {
       print('Error inserting data into the database: $e');
     }
   }
-   Future<void> partialcreate(Map<String, dynamic> data) async {
+
+  Future<void> partialcreate(Map<String, dynamic> data) async {
     try {
       await _database.insert('partial_delivery', data);
       print('Data inserted into the database: $data');
@@ -31,7 +34,8 @@ class DeliveryDatabase {
       print('Error inserting data into the database: $e');
     }
   }
-   Future<void> nonecreate(Map<String, dynamic> data) async {
+
+  Future<void> nonecreate(Map<String, dynamic> data) async {
     try {
       await _database.insert('none_delivery', data);
       print('Data inserted into the database: $data');
@@ -40,7 +44,8 @@ class DeliveryDatabase {
       print('Error inserting data into the database: $e');
     }
   }
-   Future<void> groupcreate(Map<String, dynamic> data) async {
+
+  Future<void> groupcreate(Map<String, dynamic> data) async {
     try {
       await _database.insert('group_delivery', data);
       print('Data inserted into the database: $data');
@@ -49,7 +54,6 @@ class DeliveryDatabase {
       print('Error inserting data into the database: $e');
     }
   }
-
 
   Future<List<Map<String, dynamic>>> read() async {
     return _database.query(

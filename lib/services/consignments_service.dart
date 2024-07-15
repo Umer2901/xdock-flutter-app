@@ -75,7 +75,7 @@ class ConsignmentService {
               );
             }
           } catch (e) {
-            print('Data Error: $e');
+            debugPrint('Data Error: $e');
           }
         } else {
           throw Exception(

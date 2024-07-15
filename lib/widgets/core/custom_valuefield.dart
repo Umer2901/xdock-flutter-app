@@ -28,7 +28,7 @@ class CustomValueField extends StatelessWidget {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             SizedBox(
-              width: !svgImage.isNull ? 22.w : 26.w,
+              width: svgImage != null ? 22.w : 26.w,
               child: Text(
                 value,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -39,7 +39,7 @@ class CustomValueField extends StatelessWidget {
             ),
           ],
         ),
-        !svgImage.isNull
+        svgImage != null
             ? SizedBox(
                 height: 3.5.h,
                 width: 8.w,

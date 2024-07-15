@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:coldxpress/database/delivery_database.dart';
@@ -11,15 +13,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
   final BuildContext context;
   late Database _database;
 
-  TaskSyncpofProvider(this.context) {
-    _initializeDatabase();
-  }
-
-  Future<void> _initializeDatabase() async {
-    final databaseProvider = context.read<DatabaseProvider>();
-    await databaseProvider.initDatabase();
-    _database = databaseProvider.database;
-  }
+  TaskSyncpofProvider(this.context);
 
   Future<void> submitData(BuildContext context) async {
     try {
@@ -82,88 +76,93 @@ class TaskSyncpofProvider extends ChangeNotifier {
         },
       );
     } catch (e) {
-      print('Error submitting data: $e');
+      debugPrint('Error submitting data: $e');
     }
   }
-Future<void> saveDataToDatabase(Map postData) async {
-  try {
-    await _initializeDatabase();
 
-    final ProofOfDeliveryProvider provider = context.read<ProofOfDeliveryProvider>();
-    final DeliveryDatabase fullDeliveryDatabase = DeliveryDatabase(_database);
+  Future<void> saveDataToDatabase(Map postData) async {
+    try {
+      final ProofOfDeliveryProvider provider =
+          context.read<ProofOfDeliveryProvider>();
+      final DeliveryDatabase fullDeliveryDatabase = DeliveryDatabase(_database);
 
-    Map<String, dynamic> taskData = {};
+      Map<String, dynamic> taskData = {};
 
-    switch (provider.selectedDeliveryType) {
-      case DeliveryType.full:
-        await fullDeliveryDatabase.fullcreate(postData.cast<String, dynamic>());
-        taskData = postData.cast<String, dynamic>();
-        break;
-      case DeliveryType.partial:
-        await fullDeliveryDatabase.partialcreate(postData.cast<String, dynamic>());
-        taskData = postData.cast<String, dynamic>();
-        break;
-      case DeliveryType.none:
-        await fullDeliveryDatabase.nonecreate(postData.cast<String, dynamic>());
-        taskData = postData.cast<String, dynamic>();
-        break;
-    }
-
-    final podType = provider.selectedDeliveryType.toString().split('.').last;
-    final Map<String, dynamic> taskToSave = {
-      'task_name': 'delivery',
-      'task_type': podType,
-      'data': json.encode(taskData),
-    };
-
-    print('Saving the following data to TaskSyncDatabase: $taskToSave');
-
-    await TaskSyncDatabase(_database).create(taskToSave);
-
-    final consignmentId = postData['consignments'];
-    print("i am your dad${consignmentId.toString().replaceAll(RegExp(r'[\[\]]'), '')}");
-    if (consignmentId != null) {
-      final consignmentIdInt = int.tryParse(consignmentId.toString().replaceAll(RegExp(r'[\[\]]'), ''));
-      if (consignmentIdInt != null) {
-        await _updateConsignmentCompletion(consignmentIdInt);
-      } else {
-        print('Error: consignment_id is not a valid integer');
+      switch (provider.selectedDeliveryType) {
+        case DeliveryType.full:
+          await fullDeliveryDatabase
+              .fullcreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+        case DeliveryType.partial:
+          await fullDeliveryDatabase
+              .partialcreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
+        case DeliveryType.none:
+          await fullDeliveryDatabase
+              .nonecreate(postData.cast<String, dynamic>());
+          taskData = postData.cast<String, dynamic>();
+          break;
       }
-    } else {
-      print('Error: consignment_id is null');
+
+      final podType = provider.selectedDeliveryType.toString().split('.').last;
+      final Map<String, dynamic> taskToSave = {
+        'task_name': 'delivery',
+        'task_type': podType,
+        'data': json.encode(taskData),
+      };
+
+      debugPrint('Saving the following data to TaskSyncDatabase: $taskToSave');
+
+      await TaskSyncDatabase(_database).create(taskToSave);
+
+      final consignmentId = postData['consignments'];
+      debugPrint(
+          "i am your dad${consignmentId.toString().replaceAll(RegExp(r'[\[\]]'), '')}");
+      if (consignmentId != null) {
+        final consignmentIdInt = int.tryParse(
+            consignmentId.toString().replaceAll(RegExp(r'[\[\]]'), ''));
+        if (consignmentIdInt != null) {
+          await _updateConsignmentCompletion(consignmentIdInt);
+        } else {
+          debugPrint('Error: consignment_id is not a valid integer');
+        }
+      } else {
+        debugPrint('Error: consignment_id is null');
+      }
+
+      final connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult.contains(ConnectivityResult.wifi) ||
+          connectivityResult.contains(ConnectivityResult.mobile)) {
+        final taskDatabase = TaskSyncDatabase(_database);
+        final tasks = await taskDatabase.read();
+        await postDataToApi(tasks);
+      }
+    } catch (e) {
+      debugPrint('Error saving data to database: $e');
     }
+  }
 
-    final connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult != ConnectivityResult.none) {
-      final taskDatabase = TaskSyncDatabase(_database);
-      final tasks = await taskDatabase.read();
-      await postDataToApi(tasks);
+  Future<void> _updateConsignmentCompletion(int consignmentId) async {
+    try {
+      await _database.update(
+        'consignments',
+        {'is_complete': 1},
+        where: 'id = ?',
+        whereArgs: [consignmentId],
+      );
+      debugPrint(
+          'Updated consignment with id $consignmentId to is_complete = 1');
+    } catch (e) {
+      debugPrint('Error updating consignment completion: $e');
     }
-  } catch (e) {
-    print('Error saving data to database: $e');
   }
-}
-
-Future<void> _updateConsignmentCompletion(int consignmentId) async {
-  try {
-    await _database.update(
-      'consignments',
-      {'is_complete': 1},
-      where: 'id = ?',
-      whereArgs: [consignmentId],
-    );
-    print('Updated consignment with id $consignmentId to is_complete = 1');
-  } catch (e) {
-    print('Error updating consignment completion: $e');
-  }
-}
-
-
-
 
   Future<void> postDataToApi(List<Map<String, dynamic>> tasks) async {
     var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-    AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
 
     if (state is Authenticated) {
       try {
@@ -171,16 +170,17 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
           final taskData = json.decode(task['data']);
           final consignmentId = taskData['consignments'];
           final isGroup = taskData['is_group'];
-          print("Consignment ID: $consignmentId");
+          debugPrint("Consignment ID: $consignmentId");
 
-          final consignmentType = Get.arguments?['consignment_type'] ?? 'delivery';
+          final consignmentType =
+              Get.arguments?['consignment_type'] ?? 'delivery';
           String url = '';
 
           if (groupedConsignments.isNotEmpty) {
             if (consignmentType == 'delivery') {
-              url = '${AppHost.group}';
+              url = AppHost.group;
             } else {
-              url = '${AppHost.grouppop}';
+              url = AppHost.grouppop;
             }
           } else {
             switch (provider.selectedDeliveryType) {
@@ -195,7 +195,8 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
                 url = '${AppHost.podpartial}$consignmentId';
                 break;
               case DeliveryType.none:
-                List<String> rejectionReasons = provider.selectedOrderRejectionReasons as List<String>;
+                List<String> rejectionReasons =
+                    provider.selectedOrderRejectionReasons;
                 for (String rejectionReason in rejectionReasons) {
                   switch (rejectionReason) {
                     case "Temperature issue":
@@ -214,18 +215,23 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
                       url = '${AppHost.otherrejection}$consignmentId';
                       break;
                     default:
-                      throw Exception('Invalid rejection reason: $rejectionReason');
+                      throw Exception(
+                          'Invalid rejection reason: $rejectionReason');
                   }
                 }
                 break;
             }
           }
 
-          final podType = provider.selectedDeliveryType.toString().split('.').last;
+          final podType =
+              provider.selectedDeliveryType.toString().split('.').last;
           final combinedData = {
             'pod_type': podType,
             'tasks': tasks,
-            'signature': provider.signature != null ? jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}') : null,
+            'signature': provider.signature != null
+                ? jsonEncode(
+                    'data:image/png;base64, ${base64Encode(provider.signature!)}')
+                : null,
           };
 
           final response = await http.post(
@@ -239,22 +245,23 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
           );
 
           if (response.statusCode == 200) {
-            print('Data posted successfully to URL: $url');
+            debugPrint('Data posted successfully to URL: $url');
             await TaskSyncDatabase(_database).delete(task['id']);
-            await ConsignmentDatabase(_database).update(task['id'], {'is_complete': 1});
+            await ConsignmentDatabase(_database)
+                .update(task['id'], {'is_complete': 1});
 
             if (isGroup != null && isGroup != 'parent') {
               await submitGroupAsIndividual(int.parse(isGroup));
               await addNewConsignment(Get.arguments);
             }
           } else {
-            print('Failed to post data to URL: $url');
-            print('Response status: ${response.statusCode}');
-            print('Response body: ${response.body}');
+            debugPrint('Failed to post data to URL: $url');
+            debugPrint('Response status: ${response.statusCode}');
+            debugPrint('Response body: ${response.body}');
           }
         }
       } catch (e) {
-        print('Error posting data to API: $e');
+        debugPrint('Error posting data to API: $e');
       }
     }
   }
@@ -291,7 +298,8 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
         element['pallet'] = consignment['pallet'];
         element['space'] = consignment['space'];
         element['pod_type'] = consignment['pod_type'];
-        await ConsignmentDatabase(context.read<DatabaseProvider>().database).update(element['id'], element);
+        await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+            .update(element['id'], element);
       }
     });
 
@@ -304,7 +312,8 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
       'grouped_consignments': '',
       'status': 3,
     };
-    await ConsignmentDatabase(context.read<DatabaseProvider>().database).update(id, updatedConsignment);
+    await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+        .update(id, updatedConsignment);
   }
 
   Future<void> addNewConsignment(Map consignmentDetails) async {

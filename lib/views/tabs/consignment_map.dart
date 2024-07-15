@@ -265,7 +265,7 @@ class _ConsignmentMapTabState extends State<ConsignmentMapTab> {
                         isBottomSheetVisible = false;
                       });
                       Get.toNamed(
-                        AppRoutes.Stopwatch,
+                        AppRoutes.stopwatch,
                         arguments: consignmentDetail,
                       );
                     },

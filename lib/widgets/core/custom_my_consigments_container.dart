@@ -168,7 +168,7 @@ class _CustomMyConsigmentContainerState
                   GestureDetector(
                     onTap: () {
                       Get.toNamed(
-                        AppRoutes.Stopwatch,
+                        AppRoutes.stopwatch,
                         arguments: widget.consignment,
                       );
                     },

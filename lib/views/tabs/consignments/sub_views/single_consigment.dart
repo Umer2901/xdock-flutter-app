@@ -198,7 +198,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   GestureDetector(
                     onTap: () {
                       Get.offAndToNamed(
-                        AppRoutes.Stopwatch,
+                        AppRoutes.stopwatch,
                         arguments: Get.arguments,
                       );
                     },
@@ -297,7 +297,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (groupedConsignments.isNotEmpty != 0) ...{
+                      if (groupedConsignments.isNotEmpty) ...{
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(

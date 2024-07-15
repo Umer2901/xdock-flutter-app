@@ -39,7 +39,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       );
     }
 
-    print("our group data: ${Get.arguments['is_group']}");
+    debugPrint("our group data: ${Get.arguments['is_group']}");
   }
 
   @override
@@ -112,6 +112,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                             ),
                             child: SvgPicture.asset(
                               AppSvgs.mapMarker,
+                              // ignore: deprecated_member_use
                               color: AppColors.black,
                             ),
                           ),
@@ -205,10 +206,8 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                   ),
                   SizedBox(height: 1.h),
                   GestureDetector(
-                    onTap: () async {
-                      context.read<ProofOfDeliveryProvider>().image == null
-                          ? _takePhoto()
-                          : null;
+                    onTap: () {
+                      _takePhoto();
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -343,7 +342,9 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                                   .images
                                   .isNotEmpty
                               ? () {
-                          Provider.of<TaskSyncpofProvider>(context,listen: false).submitData(context);
+                                  Provider.of<TaskSyncpofProvider>(context,
+                                          listen: false)
+                                      .submitData(context);
                                 }
                               : () {},
                           backgroundColor: context
@@ -380,6 +381,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       );
 
       if (image != null) {
+        debugPrint('Testing Image Picker');
         Uint8List bytes = await image.readAsBytes();
         setState(() {
           context.read<ProofOfDeliveryProvider>().addImage(
@@ -394,6 +396,4 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
       debugPrint('Error picking image from camera: $e');
     }
   }
-
-
 }

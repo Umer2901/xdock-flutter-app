@@ -110,7 +110,7 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final bool enabled;
   const CustomButton({
-    Key? key,
+    super.key,
     this.height,
     this.width,
     this.borderRadius,
@@ -123,13 +123,13 @@ class CustomButton extends StatelessWidget {
     this.backgroundColor = AppColors.blue,
     required this.onPressed,
     this.isLoading = false,
-    this.enabled = true, 
-  }) : super(key: key);
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: enabled ? onPressed : null, 
+      onTap: enabled ? onPressed : null,
       child: Container(
         height: height ?? 6.5.h,
         width: width ?? 90.w,

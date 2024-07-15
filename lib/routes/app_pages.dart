@@ -67,7 +67,7 @@ class AppPages extends AppRoutes {
       arguments: Get.arguments,
     ),
     GetPage(
-      name: AppRoutes.Stopwatch,
+      name: AppRoutes.stopwatch,
       page: () => const EditTime(),
       arguments: Get.arguments,
     ),

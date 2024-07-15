@@ -39,24 +39,6 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
     }).toList();
   }
 
-  static List<dynamic> searchVehicleReg(List<dynamic> vehiclesReg, String query,
-      {String removeRego = 'Not Provided'}) {
-    List<dynamic> reg = vehiclesReg;
-    print('$reg----');
-    try {
-      for (var vehicleReg in vehiclesReg) {
-        if (vehicleReg.toLowerCase().contains(query.toLowerCase()) &&
-            vehicleReg != removeRego) {
-          reg.add(vehicleReg);
-        }
-      }
-    } catch (e) {
-      print('----------$e----------------');
-    }
-
-    return reg.isNotEmpty ? reg : [];
-  }
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -401,14 +383,14 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                               dropDownList: vehicleRegoList,
                               onChanged: (value) {
                                 if (value != null && value != '') {
-                                  print(value);
+                                  debugPrint(value);
                                   vehicleRegistration =
                                       widget.data['vehicles'].firstWhere(
                                     (vehicle) =>
                                         vehicle['vehicle_rego'] == value.value,
                                   );
                                 } else {
-                                  print('------------');
+                                  debugPrint('------------');
                                 }
                               },
                             ),
