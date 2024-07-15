@@ -29,12 +29,12 @@ class PreStartCheckListView extends StatelessWidget {
           leading: IconButton(
             onPressed: () {
               if (context.read<PreStartProvider>().index == 0) {
-                context.read<PreStartProvider>().setEntities({});
+                context.read<PreStartProvider>().reset();
                 Get.back();
               } else {
-                context
-                    .read<PreStartProvider>()
-                    .setIndex(context.read<PreStartProvider>().index - 1);
+                context.read<PreStartProvider>().setIndex(
+                      context.read<PreStartProvider>().index - 1,
+                    );
               }
             },
             icon: Icon(

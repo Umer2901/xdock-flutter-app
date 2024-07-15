@@ -147,7 +147,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     drawerItem(
                       icon: Icons.checklist,
                       title: AppText.preStartTitle,
-                      onTap: () {},
+                      onTap: () {
+                        Get.toNamed(AppRoutes.preStartChecklist);
+                      },
                     ),
                     SizedBox(height: 2.h),
                     drawerItem(

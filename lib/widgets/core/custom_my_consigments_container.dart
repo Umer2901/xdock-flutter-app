@@ -9,10 +9,12 @@ class CustomMyConsigmentContainer extends StatefulWidget {
     required this.isLoading,
     this.consignment,
     this.index,
+    required this.isPrecheckDone,
   });
   final bool isLoading;
   final Map? consignment;
   final int? index;
+  final bool isPrecheckDone;
   @override
   State<CustomMyConsigmentContainer> createState() =>
       _CustomMyConsigmentContainerState();
@@ -173,7 +175,7 @@ class _CustomMyConsigmentContainerState
                     child: CustomProductTypeAndTime(
                       type: productTypes['id'].toString(),
                       time:
-                          '${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
+                          '${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
                       svgImage: productTypes['id'] == 1
                           ? SvgPicture.asset(AppSvgs.chilled)
                           : SvgPicture.asset(AppSvgs.frozen),
@@ -319,10 +321,12 @@ class _CustomMyConsigmentContainerState
                                   ),
                                 ),
                                 onTap: () {
-                                  Get.toNamed(
-                                    AppRoutes.singleConsigment,
-                                    arguments: subConsignment,
-                                  );
+                                  if (widget.isPrecheckDone) {
+                                    Get.toNamed(
+                                      AppRoutes.singleConsigment,
+                                      arguments: subConsignment,
+                                    );
+                                  }
                                 },
                                 title: Text(
                                   '${AppText.supplier}: ${(subConsignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',

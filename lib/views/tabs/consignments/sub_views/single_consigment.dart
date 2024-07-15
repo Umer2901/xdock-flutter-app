@@ -197,7 +197,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Get.toNamed(
+                      Get.offAndToNamed(
                         AppRoutes.Stopwatch,
                         arguments: Get.arguments,
                       );
@@ -205,7 +205,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                     child: CustomProductTypeAndTime(
                       type: (productTypes['id']) == 1 ? '1' : '2',
                       time:
-                          '${(Get.arguments!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(Get.arguments!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('hh.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
+                          '${(Get.arguments!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(Get.arguments!['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
                       svgImage: SvgPicture.asset(AppSvgs.frozen),
                     ),
                   ),
