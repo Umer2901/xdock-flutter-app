@@ -264,7 +264,12 @@ class _LoginViewState extends State<LoginView> {
                                   .trim(),
                               database:
                                   context.read<DatabaseProvider>().database,
-                            );
+                            )
+                                .whenComplete(() {
+                              context
+                                  .read<BottomNavProvider>()
+                                  .changeTabView(1);
+                            });
                           }
                         }
                       },

@@ -93,8 +93,8 @@ class _CustomMyConsigmentContainerState
                             Text(
                               (widget.consignment!['consignment_type'] ==
                                           'delivery'
-                                      ? deliveryAddresses['customer_name']
-                                      : pickupAddresses['customer_name']) ??
+                                      ? deliveryAddresses['company_name']
+                                      : pickupAddresses['company_name']) ??
                                   'Not Provided',
                               maxLines: 1,
                               style: Theme.of(context).textTheme.headlineMedium,

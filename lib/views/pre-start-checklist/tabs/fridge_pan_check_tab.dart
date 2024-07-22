@@ -100,21 +100,70 @@ class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
                                         ? AppColors.red
                                         : AppColors.blue,
                                     onChanged: (value) {
-                                      setState(() {
-                                        final temp = {
-                                          'question_id_${(widget.data[0]['checklist_questions'].length) + widget.data[1]['checklist_questions'].indexOf(widget.data[1]['checklist_questions'][i])}':
-                                              widget.data[1]
-                                                      ['checklist_questions'][i]
-                                                      ['id']
-                                                  .toString(),
-                                          'comment_${widget.data[1]['checklist_questions'][i]['id']}':
-                                              '',
-                                          'answer_${widget.data[1]['checklist_questions'][i]['id']}':
-                                              value.toString(),
-                                        };
-                                        checklistAnswers
-                                            .addEntries(temp.entries);
-                                      });
+                                      if (!widget.data[1]['checklist_questions']
+                                                  [i]['options']
+                                              .containsKey('required_answer') ||
+                                          widget.data[1]['checklist_questions']
+                                                  [i]['options']
+                                                  ['required_answer']
+                                              .contains(value) ||
+                                          widget
+                                              .data[1]['checklist_questions'][i]
+                                                  ['options']['required_answer']
+                                              .isEmpty) {
+                                        setState(() {
+                                          final temp = {
+                                            'question_id_${(widget.data[0]['checklist_questions'].length) + widget.data[1]['checklist_questions'].indexOf(widget.data[1]['checklist_questions'][i])}':
+                                                widget.data[1]
+                                                        ['checklist_questions']
+                                                        [i]['id']
+                                                    .toString(),
+                                            'comment_${widget.data[1]['checklist_questions'][i]['id']}':
+                                                '',
+                                            'answer_${widget.data[1]['checklist_questions'][i]['id']}':
+                                                value.toString(),
+                                          };
+                                          checklistAnswers
+                                              .addEntries(temp.entries);
+                                        });
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.error_outline_rounded,
+                                                  color: AppColors.white,
+                                                ),
+                                                SizedBox(width: 2.w),
+                                                Expanded(
+                                                  child: Text(
+                                                    '${widget.data[1]['checklist_questions'][i]['question']} value can\'t be "$value". Contact your supervise!',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          color:
+                                                              AppColors.white,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(0),
+                                            ),
+                                            duration:
+                                                const Duration(seconds: 2),
+                                            behavior: SnackBarBehavior.floating,
+                                            backgroundColor: AppColors.lightRed,
+                                            margin:
+                                                EdgeInsets.only(bottom: 1.h),
+                                          ),
+                                        );
+                                      }
                                     },
                                   ),
                                   Text(
@@ -137,7 +186,8 @@ class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
                                 : null) ==
                             'No') ...{
                           CustomTextField(
-                            name: 'comment',
+                            name:
+                                'comment${widget.data[1]['checklist_questions'][i]['id']}',
                             hintText: 'Comment',
                             onChanged: (value) {
                               setState(() {
@@ -223,21 +273,70 @@ class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
                                         ? AppColors.red
                                         : AppColors.blue,
                                     onChanged: (value) {
-                                      setState(() {
-                                        final temp = {
-                                          'question_id_${(widget.data[0]['checklist_questions'].length) + (widget.data[1]['checklist_questions'].length) + widget.data[2]['checklist_questions'].indexOf(widget.data[2]['checklist_questions'][i])}':
-                                              widget.data[2]
-                                                      ['checklist_questions'][i]
-                                                      ['id']
-                                                  .toString(),
-                                          'comment_${widget.data[2]['checklist_questions'][i]['id']}':
-                                              '',
-                                          'answer_${widget.data[2]['checklist_questions'][i]['id']}':
-                                              value.toString(),
-                                        };
-                                        checklistAnswers
-                                            .addEntries(temp.entries);
-                                      });
+                                      if (!widget.data[2]['checklist_questions']
+                                                  [i]['options']
+                                              .containsKey('required_answer') ||
+                                          widget.data[2]['checklist_questions']
+                                                  [i]['options']
+                                                  ['required_answer']
+                                              .contains(value) ||
+                                          widget
+                                              .data[2]['checklist_questions'][i]
+                                                  ['options']['required_answer']
+                                              .isEmpty) {
+                                        setState(() {
+                                          final temp = {
+                                            'question_id_${(widget.data[0]['checklist_questions'].length) + (widget.data[1]['checklist_questions'].length) + widget.data[2]['checklist_questions'].indexOf(widget.data[2]['checklist_questions'][i])}':
+                                                widget.data[2]
+                                                        ['checklist_questions']
+                                                        [i]['id']
+                                                    .toString(),
+                                            'comment_${widget.data[2]['checklist_questions'][i]['id']}':
+                                                '',
+                                            'answer_${widget.data[2]['checklist_questions'][i]['id']}':
+                                                value.toString(),
+                                          };
+                                          checklistAnswers
+                                              .addEntries(temp.entries);
+                                        });
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.error_outline_rounded,
+                                                  color: AppColors.white,
+                                                ),
+                                                SizedBox(width: 2.w),
+                                                Expanded(
+                                                  child: Text(
+                                                    '${widget.data[2]['checklist_questions'][i]['question']} value can\'t be "$value". Contact your supervise!',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          color:
+                                                              AppColors.white,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(0),
+                                            ),
+                                            duration:
+                                                const Duration(seconds: 2),
+                                            behavior: SnackBarBehavior.floating,
+                                            backgroundColor: AppColors.lightRed,
+                                            margin:
+                                                EdgeInsets.only(bottom: 1.h),
+                                          ),
+                                        );
+                                      }
                                     },
                                   ),
                                   Text(
@@ -260,7 +359,8 @@ class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
                                 : null) ==
                             'No') ...{
                           CustomTextField(
-                            name: 'comment',
+                            name:
+                                'comment${widget.data[2]['checklist_questions'][i]['id']}',
                             hintText: 'Comment',
                             onChanged: (value) {
                               setState(() {

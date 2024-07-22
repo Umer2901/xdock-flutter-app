@@ -392,7 +392,7 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                                             ? context
                                                 .read<OutboundProvider>()
                                                 .data['selectedVehicle']
-                                            : vehicleRegistration.toString(),
+                                            : vehicleRegistration,
                                         "total_pallet_types": widget
                                             .data['data']['pallet_types']
                                             .entries

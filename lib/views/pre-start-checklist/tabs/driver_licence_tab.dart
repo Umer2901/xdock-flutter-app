@@ -383,7 +383,6 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                               dropDownList: vehicleRegoList,
                               onChanged: (value) {
                                 if (value != null && value != '') {
-                                  debugPrint(value);
                                   vehicleRegistration =
                                       widget.data['vehicles'].firstWhere(
                                     (vehicle) =>
@@ -638,8 +637,7 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                                                 ? context
                                                     .read<PreStartProvider>()
                                                     .data['selectedVehicle']
-                                                : vehicleRegistration
-                                                    .toString(),
+                                                : vehicleRegistration,
                                             "current_odometer_reading": _formKey
                                                 .currentState!
                                                 .fields['odometer']!

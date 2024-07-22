@@ -67,6 +67,13 @@ class ConsignmentService {
                     .readById(dataIteration['id']);
                 if (consignment.isEmpty) {
                   await ConsignmentDatabase(_database).create(dataIteration);
+                } else {
+                  await ConsignmentDatabase(_database).update(
+                    dataIteration['id'],
+                    {
+                      'access_token': accessToken,
+                    },
+                  );
                 }
               }
             } else {

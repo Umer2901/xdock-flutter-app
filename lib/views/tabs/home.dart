@@ -448,12 +448,8 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
             ),
-            endDrawer: staffSnapshot.hasData
-                ? CustomDrawer(
-                    name: staffSnapshot.data[0]['name'],
-                    consignmentCount: consignmentCount,
-                  )
-                : const SizedBox(),
+            endDrawer:
+                staffSnapshot.hasData ? const CustomDrawer() : const SizedBox(),
           );
         });
   }

@@ -122,17 +122,18 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                                             children: [
                                               const Icon(
                                                 Icons.error_outline_rounded,
-                                                color: AppColors.red,
+                                                color: AppColors.white,
                                               ),
                                               SizedBox(width: 2.w),
                                               Expanded(
                                                 child: Text(
-                                                  '${widget.questions[i]['question']} value can\'t be $value. Contact your supervise!',
+                                                  '${widget.questions[i]['question']} value can\'t be "$value". Contact your supervise!',
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .bodyMedium
                                                       ?.copyWith(
-                                                          color: AppColors.red),
+                                                        color: AppColors.white,
+                                                      ),
                                                 ),
                                               ),
                                             ],
@@ -169,7 +170,7 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                               : null) ==
                           'No') ...{
                         CustomTextField(
-                          name: 'comment',
+                          name: 'comment${widget.questions[i]['id']}',
                           hintText: 'Comment',
                           onChanged: (value) {
                             setState(() {

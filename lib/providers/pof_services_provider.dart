@@ -11,7 +11,6 @@ import 'package:coldxpress/export.dart';
 
 class TaskSyncpofProvider extends ChangeNotifier {
   final BuildContext context;
-  late Database _database;
 
   TaskSyncpofProvider(this.context);
 
@@ -19,7 +18,6 @@ class TaskSyncpofProvider extends ChangeNotifier {
     try {
       final Map postData = context.read<ProofOfDeliveryProvider>().data;
       saveDataToDatabase(postData);
-
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -84,7 +82,8 @@ class TaskSyncpofProvider extends ChangeNotifier {
     try {
       final ProofOfDeliveryProvider provider =
           context.read<ProofOfDeliveryProvider>();
-      final DeliveryDatabase fullDeliveryDatabase = DeliveryDatabase(_database);
+      final DeliveryDatabase fullDeliveryDatabase =
+          DeliveryDatabase(context.read<DatabaseProvider>().database);
 
       Map<String, dynamic> taskData = {};
 
@@ -115,7 +114,8 @@ class TaskSyncpofProvider extends ChangeNotifier {
 
       debugPrint('Saving the following data to TaskSyncDatabase: $taskToSave');
 
-      await TaskSyncDatabase(_database).create(taskToSave);
+      await TaskSyncDatabase(context.read<DatabaseProvider>().database)
+          .create(taskToSave);
 
       final consignmentId = postData['consignments'];
       debugPrint(
@@ -135,7 +135,8 @@ class TaskSyncpofProvider extends ChangeNotifier {
       final connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult.contains(ConnectivityResult.wifi) ||
           connectivityResult.contains(ConnectivityResult.mobile)) {
-        final taskDatabase = TaskSyncDatabase(_database);
+        final taskDatabase =
+            TaskSyncDatabase(context.read<DatabaseProvider>().database);
         final tasks = await taskDatabase.read();
         await postDataToApi(tasks);
       }
@@ -146,12 +147,12 @@ class TaskSyncpofProvider extends ChangeNotifier {
 
   Future<void> _updateConsignmentCompletion(int consignmentId) async {
     try {
-      await _database.update(
-        'consignments',
-        {'is_complete': 1},
-        where: 'id = ?',
-        whereArgs: [consignmentId],
-      );
+      await context.read<DatabaseProvider>().database.update(
+            'consignments',
+            {'is_complete': 1},
+            where: 'id = ?',
+            whereArgs: [consignmentId],
+          );
       debugPrint(
           'Updated consignment with id $consignmentId to is_complete = 1');
     } catch (e) {
@@ -246,8 +247,9 @@ class TaskSyncpofProvider extends ChangeNotifier {
 
           if (response.statusCode == 200) {
             debugPrint('Data posted successfully to URL: $url');
-            await TaskSyncDatabase(_database).delete(task['id']);
-            await ConsignmentDatabase(_database)
+            await TaskSyncDatabase(context.read<DatabaseProvider>().database)
+                .delete(task['id']);
+            await ConsignmentDatabase(context.read<DatabaseProvider>().database)
                 .update(task['id'], {'is_complete': 1});
 
             if (isGroup != null && isGroup != 'parent') {
@@ -331,6 +333,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
       'pod_type': provider.selectedDeliveryType.toString().split('.').last,
       'date': DateFormat('dd/MM/yyyy').format(DateTime.now()),
     };
-    await ConsignmentDatabase(_database).create(newConsignment);
+    await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+        .create(newConsignment);
   }
 }
