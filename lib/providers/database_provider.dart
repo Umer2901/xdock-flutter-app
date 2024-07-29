@@ -159,9 +159,9 @@ class DatabaseProvider with ChangeNotifier {
     await db.execute('''
         CREATE TABLE IF NOT EXISTS full_delivery (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          pod_type TEXT,
-          cartons INTEGER,
-          pallets INTEGER,
+          pod_type INTEGER,
+          carton INTEGER,
+          pallet INTEGER,
           lengthOfDelivery INTEGER,
           device TEXT,
           space INTEGER,
@@ -200,8 +200,8 @@ class DatabaseProvider with ChangeNotifier {
     await db.execute('''
         CREATE TABLE IF NOT EXISTS partial_delivery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cartons INTEGER,
-        pallets INTEGER,
+        carton INTEGER,
+        pallet INTEGER,
         lengthofDelivery INTEGER,
         device TEXT,
         space TEXT,
@@ -215,7 +215,7 @@ class DatabaseProvider with ChangeNotifier {
         service_time_start TEXT,
         service_time_end TEXT,
         address_id INTEGER,
-        pod_type TEXT,
+        pod_type INTEGER,
         customer_reference TEXT,
         pictures TEXT,
         consignments TEXT,
@@ -243,7 +243,7 @@ class DatabaseProvider with ChangeNotifier {
     await db.execute('''
     CREATE TABLE IF NOT EXISTS none_delivery (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pod_type TEXT,
+    pod_type INTEGER,
     error_type TEXT,
     rejection_reason TEXT,
     comments TEXT,
@@ -273,7 +273,7 @@ class DatabaseProvider with ChangeNotifier {
     await db.execute('''
         CREATE TABLE IF NOT EXISTS group_delivery (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          pod_type TEXT,
+          pod_type INTEGER,
           cartons INTEGER,
           pallets INTEGER,
           lengthOfDelivery INTEGER,

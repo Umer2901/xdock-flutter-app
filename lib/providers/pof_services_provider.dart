@@ -169,6 +169,7 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
       try {
         for (var task in tasks) {
           final taskData = json.decode(task['data']);
+          print("i am taskdata ${taskData}");
           final consignmentId = taskData['consignments'];
           final isGroup = taskData['is_group'];
           print("Consignment ID: $consignmentId");
@@ -235,7 +236,7 @@ Future<void> _updateConsignmentCompletion(int consignmentId) async {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode(combinedData),
+            body: jsonEncode([taskData]),
           );
 
           if (response.statusCode == 200) {
