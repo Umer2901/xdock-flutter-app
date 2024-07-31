@@ -914,9 +914,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                                     context,
                                                     listen: false);
                                             final service_time_start =
-                                                '${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
+                                                '${serviceTimeProvider.startTime}';
                                             final service_time_end =
-                                                '${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
+                                                '${serviceTimeProvider.endTime}';
                                             final lengthofDelivery =
                                                 int.tryParse(_formKey
                                                         .currentState!
@@ -1010,8 +1010,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               "pod_type":
                                                   provider.data['pod_type'],
                                               "device": jsonEncode(deviceinfo),
-                                              "cartons": cartons,
-                                              "pallets": pallets,
+                                              "carton": cartons,
+                                              "pallet": pallets,
                                               "service_window": service_window,
                                               "service_time_start":
                                                   service_time_start,
@@ -1524,8 +1524,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             "device": jsonEncode(deviceinfo),
                                             "lengthofDelivery":
                                                 lengthofDelivery,
-                                            "cartons": cartons,
-                                            "pallets": pallets,
+                                            "carton": cartons,
+                                            "pallet": pallets,
                                             "service_window": service_window,
                                             "service_time_start":
                                                 service_time_start,

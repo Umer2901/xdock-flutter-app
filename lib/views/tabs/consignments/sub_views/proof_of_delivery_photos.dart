@@ -336,12 +336,32 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                       SizedBox(
                         width: 50.w,
                         child: CustomButton(
+                          
                           label: "Submit POD",
                           onPressed: context
                                   .watch<ProofOfDeliveryProvider>()
                                   .images
                                   .isNotEmpty
                               ? () {
+                                final temp = {
+                                           
+                                              "pictures":  
+                                                jsonEncode(context
+                                                .read<ProofOfDeliveryProvider>()
+                                                .base64Images),
+                                              "pictureSources": 
+                                               jsonEncode(
+                                                context
+                                                    .read<
+                                                        ProofOfDeliveryProvider>()
+                                                    .pictureSources)
+                                            };
+
+                                            context
+                                                .read<ProofOfDeliveryProvider>()
+                                                .addEntities(temp.entries);
+                                            
+                                          
                                   Provider.of<TaskSyncpofProvider>(context,
                                           listen: false)
                                       .submitData(context);
@@ -372,28 +392,36 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     );
   }
 
-  Future<void> _takePhoto() async {
-    final ImagePicker picker = ImagePicker();
-    try {
-      final XFile? image = await picker.pickImage(
-        imageQuality: 10,
-        source: ImageSource.camera,
-      );
+ Future<void> _takePhoto() async {
+  final ImagePicker picker = ImagePicker();
+  try {
+    final XFile? image = await picker.pickImage(
+      imageQuality: 10,
+      source: ImageSource.camera,
+    );
 
-      if (image != null) {
-        debugPrint('Testing Image Picker');
-        Uint8List bytes = await image.readAsBytes();
-        setState(() {
-          context.read<ProofOfDeliveryProvider>().addImage(
-                image: image,
-                base64String:
-                    'data:image/jpeg;base64,${base64Encode(bytes).toString()}',
-                source: 'By Camera',
-              );
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking image from camera: $e');
+    if (image != null) {
+      debugPrint('Picked Image: ${image.path}');
+      Uint8List bytes = await image.readAsBytes();
+      String base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+      debugPrint('Base64 Image: $base64String');
+      
+      setState(() {
+        context.read<ProofOfDeliveryProvider>().addImage(
+          image: image,
+          base64String: base64String,
+          source: 'By Camera',
+        );
+      });
+
+      // Debug prints
+      debugPrint('Image Source: By Camera');
+      debugPrint('Image Path: ${image.path}');
     }
+  } catch (e) {
+    debugPrint('Error picking image from camera: $e');
   }
+}
+
+
 }

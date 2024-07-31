@@ -274,8 +274,8 @@ class DatabaseProvider with ChangeNotifier {
         CREATE TABLE IF NOT EXISTS group_delivery (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           pod_type INTEGER,
-          cartons INTEGER,
-          pallets INTEGER,
+          carton INTEGER,
+          pallet INTEGER,
           lengthOfDelivery INTEGER,
           device TEXT,
           space INTEGER,
