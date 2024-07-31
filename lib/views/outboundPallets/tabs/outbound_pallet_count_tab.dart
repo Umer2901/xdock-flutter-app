@@ -15,7 +15,6 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
   List<DropDownValueModel> vehicleRegoList = [];
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     widget.data['data']['vehicles'].map((vehicle) {
       vehicleRegoList.add(DropDownValueModel(
@@ -120,113 +119,15 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                           dropDownList: vehicleRegoList,
                           onChanged: (value) {
                             if (value != null && value != '') {
-                              print(value);
                               vehicleRegistration =
                                   widget.data['data']['vehicles'].firstWhere(
                                 (vehicle) =>
                                     vehicle['vehicle_rego'] == value.value,
                               );
-                            } else {
-                              print('------------');
-                            }
+                            } else {}
                           },
                         ),
                       ),
-                      // SizedBox(
-                      //   height: 6.h,
-                      //   width: 90.w,
-                      //   child: DropdownSearch(
-                      //     items: widget.data['data']['vehicles'].map((vehicle) {
-                      //       return vehicle['vehicle_rego'];
-                      //     }).toList(),
-                      //     validator: (value) {
-                      //       if (value == null || value == '') {
-                      //         setState(() {
-                      //           isRegistrationError = true;
-                      //         });
-                      //       } else {
-                      //         setState(() {
-                      //           isRegistrationError = false;
-                      //         });
-                      //       }
-                      //       return null;
-                      //     },
-                      //     onChanged: (value) {
-                      //       vehicleRegistration = widget.data['data']
-                      //               ['vehicles']
-                      //           .firstWhere((vehicle) =>
-                      //               vehicle['vehicle_rego'] == value);
-                      //     },
-                      //     dropdownDecoratorProps: DropDownDecoratorProps(
-                      //       dropdownSearchDecoration: InputDecoration(
-                      //         enabledBorder: OutlineInputBorder(
-                      //           borderSide: BorderSide(
-                      //               color: isRegistrationError == false
-                      //                   ? AppColors.black
-                      //                   : AppColors.red),
-                      //           borderRadius: const BorderRadius.all(
-                      //             Radius.circular(15),
-                      //           ),
-                      //         ),
-                      //         hintText: 'Please Select',
-                      //         hintStyle: const TextStyle(
-                      //           fontSize: 16,
-                      //           letterSpacing: 1,
-                      //           fontWeight: FontWeight.w400,
-                      //           color: AppColors.black,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //     popupProps: const PopupProps.menu(
-                      //       showSearchBox: true,
-                      //       searchDelay: Duration.zero,
-                      //       searchFieldProps: TextFieldProps(
-                      //         decoration: InputDecoration(
-                      //           enabledBorder: OutlineInputBorder(
-                      //             borderRadius: BorderRadius.all(
-                      //               Radius.circular(10),
-                      //             ),
-                      //           ),
-                      //           border: OutlineInputBorder(
-                      //             borderRadius: BorderRadius.all(
-                      //               Radius.circular(10),
-                      //             ),
-                      //           ),
-                      //           hintText: 'Search',
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      // CustomDropdown(
-                      //   name: 'vehicle_rego',
-                      //   validator: FormBuilderValidators.required(),
-                      //   initialValue: context
-                      //           .read<OutboundProvider>()
-                      //           .data
-                      //           .containsKey('vehicle_rego')
-                      //       ? context
-                      //           .read<OutboundProvider>()
-                      //           .data['vehicle_rego']
-                      //       : null,
-                      //   hintText: 'Please Select',
-                      //   fillColor: AppColors.white,
-                      //   items: widget.data['data']['vehicles']
-                      //       .map<DropdownMenuItem<String>>((vehicle) {
-                      //     return DropdownMenuItem<String>(
-                      //       value: vehicle['vehicle_rego'],
-                      //       child: Text(
-                      //         vehicle['vehicle_rego'],
-                      //         style: Theme.of(context).textTheme.bodyMedium,
-                      //       ),
-                      //     );
-                      //   }).toList(),
-                      //   onChanged: (value) {
-                      //     vehicleRegistration = widget.data['data']['vehicles']
-                      //         .firstWhere((vehicle) =>
-                      //             vehicle['vehicle_rego'] == value);
-                      //   },
-                      // ),
                       SizedBox(
                         height: 2.h,
                       ),
@@ -378,24 +279,6 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                           ),
                         ),
                       ),
-                      // SizedBox(height: 0.5.h),
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.end,
-                      //   children: [
-                      //     Icon(
-                      //       Icons.rotate_right,
-                      //       color: AppColors.blue,
-                      //       size: 2.h,
-                      //     ),
-                      //     Text(
-                      //       AppText.reTakePhoto,
-                      //       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      //             color: AppColors.blue,
-                      //             fontWeight: FontWeight.w700,
-                      //           ),
-                      //     )
-                      //   ],
-                      // ),
                       SizedBox(
                         height: 1.h,
                       ),
@@ -492,25 +375,24 @@ class _OutboundPalletCountTabState extends State<OutboundPalletCountTab> {
                                               .value,
                                         }.entries);
                                   }
-
                                   context.read<OutboundProvider>().addEntities({
                                         "vehicle_rego": context
-                                                .read<PreStartProvider>()
+                                                .read<OutboundProvider>()
                                                 .data
                                                 .containsKey('vehicle_rego')
                                             ? context
-                                                .read<PreStartProvider>()
+                                                .read<OutboundProvider>()
                                                 .data['vehicle_rego']
                                             : vehicleRegistration![
                                                 'vehicle_rego'],
                                         "selectedVehicle": context
-                                                .read<PreStartProvider>()
+                                                .read<OutboundProvider>()
                                                 .data
                                                 .containsKey('selectedVehicle')
                                             ? context
-                                                .read<PreStartProvider>()
+                                                .read<OutboundProvider>()
                                                 .data['selectedVehicle']
-                                            : vehicleRegistration.toString(),
+                                            : vehicleRegistration,
                                         "total_pallet_types": widget
                                             .data['data']['pallet_types']
                                             .entries

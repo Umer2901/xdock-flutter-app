@@ -159,39 +159,43 @@ class _HomeTabState extends State<HomeTab> {
                           final data = precheckSnapshot.data!;
                           return Column(
                             children: [
-                              // if (data[0]['checklist'] == 0)
-                              SubmissionCheckContainer(
-                                leadingSVG: AppSvgs.checkList,
-                                title: AppText.preStartCheckReq,
-                                subtitle: AppText.preStartSubtext,
-                                onPressed: () {
-                                  Get.toNamed(AppRoutes.preStartChecklist);
-                                },
-                                backgroundColor: AppColors.twoBlueGradient,
-                                isLoading: false,
-                              ),
-                              // if (data[0]['outbound'] == 0)
-                              SubmissionCheckContainer(
-                                leadingSVG: AppSvgs.boundpallets,
-                                title: AppText.outboundPalletsReq,
-                                subtitle: AppText.outboundPalletSubtext,
-                                onPressed: () {
-                                  Get.toNamed(AppRoutes.outboundPallet);
-                                },
-                                backgroundColor: AppColors.twoBlackGradient,
-                                isLoading: false,
-                              ),
-                              // if (data[0]['inbound'] == 0)
-                              SubmissionCheckContainer(
-                                leadingSVG: AppSvgs.boundpallets,
-                                title: AppText.inboundPalletsReq,
-                                subtitle: AppText.inboundPalletSubtext,
-                                onPressed: () {
-                                  Get.toNamed(AppRoutes.inboundPallet);
-                                },
-                                backgroundColor: AppColors.twoBlackGradient,
-                                isLoading: false,
-                              ),
+                              if (data[0]['checklist'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.checkList,
+                                  title: AppText.preStartCheckReq,
+                                  subtitle: AppText.preStartSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.preStartChecklist);
+                                  },
+                                  backgroundColor: AppColors.twoBlueGradient,
+                                  isLoading: false,
+                                ),
+                              if (data[0]['outbound'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.boundpallets,
+                                  title: AppText.outboundPalletsReq,
+                                  subtitle: AppText.outboundPalletSubtext,
+                                  onPressed: () {
+                                    Get.toNamed(AppRoutes.outboundPallet);
+                                  },
+                                  backgroundColor: AppColors.twoBlackGradient,
+                                  isLoading: false,
+                                ),
+                              if (data[0]['inbound'] == 0)
+                                SubmissionCheckContainer(
+                                  leadingSVG: AppSvgs.boundpallets,
+                                  title: AppText.inboundPalletsReq,
+                                  subtitle: AppText.inboundPalletSubtext,
+                                  onPressed: () {
+                                    if (data[0]['checklist'] == 1 &&
+                                        data[0]['outbound'] == 1 &&
+                                        consignmentCount == 0) {
+                                      Get.toNamed(AppRoutes.inboundPallet);
+                                    }
+                                  },
+                                  backgroundColor: AppColors.twoBlackGradient,
+                                  isLoading: false,
+                                ),
                             ],
                           );
                         }
@@ -444,12 +448,8 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
             ),
-            endDrawer: staffSnapshot.hasData
-                ? CustomDrawer(
-                    name: staffSnapshot.data[0]['name'],
-                    consignmentCount: consignmentCount,
-                  )
-                : const SizedBox(),
+            endDrawer:
+                staffSnapshot.hasData ? const CustomDrawer() : const SizedBox(),
           );
         });
   }

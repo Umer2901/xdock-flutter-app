@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:coldxpress/export.dart';
 
 class CustomElevatedButton extends StatelessWidget {
@@ -91,7 +92,6 @@ class CustomElevatedButton extends StatelessWidget {
                         ),
             ),
           ),
-          // Bottom shadow
           Positioned(
             left: 20,
             right: 20,

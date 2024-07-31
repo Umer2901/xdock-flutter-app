@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'dart:typed_data';
 import 'package:coldxpress/export.dart';
 
@@ -11,11 +13,11 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   Map<String, String> _base64Images = {};
   Map<String, String> _pictureSources = {};
   DeliveryType _selectedDeliveryType = DeliveryType.full;
-  List<String> _selectedOrderRejectionReasons = [];
+  final List<String> _selectedOrderRejectionReasons = [];
   bool _showSignature = false;
   String? signatureData;
   XFile? _image;
-  
+
   int get index => _index;
   Map get data => _data;
   bool get showSignature => _showSignature;
@@ -25,7 +27,8 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   Map<String, String> get pictureSources => _pictureSources;
   DeliveryType get selectedDeliveryType => _selectedDeliveryType;
   Uint8List? get signature => _signatureData;
-  List<String> get selectedOrderRejectionReasons => _selectedOrderRejectionReasons;
+  List<String> get selectedOrderRejectionReasons =>
+      _selectedOrderRejectionReasons;
 
   setIndex(int value) {
     _index = value;
@@ -41,7 +44,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _data = value;
     notifyListeners();
   }
-  
+
   setImage({required XFile image}) {
     _image = image;
     notifyListeners();
@@ -52,7 +55,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  clearSignatureAndShowPopup( SignatureController controller) {
+  clearSignatureAndShowPopup(SignatureController controller) {
     controller.clear();
     _signatureData = null;
     _showSignature = true;
@@ -60,7 +63,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-    lpc(SignatureController controller) {
+  lpc(SignatureController controller) {
     controller.clear();
     _signatureData = null;
     _showSignature = false;
@@ -70,7 +73,6 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _base64Images = {};
     _pictureSources = {};
     notifyListeners();
-    
   }
 
   updateSelectedDeliveryType(DeliveryType type) {
@@ -88,7 +90,6 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-
   updateOrderRejectionReason(String reason) {
     _selectedOrderRejectionReasons.clear();
     _selectedOrderRejectionReasons.add(reason);
@@ -100,19 +101,21 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _selectedOrderRejectionReasons.clear();
     notifyListeners();
   }
- resetSignatureState() {
+
+  resetSignatureState() {
     _showSignature = false;
     _signatureData = null;
     notifyListeners();
   }
- 
+
   addImage({
     required XFile image,
     required String base64String,
     required String source,
   }) {
     _images.add(image);
-    _base64Images.addEntries({'picture${_images.length}': base64String}.entries);
+    _base64Images
+        .addEntries({'picture${_images.length}': base64String}.entries);
     _pictureSources.addEntries({'picture${_images.length}': source}.entries);
     notifyListeners();
   }
@@ -132,10 +135,9 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _base64Images = {};
     _pictureSources = {};
     resetSignatureState();
-    
   }
 
-   backToDefault() {
+  backToDefault() {
     _index = 0;
     _data = {};
     _images = [];

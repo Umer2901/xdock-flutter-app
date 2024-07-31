@@ -40,4 +40,11 @@ class PreStartProvider with ChangeNotifier {
     _ischeck = isCheck;
     notifyListeners();
   }
+
+  reset() {
+    _index = 0;
+    _data = {};
+    _image = null;
+    _ischeck = false;
+  }
 }

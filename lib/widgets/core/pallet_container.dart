@@ -143,7 +143,7 @@ class PalletContainer extends StatelessWidget {
   final TextInputType keyboardType;
   final EdgeInsets? contentPadding;
   final bool isErrorState;
-   final Function(int)? onValueChanged;
+  final Function(int)? onValueChanged;
   const PalletContainer({
     super.key,
     required this.name,
@@ -157,7 +157,8 @@ class PalletContainer extends StatelessWidget {
     this.keyboardType = TextInputType.number,
     this.contentPadding,
     this.isErrorState = false,
-    this.icon, this.onValueChanged,
+    this.icon,
+    this.onValueChanged,
   });
 
   @override
@@ -179,7 +180,7 @@ class PalletContainer extends StatelessWidget {
                 height: 20.sp,
                 width: 20.sp,
                 child: icon ??
-                    Image(
+                    const Image(
                       image: AssetImage(AppImages.pallet),
                     ),
               ),

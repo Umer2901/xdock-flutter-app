@@ -1,5 +1,4 @@
 import 'package:coldxpress/export.dart';
-import 'package:flutter/material.dart';
 
 class CustomError extends StatelessWidget {
   const CustomError({super.key, required this.text});
