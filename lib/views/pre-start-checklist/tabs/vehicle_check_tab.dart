@@ -29,9 +29,7 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      height: 4.h,
-                    ),
+                    SizedBox(height: 4.h),
                     Text(
                       AppText.vehicleChecks.toUpperCase(),
                       style: Theme.of(context)
@@ -46,9 +44,7 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                           .bodySmall
                           ?.copyWith(color: AppColors.grey),
                     ),
-                    SizedBox(
-                      height: 2.h,
-                    ),
+                    SizedBox(height: 2.h),
                     for (int i = 0; i < widget.questions.length; i++) ...{
                       Text(
                         widget.questions[i]['question'],
@@ -83,72 +79,23 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                                                   .data[
                                               'answer_${widget.questions[i]['id']}']
                                           : null,
-                                  activeColor: (checklistAnswers.containsKey(
-                                                  'answer_${widget.questions[i]['id']}')
-                                              ? checklistAnswers[
-                                                  'answer_${widget.questions[i]['id']}']
-                                              : null) ==
-                                          'No'
-                                      ? AppColors.red
-                                      : AppColors.blue,
+                                  activeColor: _getAnswerColor(
+                                    widget.questions[i],
+                                    widget.questions[i]['options']['option'][j],
+                                  ),
                                   onChanged: (value) {
-                                    if (!widget.questions[i]['options']
-                                            .containsKey('required_answer') ||
-                                        widget.questions[i]['options']
-                                                ['required_answer']
-                                            .contains(value) ||
-                                        widget
-                                            .questions[i]['options']
-                                                ['required_answer']
-                                            .isEmpty) {
-                                      setState(() {
-                                        final temp = {
-                                          'question_id_${widget.questions.indexOf(widget.questions[i])}':
-                                              widget.questions[i]['id']
-                                                  .toString(),
-                                          'comment_${widget.questions[i]['id']}':
-                                              '',
-                                          'answer_${widget.questions[i]['id']}':
-                                              value.toString(),
-                                        };
-                                        checklistAnswers
-                                            .addEntries(temp.entries);
-                                      });
-                                    } else {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.error_outline_rounded,
-                                                color: AppColors.white,
-                                              ),
-                                              SizedBox(width: 2.w),
-                                              Expanded(
-                                                child: Text(
-                                                  '${widget.questions[i]['question']} value can\'t be "$value". Contact your supervise!',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.copyWith(
-                                                        color: AppColors.white,
-                                                      ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(0),
-                                          ),
-                                          duration: const Duration(seconds: 2),
-                                          behavior: SnackBarBehavior.floating,
-                                          backgroundColor: AppColors.lightRed,
-                                          margin: EdgeInsets.only(bottom: 1.h),
-                                        ),
-                                      );
-                                    }
+                                    setState(() {
+                                      final temp = {
+                                        'question_id_${widget.questions.indexOf(widget.questions[i])}':
+                                            widget.questions[i]['id']
+                                                .toString(),
+                                        'comment_${widget.questions[i]['id']}':
+                                            '',
+                                        'answer_${widget.questions[i]['id']}':
+                                            value.toString(),
+                                      };
+                                      checklistAnswers.addEntries(temp.entries);
+                                    });
                                   },
                                 ),
                                 Text(
@@ -187,9 +134,7 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                         SizedBox(height: 1.5.h),
                       }
                     },
-                    SizedBox(
-                      height: 2.h,
-                    ),
+                    SizedBox(height: 2.h),
                     Align(
                       alignment: Alignment.centerRight,
                       child: SizedBox(
@@ -198,27 +143,16 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                         child: CustomButton(
                           label: AppText.next,
                           onPressed: () {
-                            bool validate = true;
-                            for (var value in widget.questions) {
-                              if (!checklistAnswers
-                                      .containsKey('answer_${value['id']}') &&
-                                  !context
-                                      .read<PreStartProvider>()
-                                      .data
-                                      .containsKey('answer_${value['id']}')) {
-                                validate = false;
-                              }
-                            }
-                            if (validate) {
+                            final errors = _validateAnswers();
+                            if (errors.isEmpty) {
                               context
                                   .read<PreStartProvider>()
                                   .addEntities(checklistAnswers.entries);
                               context.read<PreStartProvider>().setIndex(2);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'All sections must be filled out in order to continue.'),
+                                SnackBar(
+                                  content: Text(errors.join('\n')),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -227,9 +161,7 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: 2.h,
-                    ),
+                    SizedBox(height: 2.h),
                   ],
                 ),
               ),
@@ -239,4 +171,37 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
       ),
     );
   }
+
+  Color _getAnswerColor(Map question, String selectedOption) {
+    if (question['options'].containsKey('required_answer')) {
+      if (question['options']['required_answer'].contains(selectedOption)) {
+        return AppColors.blue; 
+      } else if (selectedOption == checklistAnswers['answer_${question['id']}']) {
+        return AppColors.red; 
+      }
+    }
+    return AppColors.blue; 
+  }
+
+  List<String> _validateAnswers() {
+  List<String> errors = [];
+  for (var question in widget.questions) {
+    String questionId = question['id'].toString();
+    String answerKey = 'answer_$questionId';
+
+    if (!checklistAnswers.containsKey(answerKey)) {
+      errors.add('${question['question']} is not answered.');
+      continue;
+    }
+
+    String selectedAnswer = checklistAnswers[answerKey]?.toString() ?? ''; 
+    if (question['options'].containsKey('required_answer')) {
+      List<String> requiredAnswers = List<String>.from(question['options']['required_answer']);
+      if (!requiredAnswers.contains(selectedAnswer)) {
+        errors.add('${question['question']} has an incorrect answer.');
+      }
+    }
+  }
+  return errors;
+}
 }

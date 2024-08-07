@@ -24,4 +24,6 @@ class AppSvgs {
   static const String carton = 'assets/svg/carton.svg';
   static const String space = 'assets/svg/space.svg';
   static const String weight = 'assets/svg/weight.svg';
+  static const String refresh = 'assets/svg/refresh.svg';
+
 }

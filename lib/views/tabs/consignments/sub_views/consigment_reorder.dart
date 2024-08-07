@@ -13,7 +13,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   final ScrollController _scrollController = ScrollController();
   final List<dynamic> _consignments = [];
   List<int> consignmentIds = [];
-
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   void initState() {
     super.initState();
@@ -28,6 +28,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.white,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
@@ -42,8 +43,10 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () {},
+        IconButton(
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
+            },
             icon: Icon(
               Icons.more_horiz,
               size: 20.sp,
@@ -170,6 +173,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
           ),
         ),
       )),
+         endDrawer: const CustomDrawer(),
     );
   }
 }

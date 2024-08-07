@@ -18,4 +18,5 @@ class AppImages {
   static const String priority = 'assets/images/priority.png';
   static const String cardboard = 'assets/images/cardboard_boxes.png';
   static const String clock = 'assets/images/Clock.png';
+   static const String refresh = 'assets/images/Refresh.png';
 }

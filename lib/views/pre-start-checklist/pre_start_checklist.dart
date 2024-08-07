@@ -17,12 +17,14 @@ class PreStartCheckListView extends StatelessWidget {
   Widget build(BuildContext context) {
     AuthenticationState state =
         BlocProvider.of<AuthenticationCubit>(context).state;
-
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+     
     return Container(
       decoration: const BoxDecoration(
         gradient: AppColors.preStartHeaderGradient,
       ),
       child: Scaffold(
+         key: _scaffoldKey,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -45,7 +47,9 @@ class PreStartCheckListView extends StatelessWidget {
           ),
           actions: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {          
+ _scaffoldKey.currentState?.openEndDrawer();
+              },
               icon: Icon(
                 Icons.more_horiz,
                 color: AppColors.white,
@@ -122,6 +126,7 @@ class PreStartCheckListView extends StatelessWidget {
             ],
           ),
         ),
+         endDrawer: const CustomDrawer(),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'package:coldxpress/export.dart';
+
+import 'package:coldxpress/export.dart'; // Import necessary packages and your project files
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -16,14 +17,12 @@ class _HomeTabState extends State<HomeTab> {
   int consignmentCount = 0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
+    AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
     if (state is Authenticated) {
       staff = UserDatabase(
         context.read<DatabaseProvider>().database,
@@ -42,9 +41,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   config(token) async {
-    await PreCheckDatabase(context.read<DatabaseProvider>().database,
-            accessToken: token)
-        .read();
+    await PreCheckDatabase(context.read<DatabaseProvider>().database, accessToken: token).read();
   }
 
   @override
@@ -55,7 +52,27 @@ class _HomeTabState extends State<HomeTab> {
     super.dispose();
   }
 
-  @override
+ 
+  List<Map> filterConsignmentsByDate(List<Map> consignments, String targetDate) {
+  return consignments.where((consignment) {
+    final date = _decodeJson(consignment['run_sheets'])['date'] ?? '';
+    return date == targetDate;
+  }).toList();
+}
+
+String getTodayDate() {
+  final now = DateTime.now();
+  return DateFormat('yyyy-MM-dd').format(now); 
+}
+
+  Map _decodeJson(dynamic value) {
+    if (value is String) {
+      return json.decode(value) as Map;
+    }
+    return value as Map;
+  }
+
+   @override
   Widget build(BuildContext context) {
     return StreamBuilder<dynamic>(
         stream: staff.controller.stream,
@@ -202,270 +219,220 @@ class _HomeTabState extends State<HomeTab> {
                       },
                     ),
                     SizedBox(height: 2.h),
-                    StreamBuilder(
-                      stream: consignment.stream,
-                      builder: (context, consignmentSnapshot) {
-                        if (consignmentSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const SizedBox();
-                        } else if (consignmentSnapshot.hasData) {
-                          consignmentCount =
-                              consignmentSnapshot.data?.length ?? 0;
-                          return Expanded(
+                StreamBuilder(
+                  stream: consignment.stream,
+                  builder: (context, consignmentSnapshot) {
+                    if (consignmentSnapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox();
+                    } else if (consignmentSnapshot.hasData) {
+                      List<Map> consignments = consignmentSnapshot.data!;
+                      final targetDate = getTodayDate(); 
+                      List<Map> filteredConsignments = filterConsignmentsByDate(consignments, targetDate);
+
+                      consignmentCount = filteredConsignments.length;
+
+                      return Expanded(
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  AppText.todayConsignments.toUpperCase(),
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                                SizedBox(width: 2.w),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () {
+                                    context.read<BottomNavProvider>().changeTabView(0);
+                                  },
+                                  child: Text(
+                                    AppText.seeAll,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: AppColors.midBlue,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  filteredConsignments.length.toString(),
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  AppText.consignmentRemaining,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                SizedBox(width: 2.w),
+                                CircleAvatar(
+                                  backgroundColor: AppColors.black,
+                                  radius: 0.6.w,
+                                ),
+                                SizedBox(width: 1.w),
+                                Text(
+                                  DateFormat('dd MMM, yyyy').format(DateTime.now()),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 2.h),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                controller: _scrollController,
+                                child: filteredConsignments.isEmpty
+                                    ? Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 4.h),
+                                        child: SizedBox(
+                                          width: 60.w,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              const Image(
+                                                image: AssetImage(AppImages.cardboard),
+                                              ),
+                                              SizedBox(height: 3.h),
+                                              Text(
+                                                'Consignment Completed!',
+                                                textAlign: TextAlign.center,
+                                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                                              ),
+                                              Text(
+                                                'Get back safe, and remember to return your pallets.',
+                                                textAlign: TextAlign.center,
+                                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
+                                        children: [
+                                          for (var consignment in filteredConsignments) ...{
+                                            ConsignmentContainer(
+                                              consignment: consignment,
+                                            ),
+                                          },
+                                          SizedBox(height: 2.h),
+                                          GestureDetector(
+                                            onTap: () {
+                                              _scrollController.animateTo(
+                                                0.0,
+                                                duration: const Duration(milliseconds: 500),
+                                                curve: Curves.easeInOut,
+                                              );
+                                            },
+                                            child: Text(
+                                              AppText.returnToTop,
+                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                color: AppColors.midBlue,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else if (consignmentSnapshot.hasError) {
+                      return Expanded(
+                        child: SizedBox(
+                          child: SingleChildScrollView(
                             child: Column(
                               children: [
                                 Row(
                                   children: [
                                     Text(
                                       AppText.todayConsignments.toUpperCase(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall,
-                                    ),
-                                    SizedBox(width: 2.w),
-                                    const Spacer(),
-                                    GestureDetector(
-                                      onTap: () {
-                                        context
-                                            .read<BottomNavProvider>()
-                                            .changeTabView(0);
-                                      },
-                                      child: Text(
-                                        AppText.seeAll,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color: AppColors.midBlue,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      consignmentSnapshot.data!.length
-                                          .toString(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    ),
-                                    Text(
-                                      AppText.consignmentRemaining,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                    ),
-                                    SizedBox(
-                                      width: 2.w,
-                                    ),
-                                    CircleAvatar(
-                                      backgroundColor: AppColors.black,
-                                      radius: 0.6.w,
-                                    ),
-                                    SizedBox(
-                                      width: 1.w,
-                                    ),
-                                    Text(
-                                      DateFormat('dd MMM,yyyy')
-                                          .format(DateTime.now()),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
+                                      style: Theme.of(context).textTheme.headlineSmall,
                                     ),
                                   ],
                                 ),
                                 SizedBox(height: 2.h),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    controller: _scrollController,
-                                    child: consignmentSnapshot.data!.isEmpty
-                                        ? Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 4.h,
-                                            ),
-                                            child: SizedBox(
-                                              width: 60.w,
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  const Image(
-                                                    image: AssetImage(
-                                                      AppImages.cardboard,
-                                                    ),
-                                                  ),
-                                                  SizedBox(
-                                                    height: 3.h,
-                                                  ),
-                                                  Text(
-                                                    'Consignment Completed!',
-                                                    textAlign: TextAlign.center,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .headlineSmall
-                                                        ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w700),
-                                                  ),
-                                                  Text(
-                                                    'Get back safe, and remember to return your pallets.',
-                                                    textAlign: TextAlign.center,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium
-                                                        ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w500),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          )
-                                        : Column(
-                                            children: [
-                                              for (var consignment
-                                                  in consignmentSnapshot
-                                                      .data!) ...{
-                                                ConsignmentContainer(
-                                                  consignment: consignment,
-                                                ),
-                                              },
-                                              SizedBox(
-                                                height: 2.h,
-                                              ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  _scrollController.animateTo(
-                                                    0.0,
-                                                    duration: const Duration(
-                                                        milliseconds: 500),
-                                                    curve: Curves.easeInOut,
-                                                  );
-                                                },
-                                                child: Text(
-                                                  AppText.returnToTop,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.copyWith(
-                                                        color:
-                                                            AppColors.midBlue,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 4.h,
-                                              ),
-                                            ],
-                                          ),
-                                  ),
-                                )
+                                Text(
+                                  consignmentSnapshot.error.toString(),
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.red),
+                                ),
                               ],
                             ),
-                          );
-                        } else if (consignmentSnapshot.hasError) {
-                          return Expanded(
-                            child: SizedBox(
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          AppText.todayConsignments
-                                              .toUpperCase(),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineSmall,
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    Text(
-                                      consignmentSnapshot.error.toString(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(color: AppColors.red),
-                                    ),
-                                  ],
+                          ),
+                        ),
+                      );
+                    } else {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4.h),
+                        child: SizedBox(
+                          width: 60.w,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Image(
+                                image: AssetImage(AppImages.cardboard),
+                              ),
+                              SizedBox(height: 3.h),
+                              Text(
+                                'No Consignment!',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                'Get back safe, and remember to return your pallets.',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                              
                                 ),
-                              ),
+                              ],
                             ),
-                          );
-                        } else {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 4.h,
-                            ),
-                            child: SizedBox(
-                              width: 60.w,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  const Image(
-                                    image: AssetImage(
-                                      AppImages.cardboard,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 3.h,
-                                  ),
-                                  Text(
-                                    'No Consignment!',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                  ),
-                                  Text(
-                                    'Get back safe, and remember to return your pallets.',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+               
+                ],
               ),
             ),
-            endDrawer:
-                staffSnapshot.hasData ? const CustomDrawer() : const SizedBox(),
-          );
-        });
+          ),
+          endDrawer: const CustomDrawer(),
+        );
+      },
+    );
   }
 }
 
+ 
+               
 class ConsignmentContainer extends StatelessWidget {
   final bool isLoading;
   final Map? consignment;
-  const ConsignmentContainer(
-      {super.key, this.isLoading = false, this.consignment});
+
+  const ConsignmentContainer({
+    super.key,
+    this.isLoading = false,
+    this.consignment,
+  });
 
   @override
   Widget build(BuildContext context) {
-    Map productTypes = json.decode(consignment?['product_types']);
-    Map deliveryAddresses = json.decode(consignment?['delivery_addresses']);
-    Map pickupAddresses = json.decode(consignment?['pickup_addresses']);
+    final Map productTypes = _decodeJson(consignment?['product_types']);
+    final Map deliveryAddresses = _decodeJson(consignment?['delivery_addresses']);
+    final Map pickupAddresses = _decodeJson(consignment?['pickup_addresses']);
+    final Map runSheets = _decodeJson(consignment?['run_sheets']);
+
+    final companyName = consignment?['consignment_type'] == 'delivery'
+        ? (deliveryAddresses['company_name'] ?? 'Not Provided')
+        : (pickupAddresses['company_name'] ?? 'Not Provided');
+
+    final date = runSheets['date'] ?? 'Not Provided';
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -488,6 +455,94 @@ class ConsignmentContainer extends StatelessWidget {
             )
           : Stack(
               children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.darkGrey.withOpacity(0.16),
+                      radius: 7.5.w,
+                      child: SizedBox(
+                        height: 15.h,
+                        width: 15.w,
+                        child: Image(
+                          image: productTypes['id'] == 1
+                              ? const AssetImage(AppImages.chilled)
+                              : const AssetImage(AppImages.frozen),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 2.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            companyName,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'ID: ${consignment?['id']}'.toUpperCase(),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.black.withOpacity(0.5),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                            maxLines: 1,
+                          ),
+                          SizedBox(
+                            width: 45.w,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${AppText.drop}: ${consignment?['sort'] ?? 0}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                  maxLines: 1,
+                                ),
+                                Text(
+                                  '${AppText.ctn}: ${consignment?['cartons'] ?? 0}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                  maxLines: 1,
+                                ),
+                                Text(
+                                  '${AppText.plt}: ${consignment?['pallets'] ?? 0}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // SizedBox(height: 4.h),
+                          // Text(
+                          //   'Date: $date',
+                          //   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          //         color: AppColors.black.withOpacity(0.7),
+                          //         fontWeight: FontWeight.w400,
+                          //       ),
+                          // ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                 Positioned(
                   top: 0,
                   right: 0,
@@ -508,91 +563,23 @@ class ConsignmentContainer extends StatelessWidget {
                                 ? AppColors.black
                                 : AppColors.white,
                             fontSize: 10.sp,
+                            overflow: TextOverflow.ellipsis,
                             fontWeight: FontWeight.w700),
+                        maxLines: 1,
                       ),
                     ),
                   ),
                 ),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: AppColors.darkGrey.withOpacity(0.16),
-                      radius: 7.5.w,
-                      child: SizedBox(
-                        height: 15.h,
-                        width: 15.w,
-                        child: Image(
-                          image: productTypes['id'] == 1
-                              ? const AssetImage(AppImages.chilled)
-                              : const AssetImage(AppImages.frozen),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 2.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          (consignment?['consignment_type'] == 'delivery'
-                                  ? deliveryAddresses['customer_name']
-                                  : pickupAddresses['customer_name']) ??
-                              'Not Provided',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'ID: ${consignment?['id']}'.toUpperCase(),
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.black.withOpacity(0.5),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                        ),
-                        SizedBox(
-                          width: 45.w,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${AppText.drop}: ${consignment?['sort'] ?? 0}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                              Text(
-                                '${AppText.ctn}: ${consignment?['cartons'] ?? 0}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                              Text(
-                                '${AppText.plt}: ${consignment?['pallets'] ?? 0}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ],
-                ),
               ],
             ),
     );
+  }
+
+ 
+  Map _decodeJson(dynamic value) {
+    if (value is String) {
+      return json.decode(value) as Map;
+    }
+    return value as Map;
   }
 }

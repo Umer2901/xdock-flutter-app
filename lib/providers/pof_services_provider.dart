@@ -229,7 +229,37 @@ class TaskSyncpofProvider extends ChangeNotifier {
                 break;
             }
           }
-
+ final requestBody = {
+    "carton": taskData['carton'],
+    "pallet": taskData['pallet'],
+    "space":taskData['space'],
+    "weigth": taskData['weigth'],
+    "first_name": taskData['first_name'],
+    "last_name": taskData['last_name'],
+    "temperature": taskData['temperature'],
+    "signature": taskData['signature'],
+    "comments": taskData['comments'],
+    "service_window": taskData['service_window'],
+    "service_time_start": taskData['service_time_start'],
+    "service_time_end": taskData['service_time_end'],
+    "address_id": taskData['address_id'],
+    "pod_type":  taskData['pod_type'],
+    "customer_reference": taskData['customer_reference'],
+    "pictures": [taskData['pictures']],
+    "pictureSources": jsonDecode(taskData['pictureSources'],),
+    "latitude": taskData['latitude'],
+    "longitude": taskData['longitude'],
+    "consignments": jsonDecode(taskData['consignments'],),
+    "device": jsonDecode(taskData['device'],),
+    "app_version": taskData['app_version'],
+    "driver_id": taskData['driver_id'],
+    "date_delivered": taskData['date_delivered'],
+    "platforms": jsonDecode(taskData['platforms'],),
+    "current_app_version": taskData['current_app_version'],
+    };
+     requestBody.forEach((key, value) {
+          debugPrint('$key: $value');
+        });
           // final podType =
           //     provider.selectedDeliveryType.toString().split('.').last;
           // final combinedData = {
@@ -248,34 +278,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-    "carton": taskData['carton'],
-    "pallet": taskData['pallet'],
-    "space":taskData['space'],
-    "weigth": taskData['weigth'],
-    "first_name": taskData['first_name'],
-    "last_name": taskData['last_name'],
-    "temperature": taskData['temperature'],
-    "signature": taskData['signature'],
-    "comments": taskData['comments'],
-    "service_window": taskData['service_window'],
-    "service_time_start": taskData['service_time_start'],
-    "service_time_end": taskData['service_time_end'],
-    "address_id": taskData['address_id'],
-    "pod_type":  taskData['pod_type'],
-    "customer_reference": taskData['customer_reference'],
-    "pictures": [taskData['pictures']],
-    "pictureSources":taskData['pictureSources'],
-    "latitude": taskData['latitude'],
-    "longitude": taskData['longitude'],
-    "consignments": taskData['consignments'],
-    "device": taskData['device'],
-    "app_version": taskData['app_version'],
-    "driver_id": taskData['driver_id'],
-    "date_delivered": taskData['date_delivered'],
-    "platforms": taskData['platforms'],
-    "current_app_version": taskData['current_app_version'],
-}),
+            body: jsonEncode(requestBody),
           );
 
           if (response.statusCode == 200) {
@@ -288,6 +291,8 @@ class TaskSyncpofProvider extends ChangeNotifier {
             if (isGroup != null && isGroup != 'parent') {
               await submitGroupAsIndividual(int.parse(isGroup));
               await addNewConsignment(Get.arguments);
+
+              
             }
           } else {
             debugPrint('Failed to post data to URL: $url');

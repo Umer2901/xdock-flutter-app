@@ -14,7 +14,7 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
   final List<dynamic> _consignments = [];
   List<int> consignmentIds = [];
   List<dynamic> selectedConsignments = [];
-  
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -30,6 +30,8 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
+      key: _scaffoldKey,
       backgroundColor: AppColors.white,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
@@ -45,7 +47,9 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+ _scaffoldKey.currentState?.openEndDrawer();
+            },
             icon: Icon(
               Icons.more_horiz,
               size: 20.sp,
@@ -257,6 +261,8 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
           ),
         ),
       )),
+         endDrawer: const CustomDrawer(),
     );
+    
   }
 }

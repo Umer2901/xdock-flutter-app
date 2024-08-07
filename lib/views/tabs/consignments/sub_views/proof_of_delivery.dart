@@ -30,6 +30,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   late Map productTypes;
   late Map deliveryAddresses;
   late Map pickupAddresses;
+  late Map runSheets;
   List groupedConsignments = [];
 
   @override
@@ -40,6 +41,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
     productTypes = Get.arguments['product_types'].runtimeType == String
         ? json.decode(Get.arguments['product_types'])
         : Get.arguments['product_types'];
+     runSheets = Get.arguments['run_sheets'].runtimeType == String
+        ? json.decode(Get.arguments['run_sheets'])
+        : Get.arguments['run_sheets'];
     deliveryAddresses =
         Get.arguments['delivery_addresses'].runtimeType == String
             ? json.decode(Get.arguments['delivery_addresses'])
@@ -52,6 +56,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
         Get.arguments?['grouped_consignments'],
       );
     }
+      debugPrint("Run Sheets Data: ${jsonEncode(runSheets)}");
     debugPrint("our group data: ${Get.arguments['is_group']}");
   }
 
@@ -478,16 +483,17 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   heading: AppText.cartons,
                                   icon: SvgPicture.asset(AppSvgs.boundpallets),
                                   hintText: '0',
+                                  initialValue: Get.arguments?['carton'] ?? 0,
                                   //  initialValue: int.tryParse(context.read<ProofOfDeliveryProvider>().data['cartons']?.toString() ?? '0') ?? 0,
-                                  initialValue: isGroupedConsignment
-                                      ? (Get.arguments?['carton'] ?? 0)
-                                      : (int.tryParse(context
-                                                  .read<
-                                                      ProofOfDeliveryProvider>()
-                                                  .data['cartons']
-                                                  ?.toString() ??
-                                              '0') ??
-                                          0),
+                                  // initialValue: isGroupedConsignment
+                                  //     ? (Get.arguments?['carton'] ?? 0)
+                                  //     : (int.tryParse(context
+                                  //                 .read<
+                                  //                     ProofOfDeliveryProvider>()
+                                  //                 .data['cartons']
+                                  //                 ?.toString() ??
+                                  //             '0') ??
+                                  //         0),
                                   totalPallet: int.tryParse(Get
                                               .arguments?['carton']
                                               ?.toString() ??
@@ -502,16 +508,17 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                   name: 'pallets',
                                   heading: AppText.pallets,
                                   hintText: '0',
-                                  //initialValue:int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0,
-                                  initialValue: isGroupedConsignment
-                                      ? (Get.arguments?['pallet'] ?? 0)
-                                      : (int.tryParse(context
-                                                  .read<
-                                                      ProofOfDeliveryProvider>()
-                                                  .data['pallet']
-                                                  ?.toString() ??
-                                              '0') ??
-                                          0),
+                                   initialValue: Get.arguments?['pallets'] ?? 0,
+                                  // //initialValue:int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0,
+                                  // initialValue: isGroupedConsignment
+                                  //     ? (Get.arguments?['pallet'] ?? 0)
+                                  //     : (int.tryParse(context
+                                  //                 .read<
+                                  //                     ProofOfDeliveryProvider>()
+                                  //                 .data['pallet']
+                                  //                 ?.toString() ??
+                                  //             '0') ??
+                                  //         0),
                                   totalPallet: int.tryParse(Get
                                               .arguments?['pallet']
                                               ?.toString() ??
@@ -955,8 +962,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                                 .base64Images);
                                             final consignments =
                                                 Get.arguments['id'];
-                                            final driver_id =
-                                                Get.arguments['runsheet_id'];
+                                         final driverId = runSheets['driver_id'];
                                             final address_id =
                                                 pickupAddresses['id'];
                                             final space =
@@ -1025,11 +1031,11 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               "app_version": "3.15.2",
                                               "consignments":
                                                   jsonEncode([consignments]),
-                                              "driver_id": driver_id,
+                                              "driver_id": driverId,
                                               "date_delivered": DateTime.now()
                                                   .toIso8601String(),
                                               "space": space,
-                                              "weight": weight,
+                                              "weigth": weight,
                                               "customer_reference":
                                                   customer_reference,
                                               "comments": comments,
@@ -1498,8 +1504,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               .base64Images);
                                           final consignments =
                                               Get.arguments['id'];
-                                          final driver_id =
-                                              Get.arguments['runsheet_id'];
+                                         final driverId = runSheets['driver_id'];
                                           final address_id =
                                               pickupAddresses['id'];
                                           final space = Get.arguments['space'];
@@ -1540,11 +1545,11 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             "app_version": "3.15.2",
                                             "consignments":
                                                 jsonEncode([consignments]),
-                                            "driver_id": driver_id,
+                                            "driver_id": driverId,
                                             "date_delivered": DateTime.now()
                                                 .toIso8601String(),
                                             "space": space,
-                                            "weight": weight,
+                                            "weigth": weight,
                                             "customer_reference":
                                                 customer_reference,
                                             "comments": comments,
@@ -1696,8 +1701,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               provider.data['rejection_reason'];
                                           final consignments =
                                               Get.arguments['id'];
-                                          final driver_id =
-                                              Get.arguments['driver_id'];
+                                         final driverId = runSheets['driver_id'];
                                           final address_id =
                                               Get.arguments['address_id'];
                                           final date_delivered =
@@ -1765,13 +1769,13 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             "record_error": true,
                                             "adhoc_charges": false,
                                             "space": space,
-                                            "weight": weight,
+                                            "weigth": weight,
                                             "consignments":
                                                 jsonEncode([consignments]),
                                             "device": jsonEncode(deviceinfo),
                                             "date_delivered": DateTime.now()
                                                 .toIso8601String(),
-                                            "driver_id": driver_id,
+                                            "driver_id": driverId,
                                             "first_name": "",
                                             "last_name": "",
                                             "customer_probe_temp": "",

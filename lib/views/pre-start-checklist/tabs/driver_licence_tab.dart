@@ -394,154 +394,7 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
                               },
                             ),
                           ),
-                          // TypeAheadField(
-                          //   suggestionsCallback: (search) => searchVehicleReg(
-                          //       widget.data['vehicles'].map((vehicle) {
-                          //         return vehicle['vehicle_rego'];
-                          //       }).toList(),
-                          //       search),
-                          //   controller: vehicleRego,
-                          //   builder: (context, controller, focusNode) {
-                          //     return CustomTextField(
-                          //       name: 'vehicle_rego',
-                          //       hintText: 'Please Select',
-                          //       focusNode: focusNode,
-                          //       controller: controller,
-                          //       fillColor: AppColors.white,
-                          //       validator: FormBuilderValidators.required(),
-                          //     );
-                          //   },
-                          //   itemBuilder: (context, value) {
-                          //     return ListTile(
-                          //       title: Text(
-                          //         value,
-                          //         style: Theme.of(context).textTheme.bodyMedium,
-                          //       ),
-                          //     );
-                          //   },
-                          //   onSelected: (value) {
-                          //     vehicleRegistration =
-                          //         widget.data['vehicles'].firstWhere(
-                          //       (vehicle) => vehicle['vehicle_rego'] == value,
-                          //     );
-                          //     _formKey.currentState!.fields['vehicle_rego']!
-                          //         .setValue(value);
-                          //     vehicleRego.setText(value);
-                          //   },
-                          // ),
-                          // SizedBox(
-                          //   height: 6.h,
-                          //   width: 90.w,
-                          //   child: DropdownSearch(
-                          //     items: widget.data['vehicles'].map((vehicle) {
-                          //       return vehicle['vehicle_rego'];
-                          //     }).toList(),
-                          //     validator: (value) {
-                          //       if (value == null || value == '') {
-                          //         setState(() {
-                          //           isRegistrationError = true;
-                          //         });
-                          //       } else {
-                          //         setState(() {
-                          //           isError = false;
-                          //           isRegistrationError = false;
-                          //         });
-                          //       }
-                          //       return null;
-                          //     },
-                          //     onChanged: (value) {
-                          //       setState(() {
-                          //         vehicleRegistration =
-                          //             widget.data['vehicles'].firstWhere(
-                          //           (vehicle) =>
-                          //               vehicle['vehicle_rego'] == value,
-                          //         );
-                          //       });
-                          //     },
-                          //     dropdownDecoratorProps: DropDownDecoratorProps(
-                          //       dropdownSearchDecoration: InputDecoration(
-                          //         enabledBorder: OutlineInputBorder(
-                          //           borderSide: BorderSide(
-                          //               color: isRegistrationError == false
-                          //                   ? AppColors.black
-                          //                   : AppColors.red),
-                          //           borderRadius: const BorderRadius.all(
-                          //             Radius.circular(15),
-                          //           ),
-                          //         ),
-                          //         hintText: 'Please Select',
-                          //         hintStyle: const TextStyle(
-                          //           fontSize: 16,
-                          //           letterSpacing: 1,
-                          //           fontWeight: FontWeight.w400,
-                          //           color: AppColors.black,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //     popupProps: const PopupProps.menu(
-                          //       showSearchBox: true,
-                          //       searchDelay: Duration.zero,
-                          //       searchFieldProps: TextFieldProps(
-                          //         decoration: InputDecoration(
-                          //           enabledBorder: OutlineInputBorder(
-                          //             borderRadius: BorderRadius.all(
-                          //               Radius.circular(10),
-                          //             ),
-                          //           ),
-                          //           border: OutlineInputBorder(
-                          //             borderRadius: BorderRadius.all(
-                          //               Radius.circular(10),
-                          //             ),
-                          //           ),
-                          //           hintText: 'Search',
-                          //         ),
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
-                          // CustomDropdown(
-                          //   name: 'vehicle_rego',
-                          //   isErrorState: (isRegistrationError),
-                          //   validator: (value) {
-                          //     debugPrint(value);
-                          //     if (value == null || value == '') {
-                          //       setState(() {
-                          //         isRegistrationError = true;
-                          //       });
-                          //     } else {
-                          //       setState(() {
-                          //         isError = false;
-                          //         isRegistrationError = false;
-                          //       });
-                          //     }
-                          //     return null;
-                          //   },
-                          //   initialValue: context
-                          //           .read<PreStartProvider>()
-                          //           .data
-                          //           .containsKey('vehicle_rego')
-                          //       ? context
-                          //           .read<PreStartProvider>()
-                          //           .data['vehicle_rego']
-                          //       : null,
-                          //   hintText: 'Please Select',
-                          //   fillColor: AppColors.white,
-                          //   items: widget.data['vehicles']
-                          //       .map<DropdownMenuItem<String>>((vehicle) {
-                          //     return DropdownMenuItem<String>(
-                          //       value: vehicle['vehicle_rego'],
-                          //       child: Text(
-                          //         vehicle['vehicle_rego'],
-                          //         style: Theme.of(context).textTheme.bodyMedium,
-                          //       ),
-                          //     );
-                          //   }).toList(),
-                          //   onChanged: (value) {
-                          //     vehicleRegistration = widget.data['vehicles']
-                          //         .firstWhere((vehicle) =>
-                          //             vehicle['vehicle_rego'] == value);
-                          //   },
-                          // ),
+                     
                           SizedBox(
                             height: 1.h,
                           ),
@@ -699,22 +552,41 @@ class _DriverLicenceTabState extends State<DriverLicenceTab> {
     );
   }
 
-  Future<void> _selectDate(BuildContext context, DateTime selectedDate) async {
-    await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(DateTime.now().year + 100),
-    ).then((pickedDate) {
-      if (pickedDate != null && pickedDate != selectedDate) {
-        setState(() {
-          expiryDate = pickedDate.toIso8601String();
-          _formKey.currentState!.fields['expiryDate']!
-              .setValue(DateFormat('dd/MM/yyyy').format(pickedDate));
-        });
-      }
-    });
-  }
+  // Future<void> _selectDate(BuildContext context, DateTime selectedDate) async {
+  //   await showDatePicker(
+  //     context: context,
+  //     initialDate: selectedDate,
+  //     firstDate: DateTime.now(),
+  //     lastDate: DateTime(DateTime.now().year + 100),
+  //   ).then((pickedDate) {
+  //     if (pickedDate != null && pickedDate != selectedDate) {
+  //       setState(() {
+  //         expiryDate = pickedDate.toIso8601String();
+  //         _formKey.currentState!.fields['expiryDate']!
+  //             .setValue(DateFormat('dd/MM/yyyy').format(pickedDate));
+  //       });
+  //     }
+  //   });
+  // }
+Future<void> _selectDate(BuildContext context, DateTime selectedDate) async {
+  final DateTime now = DateTime.now();
+  final DateTime initialDate = selectedDate.isBefore(now) ? now : selectedDate;
+
+  await showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: now,
+    lastDate: DateTime(now.year + 100),
+  ).then((pickedDate) {
+    if (pickedDate != null && pickedDate != selectedDate) {
+      setState(() {
+        expiryDate = pickedDate.toIso8601String();
+        _formKey.currentState!.fields['expiryDate']!
+            .setValue(DateFormat('dd/MM/yyyy').format(pickedDate));
+      });
+    }
+  });
+}
 
   Future<void> _takePhoto() async {
     final ImagePicker picker = ImagePicker();

@@ -9,7 +9,7 @@ class FridgePanCheckTab extends StatefulWidget {
 }
 
 class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
-  Map checklistAnswers = {};
+  Map<String, String> checklistAnswers = {};
   final _formKey = GlobalKey<FormBuilderState>();
 
   @override
@@ -32,381 +32,157 @@ class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        height: 4.h,
-                      ),
+                      SizedBox(height: 4.h),
                       Text(
                         AppText.fridgePanCheck.toUpperCase(),
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       Text(
                         AppText.fridgePanCheckDesc,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: AppColors.grey),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.grey),
                       ),
-                      SizedBox(
-                        height: 2.h,
-                      ),
-                      for (int i = 0;
-                          i < widget.data[1]['checklist_questions'].length;
-                          i++) ...{
-                        Text(
-                          widget.data[1]['checklist_questions'][i]['question'],
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                        ),
-                        Wrap(
+                      SizedBox(height: 2.h),
+                      ...widget.data[1]['checklist_questions'].map<Widget>((questionData) {
+                        final questionId = questionData['id'];
+                        final options = questionData['options']['option'];
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            for (int j = 0;
-                                j <
-                                    widget
-                                        .data[1]['checklist_questions'][i]
-                                            ['options']['option']
-                                        .length;
-                                j++) ...{
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Radio(
-                                    value: widget.data[1]['checklist_questions']
-                                        [i]['options']['option'][j],
-                                    groupValue: checklistAnswers.containsKey(
-                                            'answer_${widget.data[1]['checklist_questions'][i]['id']}')
-                                        ? checklistAnswers[
-                                            'answer_${widget.data[1]['checklist_questions'][i]['id']}']
-                                        : context
-                                                .read<PreStartProvider>()
-                                                .data
-                                                .containsKey(
-                                                    'answer_${widget.data[1]['checklist_questions'][i]['id']}')
-                                            ? context
-                                                    .read<PreStartProvider>()
-                                                    .data[
-                                                'answer_${widget.data[1]['checklist_questions'][i]['id']}']
-                                            : null,
-                                    activeColor: (checklistAnswers.containsKey(
-                                                    'answer_${widget.data[1]['checklist_questions'][i]['id']}')
-                                                ? checklistAnswers[
-                                                    'answer_${widget.data[1]['checklist_questions'][i]['id']}']
-                                                : null) ==
-                                            'No'
-                                        ? AppColors.red
-                                        : AppColors.blue,
-                                    onChanged: (value) {
-                                      if (!widget.data[1]['checklist_questions']
-                                                  [i]['options']
-                                              .containsKey('required_answer') ||
-                                          widget.data[1]['checklist_questions']
-                                                  [i]['options']
-                                                  ['required_answer']
-                                              .contains(value) ||
-                                          widget
-                                              .data[1]['checklist_questions'][i]
-                                                  ['options']['required_answer']
-                                              .isEmpty) {
-                                        setState(() {
-                                          final temp = {
-                                            'question_id_${(widget.data[0]['checklist_questions'].length) + widget.data[1]['checklist_questions'].indexOf(widget.data[1]['checklist_questions'][i])}':
-                                                widget.data[1]
-                                                        ['checklist_questions']
-                                                        [i]['id']
-                                                    .toString(),
-                                            'comment_${widget.data[1]['checklist_questions'][i]['id']}':
-                                                '',
-                                            'answer_${widget.data[1]['checklist_questions'][i]['id']}':
-                                                value.toString(),
-                                          };
-                                          checklistAnswers
-                                              .addEntries(temp.entries);
-                                        });
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Row(
-                                              children: [
-                                                const Icon(
-                                                  Icons.error_outline_rounded,
-                                                  color: AppColors.white,
-                                                ),
-                                                SizedBox(width: 2.w),
-                                                Expanded(
-                                                  child: Text(
-                                                    '${widget.data[1]['checklist_questions'][i]['question']} value can\'t be "$value". Contact your supervise!',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium
-                                                        ?.copyWith(
-                                                          color:
-                                                              AppColors.white,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(0),
-                                            ),
-                                            duration:
-                                                const Duration(seconds: 2),
-                                            behavior: SnackBarBehavior.floating,
-                                            backgroundColor: AppColors.lightRed,
-                                            margin:
-                                                EdgeInsets.only(bottom: 1.h),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                  Text(
-                                    widget.data[1]['checklist_questions'][i]
-                                        ['options']['option'][j],
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(fontSize: 10.sp),
-                                  )
-                                ],
-                              ),
-                            }
-                          ],
-                        ),
-                        if ((checklistAnswers.containsKey(
-                                    'answer_${widget.data[1]['checklist_questions'][i]['id']}')
-                                ? checklistAnswers[
-                                    'answer_${widget.data[1]['checklist_questions'][i]['id']}']
-                                : null) ==
-                            'No') ...{
-                          CustomTextField(
-                            name:
-                                'comment${widget.data[1]['checklist_questions'][i]['id']}',
-                            hintText: 'Comment',
-                            onChanged: (value) {
-                              setState(() {
-                                checklistAnswers[
-                                        'comment_${widget.data[1]['checklist_questions'][i]['id']}'] =
-                                    value;
-                              });
-                            },
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 4.w,
-                              vertical: 0,
+                            Text(
+                              questionData['question'],
+                              style: Theme.of(context).textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w800),
                             ),
-                          ),
-                          SizedBox(height: 1.5.h),
-                        }
-                      },
+                            Wrap(
+                              children: options.map<Widget>((option) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Radio<String>(
+                                      value: option,
+                                      groupValue: checklistAnswers['answer_$questionId'],
+                                      activeColor: option == 'No' ? AppColors.red : AppColors.blue,
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          final temp = {
+                                            'question_id_${widget.data[0]['checklist_questions'].length + widget.data[1]['checklist_questions'].indexOf(questionData)}': questionId.toString(),
+                                            'comment_$questionId': '',
+                                            'answer_$questionId': value,
+                                          };
+                                          setState(() {
+                                            checklistAnswers.addEntries(temp.entries);
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      option,
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10.sp),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                            if (checklistAnswers['answer_$questionId'] == 'No') ...[
+                              CustomTextField(
+                                name: 'comment$questionId',
+                                hintText: 'Comment',
+                                onChanged: (value) {
+                                  setState(() {
+                                    checklistAnswers['comment_$questionId'] = value!;
+                                  });
+                                },
+                                contentPadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0),
+                              ),
+                              SizedBox(height: 1.5.h),
+                            ],
+                            SizedBox(height: 1.h),
+                          ],
+                        );
+                      }).toList(),
                       const Divider(),
-                      SizedBox(
-                        height: 2.h,
-                      ),
+                      SizedBox(height: 2.h),
                       Text(
                         AppText.fitForWork.toUpperCase(),
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       Text(
                         AppText.fitForWorkDesc,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: AppColors.grey),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.grey),
                       ),
-                      SizedBox(
-                        height: 2.h,
-                      ),
-                      for (int i = 0;
-                          i < widget.data[2]['checklist_questions'].length;
-                          i++) ...{
-                        Text(
-                          widget.data[2]['checklist_questions'][i]['question'],
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                        ),
-                        Wrap(
+                      SizedBox(height: 2.h),
+                      ...widget.data[2]['checklist_questions'].map<Widget>((questionData) {
+                        final questionId = questionData['id'];
+                        final options = questionData['options']['option'];
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            for (int j = 0;
-                                j <
-                                    widget
-                                        .data[2]['checklist_questions'][i]
-                                            ['options']['option']
-                                        .length;
-                                j++) ...{
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Radio(
-                                    value: widget.data[2]['checklist_questions']
-                                        [i]['options']['option'][j],
-                                    groupValue: checklistAnswers.containsKey(
-                                            'answer_${widget.data[2]['checklist_questions'][i]['id']}')
-                                        ? checklistAnswers[
-                                            'answer_${widget.data[2]['checklist_questions'][i]['id']}']
-                                        : context
-                                                .read<PreStartProvider>()
-                                                .data
-                                                .containsKey(
-                                                    'answer_${widget.data[2]['checklist_questions'][i]['id']}')
-                                            ? context
-                                                    .read<PreStartProvider>()
-                                                    .data[
-                                                'answer_${widget.data[2]['checklist_questions'][i]['id']}']
-                                            : null,
-                                    activeColor: (checklistAnswers.containsKey(
-                                                    'answer_${widget.data[2]['checklist_questions'][i]['id']}')
-                                                ? checklistAnswers[
-                                                    'answer_${widget.data[2]['checklist_questions'][i]['id']}']
-                                                : null) ==
-                                            'No'
-                                        ? AppColors.red
-                                        : AppColors.blue,
-                                    onChanged: (value) {
-                                      if (!widget.data[2]['checklist_questions']
-                                                  [i]['options']
-                                              .containsKey('required_answer') ||
-                                          widget.data[2]['checklist_questions']
-                                                  [i]['options']
-                                                  ['required_answer']
-                                              .contains(value) ||
-                                          widget
-                                              .data[2]['checklist_questions'][i]
-                                                  ['options']['required_answer']
-                                              .isEmpty) {
-                                        setState(() {
-                                          final temp = {
-                                            'question_id_${(widget.data[0]['checklist_questions'].length) + (widget.data[1]['checklist_questions'].length) + widget.data[2]['checklist_questions'].indexOf(widget.data[2]['checklist_questions'][i])}':
-                                                widget.data[2]
-                                                        ['checklist_questions']
-                                                        [i]['id']
-                                                    .toString(),
-                                            'comment_${widget.data[2]['checklist_questions'][i]['id']}':
-                                                '',
-                                            'answer_${widget.data[2]['checklist_questions'][i]['id']}':
-                                                value.toString(),
-                                          };
-                                          checklistAnswers
-                                              .addEntries(temp.entries);
-                                        });
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Row(
-                                              children: [
-                                                const Icon(
-                                                  Icons.error_outline_rounded,
-                                                  color: AppColors.white,
-                                                ),
-                                                SizedBox(width: 2.w),
-                                                Expanded(
-                                                  child: Text(
-                                                    '${widget.data[2]['checklist_questions'][i]['question']} value can\'t be "$value". Contact your supervise!',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium
-                                                        ?.copyWith(
-                                                          color:
-                                                              AppColors.white,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(0),
-                                            ),
-                                            duration:
-                                                const Duration(seconds: 2),
-                                            behavior: SnackBarBehavior.floating,
-                                            backgroundColor: AppColors.lightRed,
-                                            margin:
-                                                EdgeInsets.only(bottom: 1.h),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                  Text(
-                                    widget.data[2]['checklist_questions'][i]
-                                        ['options']['option'][j],
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(fontSize: 10.sp),
-                                  )
-                                ],
-                              ),
-                            }
-                          ],
-                        ),
-                        if ((checklistAnswers.containsKey(
-                                    'answer_${widget.data[2]['checklist_questions'][i]['id']}')
-                                ? checklistAnswers[
-                                    'answer_${widget.data[2]['checklist_questions'][i]['id']}']
-                                : null) ==
-                            'No') ...{
-                          CustomTextField(
-                            name:
-                                'comment${widget.data[2]['checklist_questions'][i]['id']}',
-                            hintText: 'Comment',
-                            onChanged: (value) {
-                              setState(() {
-                                checklistAnswers[
-                                        'comment_${widget.data[2]['checklist_questions'][i]['id']}'] =
-                                    value;
-                              });
-                            },
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 4.w,
-                              vertical: 0,
+                            Text(
+                              questionData['question'],
+                              style: Theme.of(context).textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w800),
                             ),
-                          ),
-                          SizedBox(height: 1.5.h),
-                        }
-                      },
-                      SizedBox(
-                        height: 2.h,
-                      ),
+                            Wrap(
+                              children: options.map<Widget>((option) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Radio<String>(
+                                      value: option,
+                                      groupValue: checklistAnswers['answer_$questionId'],
+                                      activeColor: option == 'No' ? AppColors.red : AppColors.blue,
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          final temp = {
+                                            'question_id_${widget.data[0]['checklist_questions'].length + widget.data[1]['checklist_questions'].length + widget.data[2]['checklist_questions'].indexOf(questionData)}': questionId.toString(),
+                                            'comment_$questionId': '',
+                                            'answer_$questionId': value,
+                                          };
+                                          setState(() {
+                                            checklistAnswers.addEntries(temp.entries);
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      option,
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10.sp),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                            if (checklistAnswers['answer_$questionId'] == 'No') ...[
+                              CustomTextField(
+                                name: 'comment$questionId',
+                                hintText: 'Comment',
+                                onChanged: (value) {
+                                  setState(() {
+                                    checklistAnswers['comment_$questionId'] = value!;
+                                  });
+                                },
+                                contentPadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0),
+                              ),
+                              SizedBox(height: 1.5.h),
+                            ],
+                            SizedBox(height: 1.h),
+                          ],
+                        );
+                      }).toList(),
+                      SizedBox(height: 2.h),
                       Text(
                         AppText.fleetAndCompliance,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                      SizedBox(
-                        height: 1.h,
-                      ),
+                      SizedBox(height: 1.h),
                       CustomTextField(
                         name: 'fleet_and_compliance',
                         maxLines: 3,
                         hintText: AppText.fleetAndCompliance,
-                        initialValue: context
-                                .read<PreStartProvider>()
-                                .data
-                                .containsKey('fleet_and_compliance')
-                            ? context
-                                .read<PreStartProvider>()
-                                .data['fleet_and_compliance']
+                        initialValue: context.read<PreStartProvider>().data.containsKey('fleet_and_compliance')
+                            ? context.read<PreStartProvider>().data['fleet_and_compliance']
                             : null,
                         validator: FormBuilderValidators.required(),
                       ),
-                      SizedBox(
-                        height: 4.h,
-                      ),
+                      SizedBox(height: 4.h),
                       Align(
                         alignment: Alignment.centerRight,
                         child: SizedBox(
@@ -415,46 +191,66 @@ class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
                           child: CustomButton(
                             label: AppText.next,
                             onPressed: () {
-                              bool validate = true;
-                              for (var value in widget.data[1]
-                                  ['checklist_questions']) {
-                                if (!checklistAnswers
-                                        .containsKey('answer_${value['id']}') &&
-                                    !context
-                                        .read<PreStartProvider>()
-                                        .data
-                                        .containsKey('answer_${value['id']}')) {
-                                  validate = false;
+                              bool isValid = true;
+                              for (var section in [widget.data[1], widget.data[2]]) {
+                                for (var question in section['checklist_questions']) {
+                                  final questionId = question['id'];
+                                  if (!checklistAnswers.containsKey('answer_$questionId') &&
+                                      !context.read<PreStartProvider>().data.containsKey('answer_$questionId')) {
+                                    isValid = false;
+                                  }
                                 }
                               }
-                              for (var value in widget.data[2]
-                                  ['checklist_questions']) {
-                                if (!checklistAnswers
-                                        .containsKey('answer_${value['id']}') &&
-                                    !context
-                                        .read<PreStartProvider>()
-                                        .data
-                                        .containsKey('answer_${value['id']}')) {
-                                  validate = false;
+                              if (isValid && _formKey.currentState!.validate()) {
+                                // Check for invalid answers and provide feedback
+                                bool hasErrors = false;
+                                for (var section in [widget.data[1], widget.data[2]]) {
+                                  for (var question in section['checklist_questions']) {
+                                    final questionId = question['id'];
+                                    if (checklistAnswers['answer_$questionId'] != null &&
+                                        question['options'].containsKey('required_answer') &&
+                                        !question['options']['required_answer'].contains(checklistAnswers['answer_$questionId'])) {
+                                      hasErrors = true;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.error_outline_rounded,
+                                                color: AppColors.white,
+                                              ),
+                                              SizedBox(width: 2.w),
+                                              Expanded(
+                                                child: Text(
+                                                  '${question['question']} value can\'t be "${checklistAnswers['answer_$questionId']}". Contact your supervise!',
+                                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.white),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(0),
+                                          ),
+                                          duration: const Duration(seconds: 2),
+                                          behavior: SnackBarBehavior.floating,
+                                          backgroundColor: AppColors.lightRed,
+                                          margin: EdgeInsets.only(bottom: 1.h),
+                                        ),
+                                      );
+                                    }
+                                  }
                                 }
-                              }
-                              if (validate &&
-                                  _formKey.currentState!.validate()) {
-                                context
-                                    .read<PreStartProvider>()
-                                    .addEntities(checklistAnswers.entries);
-                                context.read<PreStartProvider>().addEntities({
-                                      'fleet_and_compliance': _formKey
-                                          .currentState!
-                                          .fields['fleet_and_compliance']!
-                                          .value
-                                    }.entries);
-                                context.read<PreStartProvider>().setIndex(3);
+                                if (!hasErrors) {
+                                  context.read<PreStartProvider>().addEntities(checklistAnswers.entries);
+                                  context.read<PreStartProvider>().addEntities({
+                                    'fleet_and_compliance': _formKey.currentState!.fields['fleet_and_compliance']!.value
+                                  }.entries);
+                                  context.read<PreStartProvider>().setIndex(3);
+                                }
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text(
-                                        'All sections must be filled out in order to continue.'),
+                                    content: Text('All sections must be filled out in order to continue.'),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -463,9 +259,7 @@ class _FridgePanCheckTabState extends State<FridgePanCheckTab> {
                           ),
                         ),
                       ),
-                      SizedBox(
-                        height: 2.h,
-                      ),
+                      SizedBox(height: 2.h),
                     ],
                   ),
                 ),

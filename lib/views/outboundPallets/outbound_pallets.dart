@@ -18,7 +18,8 @@ class OutboundPalletsScreen extends StatefulWidget {
 class _OutboundPalletsScreenState extends State<OutboundPalletsScreen> {
   final StreamController<dynamic> _outboundStreamController =
       StreamController<dynamic>();
-
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+     
   late Timer _timer;
 
   @override
@@ -75,6 +76,7 @@ class _OutboundPalletsScreenState extends State<OutboundPalletsScreen> {
         gradient: AppColors.outInBoundHeaderGradient,
       ),
       child: Scaffold(
+      key: _scaffoldKey,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -97,7 +99,9 @@ class _OutboundPalletsScreenState extends State<OutboundPalletsScreen> {
           ),
           actions: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                     _scaffoldKey.currentState?.openEndDrawer();
+              },
               icon: Icon(
                 Icons.more_horiz,
                 color: AppColors.white,
@@ -161,6 +165,8 @@ class _OutboundPalletsScreenState extends State<OutboundPalletsScreen> {
             ],
           ),
         ),
+    
+         endDrawer: const CustomDrawer(),
       ),
     );
   }
