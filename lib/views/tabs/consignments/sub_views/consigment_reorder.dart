@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
 
@@ -12,23 +11,20 @@ class MyConsigmentReorder extends StatefulWidget {
 class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   final ScrollController _scrollController = ScrollController();
   final List<dynamic> _consignments = [];
+  Map<String, List<dynamic>> groupedConsignments = {};
   List<int> consignmentIds = [];
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
-    _consignments.addAll(json.decode(json.encode(Get.arguments)));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
+    final arguments = json.decode(json.encode(Get.arguments));
+    _consignments.addAll(arguments);
+    groupedConsignments = _groupConsignmentsByDate();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: AppColors.white,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
@@ -43,10 +39,8 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
           ),
         ),
         actions: [
-        IconButton(
-            onPressed: () {
-              _scaffoldKey.currentState?.openEndDrawer();
-            },
+          IconButton(
+            onPressed: () {},
             icon: Icon(
               Icons.more_horiz,
               size: 20.sp,
@@ -60,10 +54,8 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
         ),
       ),
       body: SafeArea(
-          child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4.w),
-        child: SingleChildScrollView(
-          controller: _scrollController,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: Column(
             children: [
               CircleAvatar(
@@ -118,62 +110,93 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                   ],
                 ),
               ),
-              Column(
-                children: [
-                  ReorderableListView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    onReorder: (oldIndex, newIndex) {
-                      setState(() {
-                        if (newIndex > oldIndex) {
-                          newIndex -= 1;
-                        }
-                        final item = _consignments.removeAt(oldIndex);
-                        _consignments.insert(newIndex, item);
-                        consignmentIds = [];
-                        for (var consignment in _consignments) {
-                          consignmentIds.add(consignment['id']);
-                        }
-                      });
-                    },
-                    children: List.generate(
-                      _consignments.length,
-                      (index) {
-                        final consignment = _consignments[index];
-                        return CustomConsignmentContainer(
-                          key: ValueKey(consignment['id']),
-                          consignment: consignment,
-                          icon: const Icon(Icons.drag_handle),
-                        );
-                      },
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      _scrollController.animateTo(
-                        0.0,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 2.h),
-                      child: Text(
-                        AppText.returnToTop,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.midBlue,
-                              fontWeight: FontWeight.w700,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: groupedConsignments.entries.map((entry) {
+                      final date = entry.key;
+                      final consignments = entry.value;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Padding(
+                          //   padding: EdgeInsets.symmetric(vertical: 1.h),
+                          //   child: Text(
+                          //     date,
+                          //     style: Theme.of(context).textTheme.headlineSmall,
+                          //   ),
+                          // ),
+                          ReorderableListView(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            onReorder: (oldIndex, newIndex) {
+                              setState(() {
+                                if (newIndex > oldIndex) {
+                                  newIndex -= 1;
+                                }
+                                final item = consignments.removeAt(oldIndex);
+                                consignments.insert(newIndex, item);
+
+                                // Update the consignmentIds list to reflect new order
+                                consignmentIds = _consignments.map((consignment) => consignment['id'] as int).toList();
+                              });
+                            },
+                            children: List.generate(
+                              consignments.length,
+                              (index) {
+                                final consignment = consignments[index];
+                                return CustomConsignmentContainer(
+                                  key: ValueKey(consignment['id']),
+                                  consignment: consignment,
+                                  icon: const Icon(Icons.drag_handle),
+                                );
+                              },
                             ),
-                      ),
-                    ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
-                ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  _scrollController.animateTo(
+                    0.0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2.h),
+                  child: Text(
+                    AppText.returnToTop,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.midBlue,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
-      )),
-         endDrawer: const CustomDrawer(),
+      ),
     );
+  }
+
+  Map<String, List<dynamic>> _groupConsignmentsByDate() {
+    final Map<String, List<dynamic>> groupedByDate = {};
+
+    for (var consignment in _consignments) {
+      final date = jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
+      if (!groupedByDate.containsKey(date)) {
+        groupedByDate[date] = [];
+      }
+      groupedByDate[date]!.add(consignment);
+    }
+
+    return groupedByDate;
   }
 }

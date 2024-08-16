@@ -37,7 +37,8 @@ class _CustomMyConsigmentContainerState
         widget.consignment?['grouped_consignments'],
       );
     }
-
+final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
+    final date = runSheets['date'] ?? 'Not Provided';
     return Padding(
       padding: EdgeInsets.only(top: 2.h),
       child: widget.isLoading
@@ -99,6 +100,13 @@ class _CustomMyConsigmentContainerState
                               maxLines: 1,
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
+                          //   Padding(
+                          //   padding: EdgeInsets.symmetric(vertical: 1.h),
+                          //   child: Text(
+                          //     date,
+                          //     style: Theme.of(context).textTheme.headlineSmall,
+                          //   ),
+                          // ),
                             Text(
                               maxLines: 1,
                               'Recipient: ${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',

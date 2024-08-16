@@ -14,7 +14,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
   final ScrollController _scrollController = ScrollController();
   final _formKey = GlobalKey<FormBuilderState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
+  bool _isLoading = false;
   String? query;
 
   @override
@@ -38,6 +38,26 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
   void dispose() {
     consignment.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshConsignmentData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final consignmentService = ConsignmentService(context.read<DatabaseProvider>().database);
+      final state = BlocProvider.of<AuthenticationCubit>(context).state;
+      if (state is Authenticated) {
+        await consignmentService.fetchAndStore(state.token);
+      }
+    } catch (e) {
+      debugPrint('Error refreshing consignments: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -84,15 +104,16 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
               child: StreamBuilder(
                 stream: precheck.stream,
                 builder: (context, precheckSnapshot) {
-                  if (precheckSnapshot.hasData &&
-                      precheckSnapshot.connectionState !=
-                          ConnectionState.waiting) {
+                  if (precheckSnapshot.hasData && precheckSnapshot.connectionState != ConnectionState.waiting) {
                     return StreamBuilder(
                       stream: consignment.stream,
                       builder: (context, consignmentSnapshot) {
-                        if (consignmentSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const SizedBox();
+                        if (consignmentSnapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.blue,
+                            ),
+                          );
                         } else if (consignmentSnapshot.hasData) {
                           List<Map<String, dynamic>> allConsignments = [];
                           if (query != null && query!.isNotEmpty) {
@@ -119,6 +140,20 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                             allConsignments.addAll(consignmentSnapshot.data ?? []);
                           }
 
+                          Map<String, List<Map<String, dynamic>>> groupedByDate = {};
+                          for (var consignment in allConsignments) {
+                            final Map runSheets = jsonDecode(consignment['run_sheets']);
+                            final date = runSheets['date'] ?? 'Not Provided';
+                            if (!groupedByDate.containsKey(date)) {
+                              groupedByDate[date] = [];
+                            }
+                            groupedByDate[date]!.add(consignment);
+                          }
+                          final sortedDates = groupedByDate.keys.toList()
+                            ..sort((a, b) => DateTime.parse(b).compareTo(DateTime.parse(a)));
+
+                          int currentIndex = 1;
+
                           return Column(
                             children: [
                               Container(
@@ -139,7 +174,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                     Row(
                                       children: [
                                         Text(
-                                          consignmentSnapshot.data!.length.toString(),
+                                          allConsignments.length.toString(),
                                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                             fontWeight: FontWeight.w700,
                                             color: AppColors.white,
@@ -199,7 +234,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                             } else if (i == 2) {
                                               Get.toNamed(AppRoutes.consigmentGroup, arguments: consignmentSnapshot.data);
                                             } else {
-                                              // Refresh logic here
+                                              _refreshConsignmentData();
                                             }
                                           },
                                           child: CircleAvatar(
@@ -226,26 +261,39 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                   },
                                 ],
                               ),
-                              for (var consignment in allConsignments) ...{
-                                GestureDetector(
-                                  onTap: () {
-                                    if ((precheckSnapshot.data![0]['checklist'] == 1 &&
-                                        precheckSnapshot.data![0]['outbound'] == 1)) {
-                                      Get.toNamed(
-                                        AppRoutes.singleConsigment,
-                                        arguments: consignment,
+                              for (var date in sortedDates) ...[
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 1.h),
+                                    ...groupedByDate[date]!.asMap().entries.map((entry) {
+                                      int index = currentIndex++; 
+                                      var consignment = entry.value;
+
+                                      return GestureDetector(
+                                        onTap: () {
+                                          if ((precheckSnapshot.data![0]['checklist'] == 0  &&
+                                              precheckSnapshot.data![0]['outbound'] == 0)) {
+                                            Get.toNamed(
+                                              AppRoutes.singleConsigment,
+                                              arguments: consignment,
+                                            );
+                                          }
+                                        },
+                                        child: CustomMyConsigmentContainer(
+                                          consignment: consignment,
+                                          isLoading: false,
+                                          index: index, 
+                                          isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
+                                              precheckSnapshot.data![0]['outbound'] == 1),
+                                        ),
                                       );
-                                    }
-                                  },
-                                  child: CustomMyConsigmentContainer(
-                                    consignment: consignment,
-                                    isLoading: false,
-                                    index: consignment['sort'],
-                                    isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
-                                        precheckSnapshot.data![0]['outbound'] == 1),
-                                  ),
+                                    }).toList(),
+                                  ],
                                 ),
-                              },
+                                SizedBox(height: 2.h),
+                              ],
+
                               GestureDetector(
                                 onTap: () {
                                   _scrollController.animateTo(
@@ -286,7 +334,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                             ],
                           );
                         }
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(
                             color: AppColors.blue,
                           ),
@@ -301,7 +349,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                       ),
                     );
                   }
-                  return Center(
+                  return const Center(
                     child: CircularProgressIndicator(
                       color: AppColors.blue,
                     ),

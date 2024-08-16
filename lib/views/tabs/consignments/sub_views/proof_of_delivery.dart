@@ -32,6 +32,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   late Map pickupAddresses;
   late Map runSheets;
   List groupedConsignments = [];
+  List<dynamic> consignmentIds = [];
 
   @override
   void initState() {
@@ -478,52 +479,56 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                PalletContainer(
-                                  name: 'cartons',
-                                  heading: AppText.cartons,
-                                  icon: SvgPicture.asset(AppSvgs.boundpallets),
-                                  hintText: '0',
-                                  initialValue: Get.arguments?['carton'] ?? 0,
-                                  //  initialValue: int.tryParse(context.read<ProofOfDeliveryProvider>().data['cartons']?.toString() ?? '0') ?? 0,
-                                  // initialValue: isGroupedConsignment
-                                  //     ? (Get.arguments?['carton'] ?? 0)
-                                  //     : (int.tryParse(context
-                                  //                 .read<
-                                  //                     ProofOfDeliveryProvider>()
-                                  //                 .data['cartons']
-                                  //                 ?.toString() ??
-                                  //             '0') ??
-                                  //         0),
-                                  totalPallet: int.tryParse(Get
-                                              .arguments?['carton']
-                                              ?.toString() ??
-                                          '0') ??
-                                      0,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 4.w,
-                                    vertical: 0,
+                                IgnorePointer(
+                                  child: PalletContainer(
+                                    name: 'cartons',
+                                    heading: AppText.cartons,
+                                    icon: SvgPicture.asset(AppSvgs.boundpallets),
+                                    hintText: '0',
+                                    initialValue: Get.arguments?['carton'] ?? 0,
+                                    //  initialValue: int.tryParse(context.read<ProofOfDeliveryProvider>().data['cartons']?.toString() ?? '0') ?? 0,
+                                    // initialValue: isGroupedConsignment
+                                    //     ? (Get.arguments?['carton'] ?? 0)
+                                    //     : (int.tryParse(context
+                                    //                 .read<
+                                    //                     ProofOfDeliveryProvider>()
+                                    //                 .data['cartons']
+                                    //                 ?.toString() ??
+                                    //             '0') ??
+                                    //         0),
+                                    totalPallet: int.tryParse(Get
+                                                .arguments?['carton']
+                                                ?.toString() ??
+                                            '0') ??
+                                        0,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 4.w,
+                                      vertical: 0,
+                                    ),
                                   ),
                                 ),
-                                PalletContainer(
-                                  name: 'pallets',
-                                  heading: AppText.pallets,
-                                  hintText: '0',
-                                   initialValue: Get.arguments?['pallets'] ?? 0,
-                                  // //initialValue:int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0,
-                                  // initialValue: isGroupedConsignment
-                                  //     ? (Get.arguments?['pallet'] ?? 0)
-                                  //     : (int.tryParse(context
-                                  //                 .read<
-                                  //                     ProofOfDeliveryProvider>()
-                                  //                 .data['pallet']
-                                  //                 ?.toString() ??
-                                  //             '0') ??
-                                  //         0),
-                                  totalPallet: int.tryParse(Get
-                                              .arguments?['pallet']
-                                              ?.toString() ??
-                                          '0') ??
-                                      0,
+                               IgnorePointer(
+                                  child: PalletContainer(
+                                    name: 'pallets',
+                                    heading: AppText.pallets,
+                                    hintText: '0',
+                                     initialValue: Get.arguments?['pallets'] ?? 0,
+                                    // //initialValue:int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0,
+                                    // initialValue: isGroupedConsignment
+                                    //     ? (Get.arguments?['pallet'] ?? 0)
+                                    //     : (int.tryParse(context
+                                    //                 .read<
+                                    //                     ProofOfDeliveryProvider>()
+                                    //                 .data['pallet']
+                                    //                 ?.toString() ??
+                                    //             '0') ??
+                                    //         0),
+                                    totalPallet: int.tryParse(Get
+                                                .arguments?['pallet']
+                                                ?.toString() ??
+                                            '0') ??
+                                        0,
+                                  ),
                                 ),
                               ],
                             ),
@@ -960,8 +965,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                             final images = jsonEncode(context
                                                 .read<ProofOfDeliveryProvider>()
                                                 .base64Images);
-                                            final consignments =
-                                                Get.arguments['id'];
+                                            // final consignments =
+                                            //     Get.arguments['id'];
                                          final driverId = runSheets['driver_id'];
                                             final address_id =
                                                 pickupAddresses['id'];
@@ -1007,6 +1012,11 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               }
                                             }
 
+if (groupedConsignments.isNotEmpty) {
+  consignmentIds.addAll(groupedConsignments.map((consignment) => consignment['id']).toList());
+}
+consignmentIds.add(Get.arguments['id']);
+final consignments = jsonEncode(consignmentIds);
                                             final temp = {
                                               "temperature": temperature,
                                               "first_name": first_name,
@@ -1029,8 +1039,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               "longitude": longitude,
                                               "current_app_version": "3.15.2",
                                               "app_version": "3.15.2",
-                                              "consignments":
-                                                  jsonEncode([consignments]),
+                                              "consignments":consignments,
                                               "driver_id": driverId,
                                               "date_delivered": DateTime.now()
                                                   .toIso8601String(),
@@ -1043,6 +1052,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               "pictures": images,
                                               "platforms": platforms,
                                             };
+debugPrint('Consignment IDs: ${consignmentIds}');
 
                                             context
                                                 .read<ProofOfDeliveryProvider>()
@@ -1052,6 +1062,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                           }
                                         }
                                       },
+                                      
                                       borderColor: isValid()
                                           ? AppColors.blue
                                           : AppColors.grey,
@@ -1601,22 +1612,34 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                PalletContainer(
-                                  name: 'cartons',
-                                  heading: AppText.cartons,
-                                  icon: SvgPicture.asset(AppSvgs.boundpallets),
-                                  hintText: '0',
-                                  initialValue: 0,
-                                  totalPallet: 5,
-                                  isErrorState: true,
+                                IgnorePointer(
+                                  child: PalletContainer(
+                                    name: 'cartons',
+                                    heading: AppText.cartons,
+                                    icon: SvgPicture.asset(AppSvgs.boundpallets),
+                                    hintText: '0',
+                                    initialValue: 0,
+                                    totalPallet: int.tryParse(Get
+                                                .arguments?['carton']
+                                                ?.toString() ??
+                                            '0') ??
+                                        0,
+                                    isErrorState: true,
+                                  ),
                                 ),
-                                const PalletContainer(
-                                  name: 'pallets',
-                                  heading: AppText.pallets,
-                                  hintText: '0',
-                                  initialValue: 0,
-                                  totalPallet: 5,
-                                  isErrorState: true,
+                                IgnorePointer(
+                                  child: PalletContainer(
+                                    name: 'pallets',
+                                    heading: AppText.pallets,
+                                    hintText: '0',
+                                    initialValue: 0,
+                                   totalPallet: int.tryParse(Get
+                                                .arguments?['carton']
+                                                ?.toString() ??
+                                            '0') ??
+                                        0,
+                                    isErrorState: true,
+                                  ),
                                 ),
                               ],
                             ),

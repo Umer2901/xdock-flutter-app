@@ -1,16 +1,19 @@
 import 'package:coldxpress/export.dart';
 
 class CustomDeliveryDetailsContainer extends StatelessWidget {
-  const CustomDeliveryDetailsContainer(
-      {super.key,
-      required this.type,
-      required this.counts,
-      required this.svgIcon,
-      this.countType});
+  const CustomDeliveryDetailsContainer({
+    super.key,
+    required this.type,
+    required this.counts,
+    required this.svgIcon,
+    this.countType,
+  });
+  
   final String type;
   final String counts;
   final String? countType;
   final SvgPicture svgIcon;
+  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -34,39 +37,42 @@ class CustomDeliveryDetailsContainer extends StatelessWidget {
               child: svgIcon,
             ),
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 4.w,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      counts,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          counts,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
-                    ),
-                    SizedBox(
-                      width: 1.w,
-                    ),
-                    Text(
-                      countType ?? '',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w700, fontSize: 10.sp),
-                    ),
-                  ],
-                ),
-                Text(
-                  type.toUpperCase(),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.darkGrey.withOpacity(0.8),
+                        ),
                       ),
-                )
-              ],
+                      SizedBox(width: 1.w),
+                      Text(
+                        countType ?? '',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    type.toUpperCase(),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.darkGrey.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

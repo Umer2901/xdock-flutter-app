@@ -9,7 +9,29 @@ class VehicleCheckTab extends StatefulWidget {
 }
 
 class _VehicleCheckTabState extends State<VehicleCheckTab> {
-  Map checklistAnswers = {};
+  Map<String, String> checklistAnswers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAnswers();
+  }
+
+  void _loadAnswers() {
+    final provider = context.read<PreStartProvider>();
+    for (var question in widget.questions) {
+      String questionId = question['id'].toString();
+      String answerKey = 'answer_$questionId';
+      String commentKey = 'comment_$questionId';
+
+      if (provider.data.containsKey(answerKey)) {
+        checklistAnswers[answerKey] = provider.data[answerKey].toString();
+      }
+      if (provider.data.containsKey(commentKey)) {
+        checklistAnswers[commentKey] = provider.data[commentKey].toString();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +145,7 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
                             setState(() {
                               checklistAnswers[
                                       'comment_${widget.questions[i]['id']}'] =
-                                  value;
+                                  value!;
                             });
                           },
                           contentPadding: EdgeInsets.symmetric(
@@ -184,24 +206,24 @@ class _VehicleCheckTabState extends State<VehicleCheckTab> {
   }
 
   List<String> _validateAnswers() {
-  List<String> errors = [];
-  for (var question in widget.questions) {
-    String questionId = question['id'].toString();
-    String answerKey = 'answer_$questionId';
+    List<String> errors = [];
+    for (var question in widget.questions) {
+      String questionId = question['id'].toString();
+      String answerKey = 'answer_$questionId';
 
-    if (!checklistAnswers.containsKey(answerKey)) {
-      errors.add('${question['question']} is not answered.');
-      continue;
-    }
+      if (!checklistAnswers.containsKey(answerKey)) {
+        errors.add('${question['question']} is not answered.');
+        continue;
+      }
 
-    String selectedAnswer = checklistAnswers[answerKey]?.toString() ?? ''; 
-    if (question['options'].containsKey('required_answer')) {
-      List<String> requiredAnswers = List<String>.from(question['options']['required_answer']);
-      if (!requiredAnswers.contains(selectedAnswer)) {
-        errors.add('${question['question']} has an incorrect answer.');
+      String selectedAnswer = checklistAnswers[answerKey]?.toString() ?? ''; 
+      if (question['options'].containsKey('required_answer')) {
+        List<String> requiredAnswers = List<String>.from(question['options']['required_answer']);
+        if (!requiredAnswers.contains(selectedAnswer)) {
+          errors.add('${question['question']} has an incorrect answer.');
+        }
       }
     }
+    return errors;
   }
-  return errors;
-}
 }
