@@ -41,23 +41,41 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
   }
 
   Future<void> _refreshConsignmentData() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final consignmentService = ConsignmentService(context.read<DatabaseProvider>().database);
-      final state = BlocProvider.of<AuthenticationCubit>(context).state;
-      if (state is Authenticated) {
-        await consignmentService.fetchAndStore(state.token);
-      }
-    } catch (e) {
-      debugPrint('Error refreshing consignments: $e');
-    } finally {
+    if (!_isLoading) {
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
+
+      try {
+        final consignmentService =
+            ConsignmentService(context.read<DatabaseProvider>().database);
+        final state = BlocProvider.of<AuthenticationCubit>(context).state;
+        if (state is Authenticated) {
+          await consignmentService.fetchAndStore(state.token);
+        }
+      } catch (e) {
+        debugPrint('Error refreshing consignments: $e');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  Widget _buildRefreshButton() {
+    return GestureDetector(
+      onTap: _refreshConsignmentData,
+      child: CircleAvatar(
+        radius: 9.w,
+        backgroundColor: AppColors.greyWhite,
+        child: _isLoading
+            ? CircularProgressIndicator(
+                color: AppColors.blue,
+              )
+            : Image.asset(AppImages.refresh, width: 10.w),
+      ),
+    );
   }
 
   @override
@@ -104,11 +122,14 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
               child: StreamBuilder(
                 stream: precheck.stream,
                 builder: (context, precheckSnapshot) {
-                  if (precheckSnapshot.hasData && precheckSnapshot.connectionState != ConnectionState.waiting) {
+                  if (precheckSnapshot.hasData &&
+                      precheckSnapshot.connectionState !=
+                          ConnectionState.waiting) {
                     return StreamBuilder(
                       stream: consignment.stream,
                       builder: (context, consignmentSnapshot) {
-                        if (consignmentSnapshot.connectionState == ConnectionState.waiting) {
+                        if (consignmentSnapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(
                               color: AppColors.blue,
@@ -117,32 +138,58 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                         } else if (consignmentSnapshot.hasData) {
                           List<Map<String, dynamic>> allConsignments = [];
                           if (query != null && query!.isNotEmpty) {
-                            for (Map<String, dynamic> itr in consignmentSnapshot.data ?? []) {
-                              Map deliveryAddresses = json.decode(itr['delivery_addresses']);
-                              Map pickupAddresses = json.decode(itr['pickup_addresses']);
+                            for (Map<String, dynamic> itr
+                                in consignmentSnapshot.data ?? []) {
+                              Map deliveryAddresses =
+                                  json.decode(itr['delivery_addresses']);
+                              Map pickupAddresses =
+                                  json.decode(itr['pickup_addresses']);
 
-                              bool matchesQuery = itr['id'].toString().toLowerCase().contains(query!.toLowerCase()) ||
-                                                   itr['customer_reference'].toString().toLowerCase().contains(query!.toLowerCase()) ||
-                                                   (itr['consignment_type'] == 'delivery'
-                                                       ? (deliveryAddresses['customer_name']?.toString().toLowerCase() ?? 'Not Provided')
-                                                       : (pickupAddresses['customer_name']?.toString().toLowerCase() ?? 'Not Provided'))
-                                                   .toLowerCase().contains(query!.toLowerCase()) ||
-                                                   (itr['consignment_type'] == 'delivery'
-                                                       ? (deliveryAddresses['company_name']?.toString().toLowerCase() ?? 'Not Provided')
-                                                       : (pickupAddresses['company_name']?.toString().toLowerCase() ?? 'Not Provided'))
-                                                   .toLowerCase().contains(query!.toLowerCase());
+                              bool matchesQuery = itr['id']
+                                      .toString()
+                                      .toLowerCase()
+                                      .contains(query!.toLowerCase()) ||
+                                  itr['customer_reference']
+                                      .toString()
+                                      .toLowerCase()
+                                      .contains(query!.toLowerCase()) ||
+                                  (itr['consignment_type'] == 'delivery'
+                                          ? (deliveryAddresses['customer_name']
+                                                  ?.toString()
+                                                  .toLowerCase() ??
+                                              'Not Provided')
+                                          : (pickupAddresses['customer_name']
+                                                  ?.toString()
+                                                  .toLowerCase() ??
+                                              'Not Provided'))
+                                      .toLowerCase()
+                                      .contains(query!.toLowerCase()) ||
+                                  (itr['consignment_type'] == 'delivery'
+                                          ? (deliveryAddresses['company_name']
+                                                  ?.toString()
+                                                  .toLowerCase() ??
+                                              'Not Provided')
+                                          : (pickupAddresses['company_name']
+                                                  ?.toString()
+                                                  .toLowerCase() ??
+                                              'Not Provided'))
+                                      .toLowerCase()
+                                      .contains(query!.toLowerCase());
 
                               if (matchesQuery) {
                                 allConsignments.add(itr);
                               }
                             }
                           } else {
-                            allConsignments.addAll(consignmentSnapshot.data ?? []);
+                            allConsignments
+                                .addAll(consignmentSnapshot.data ?? []);
                           }
 
-                          Map<String, List<Map<String, dynamic>>> groupedByDate = {};
+                          Map<String, List<Map<String, dynamic>>> groupedByDate =
+                              {};
                           for (var consignment in allConsignments) {
-                            final Map runSheets = jsonDecode(consignment['run_sheets']);
+                            final Map runSheets =
+                                jsonDecode(consignment['run_sheets']);
                             final date = runSheets['date'] ?? 'Not Provided';
                             if (!groupedByDate.containsKey(date)) {
                               groupedByDate[date] = [];
@@ -150,14 +197,16 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                             groupedByDate[date]!.add(consignment);
                           }
                           final sortedDates = groupedByDate.keys.toList()
-                            ..sort((a, b) => DateTime.parse(b).compareTo(DateTime.parse(a)));
+                            ..sort((a, b) =>
+                                DateTime.parse(b).compareTo(DateTime.parse(a)));
 
                           int currentIndex = 1;
 
                           return Column(
                             children: [
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 4.w, vertical: 2.h),
                                 decoration: BoxDecoration(
                                   color: AppColors.blue,
                                   borderRadius: BorderRadius.circular(8.sp),
@@ -168,23 +217,32 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                     SizedBox(height: 0.5.h),
                                     Text(
                                       AppText.todayConsignment,
-                                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: AppColors.white),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineMedium
+                                          ?.copyWith(color: AppColors.white),
                                     ),
                                     SizedBox(height: 1.5.h),
                                     Row(
                                       children: [
                                         Text(
                                           allConsignments.length.toString(),
-                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.white,
-                                          ),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.white,
+                                              ),
                                         ),
                                         Text(
                                           AppText.consignmentRemaining,
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: AppColors.white,
-                                          ),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: AppColors.white,
+                                              ),
                                         ),
                                         SizedBox(width: 1.w),
                                         CircleAvatar(
@@ -193,10 +251,14 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                         ),
                                         SizedBox(width: 1.w),
                                         Text(
-                                          DateFormat('dd MMM, yyyy').format(DateTime.now()),
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: AppColors.white,
-                                          ),
+                                          DateFormat('dd MMM, yyyy').format(
+                                              DateTime.now()),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: AppColors.white,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -208,7 +270,8 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                         Icons.search,
                                         color: AppColors.black.withOpacity(0.5),
                                       ),
-                                      hintText: 'Search by ID, REF or Recipient',
+                                      hintText:
+                                          'Search by ID, REF or Recipient',
                                       onChanged: (value) {
                                         setState(() {
                                           query = value;
@@ -220,7 +283,8 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                               ),
                               SizedBox(height: 1.5.h),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   for (int i = 0; i < 4; i++) ...{
                                     Column(
@@ -228,33 +292,56 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                         GestureDetector(
                                           onTap: () {
                                             if (i == 0) {
-                                              Get.toNamed(AppRoutes.consignmentMap);
+                                              Get.toNamed(
+                                                  AppRoutes.consignmentMap);
                                             } else if (i == 1) {
-                                              Get.toNamed(AppRoutes.consigmentReorder, arguments: consignmentSnapshot.data);
+                                              Get.toNamed(
+                                                  AppRoutes.consigmentReorder,
+                                                  arguments:
+                                                      consignmentSnapshot.data);
                                             } else if (i == 2) {
-                                              Get.toNamed(AppRoutes.consigmentGroup, arguments: consignmentSnapshot.data);
+                                              Get.toNamed(
+                                                  AppRoutes.consigmentGroup,
+                                                  arguments:
+                                                      consignmentSnapshot.data);
                                             } else {
                                               _refreshConsignmentData();
                                             }
                                           },
                                           child: CircleAvatar(
                                             radius: 9.w,
-                                            backgroundColor: AppColors.greyWhite,
+                                            backgroundColor:
+                                                AppColors.greyWhite,
                                             child: i == 0
-                                                ? SvgPicture.asset(AppSvgs.consignmentViewBlack, width: 10.w)
+                                                ? SvgPicture.asset(
+                                                    AppSvgs.consignmentViewBlack,
+                                                    width: 10.w)
                                                 : i == 1
-                                                    ? SvgPicture.asset(AppSvgs.reorderBlack, width: 10.w)
+                                                    ? SvgPicture.asset(
+                                                        AppSvgs.reorderBlack,
+                                                        width: 10.w)
                                                     : i == 2
-                                                        ? SvgPicture.asset(AppSvgs.groupBlack, width: 10.w)
-                                                        : Image.asset(AppImages.refresh, width: 10.w),
+                                                        ? SvgPicture.asset(
+                                                            AppSvgs.groupBlack,
+                                                            width: 10.w)
+                                                        : _buildRefreshButton(),
                                           ),
                                         ),
                                         Text(
-                                          i == 0 ? 'Map' : i == 1 ? 'Re-order' : i == 2 ? 'Group' : 'Refresh',
-                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.darkGrey,
-                                          ),
+                                          i == 0
+                                              ? 'Map'
+                                              : i == 1
+                                                  ? 'Re-order'
+                                                  : i == 2
+                                                      ? 'Group'
+                                                      : 'Refresh',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.darkGrey,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -266,26 +353,39 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     SizedBox(height: 1.h),
-                                    ...groupedByDate[date]!.asMap().entries.map((entry) {
-                                      int index = currentIndex++; 
+                                    ...groupedByDate[date]!
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
+                                      int index = currentIndex++;
                                       var consignment = entry.value;
 
                                       return GestureDetector(
                                         onTap: () {
-                                          if ((precheckSnapshot.data![0]['checklist'] == 1  &&
-                                              precheckSnapshot.data![0]['outbound'] == 1)) {
+                                          if ((precheckSnapshot.data![0]
+                                                          ['checklist'] ==
+                                                      0 &&
+                                                  precheckSnapshot.data![0]
+                                                          ['outbound'] ==
+                                                      0)) {
                                             Get.toNamed(
                                               AppRoutes.singleConsigment,
                                               arguments: consignment,
                                             );
                                           }
                                         },
-                                        child: CustomMyConsigmentContainer(
+                                        child:
+                                            CustomMyConsigmentContainer(
                                           consignment: consignment,
                                           isLoading: false,
-                                          index: index, 
-                                          isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
-                                              precheckSnapshot.data![0]['outbound'] == 1),
+                                          index: index,
+                                          isPrecheckDone: (precheckSnapshot
+                                                              .data![0]
+                                                          ['checklist'] ==
+                                                      1 &&
+                                                  precheckSnapshot.data![0]
+                                                          ['outbound'] ==
+                                                      1),
                                         ),
                                       );
                                     }).toList(),
@@ -293,7 +393,6 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                 ),
                                 SizedBox(height: 2.h),
                               ],
-
                               GestureDetector(
                                 onTap: () {
                                   _scrollController.animateTo(
@@ -306,10 +405,13 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                   padding: EdgeInsets.symmetric(vertical: 2.h),
                                   child: Text(
                                     AppText.returnToTop,
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.midBlue,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: AppColors.midBlue,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                   ),
                                 ),
                               ),
@@ -322,7 +424,9 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                 children: [
                                   Text(
                                     AppText.todayConsignments.toUpperCase(),
-                                    style: Theme.of(context).textTheme.headlineSmall,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall,
                                   ),
                                 ],
                               ),

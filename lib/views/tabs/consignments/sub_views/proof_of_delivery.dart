@@ -512,7 +512,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
         name: 'pallets',
         heading: AppText.pallets,
         hintText: '0',
-        initialValue: Get.arguments?['pallets'] ?? 0,
+        initialValue: Get.arguments?['pallet'] ?? 0,
         totalPallet: int.tryParse(Get.arguments?['pallet']?.toString() ?? '0') ?? 0,
       )
     else
@@ -521,7 +521,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
           name: 'pallets',
           heading: AppText.pallets,
           hintText: '0',
-          initialValue: Get.arguments?['pallets'] ?? 0,
+          initialValue: Get.arguments?['pallet'] ?? 0,
           totalPallet: int.tryParse(Get.arguments?['pallet']?.toString() ?? '0') ?? 0,
         ),
       ),
