@@ -59,6 +59,14 @@ class PreCheckDatabase {
     }
   }
 
+  Future<Map<String, dynamic>> getPrecheckStatus() async {
+    List<Map<String, dynamic>> result = await read();
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return {}; 
+  }
+
   void dispose() {
     _timer?.cancel();
     _streamController.close();

@@ -476,62 +476,58 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                             SizedBox(
                               height: 1.h,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                IgnorePointer(
-                                  child: PalletContainer(
-                                    name: 'cartons',
-                                    heading: AppText.cartons,
-                                    icon: SvgPicture.asset(AppSvgs.boundpallets),
-                                    hintText: '0',
-                                    initialValue: Get.arguments?['carton'] ?? 0,
-                                    //  initialValue: int.tryParse(context.read<ProofOfDeliveryProvider>().data['cartons']?.toString() ?? '0') ?? 0,
-                                    // initialValue: isGroupedConsignment
-                                    //     ? (Get.arguments?['carton'] ?? 0)
-                                    //     : (int.tryParse(context
-                                    //                 .read<
-                                    //                     ProofOfDeliveryProvider>()
-                                    //                 .data['cartons']
-                                    //                 ?.toString() ??
-                                    //             '0') ??
-                                    //         0),
-                                    totalPallet: int.tryParse(Get
-                                                .arguments?['carton']
-                                                ?.toString() ??
-                                            '0') ??
-                                        0,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 4.w,
-                                      vertical: 0,
-                                    ),
-                                  ),
-                                ),
-                               IgnorePointer(
-                                  child: PalletContainer(
-                                    name: 'pallets',
-                                    heading: AppText.pallets,
-                                    hintText: '0',
-                                     initialValue: Get.arguments?['pallets'] ?? 0,
-                                    // //initialValue:int.tryParse(context.read<ProofOfDeliveryProvider>().data['pallet']?.toString() ?? '0') ?? 0,
-                                    // initialValue: isGroupedConsignment
-                                    //     ? (Get.arguments?['pallet'] ?? 0)
-                                    //     : (int.tryParse(context
-                                    //                 .read<
-                                    //                     ProofOfDeliveryProvider>()
-                                    //                 .data['pallet']
-                                    //                 ?.toString() ??
-                                    //             '0') ??
-                                    //         0),
-                                    totalPallet: int.tryParse(Get
-                                                .arguments?['pallet']
-                                                ?.toString() ??
-                                            '0') ??
-                                        0,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    if (Get.arguments?['consignment_type'] == 'pickup')
+      PalletContainer(
+        name: 'cartons',
+        heading: AppText.cartons,
+        icon: SvgPicture.asset(AppSvgs.boundpallets),
+        hintText: '0',
+        initialValue: Get.arguments?['carton'] ?? 0,
+        totalPallet: int.tryParse(Get.arguments?['carton']?.toString() ?? '0') ?? 0,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 4.w,
+          vertical: 0,
+        ),
+      )
+    else
+      IgnorePointer(
+        child: PalletContainer(
+          name: 'cartons',
+          heading: AppText.cartons,
+          icon: SvgPicture.asset(AppSvgs.boundpallets),
+          hintText: '0',
+          initialValue: Get.arguments?['carton'] ?? 0,
+          totalPallet: int.tryParse(Get.arguments?['carton']?.toString() ?? '0') ?? 0,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 4.w,
+            vertical: 0,
+          ),
+        ),
+      ),
+    if (Get.arguments?['consignment_type'] == 'pickup')
+      PalletContainer(
+        name: 'pallets',
+        heading: AppText.pallets,
+        hintText: '0',
+        initialValue: Get.arguments?['pallets'] ?? 0,
+        totalPallet: int.tryParse(Get.arguments?['pallet']?.toString() ?? '0') ?? 0,
+      )
+    else
+      IgnorePointer(
+        child: PalletContainer(
+          name: 'pallets',
+          heading: AppText.pallets,
+          hintText: '0',
+          initialValue: Get.arguments?['pallets'] ?? 0,
+          totalPallet: int.tryParse(Get.arguments?['pallet']?.toString() ?? '0') ?? 0,
+        ),
+      ),
+  ],
+),
+
                             SizedBox(
                               height: 3.h,
                             ),
@@ -1158,7 +1154,7 @@ debugPrint('Consignment IDs: ${consignmentIds}');
                                   child: CustomTextField(
                                     name: 'Reasonpartial',
                                     hintText:
-                                        "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
+                                        "",
                                     borderColor: AppColors.white,
                                     onChanged: (value) {
                                       context
