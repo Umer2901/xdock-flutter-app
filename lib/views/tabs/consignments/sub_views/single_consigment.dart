@@ -1,10 +1,6 @@
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
-import 'package:get/get.dart';
 
 class SingleConsigmentView extends StatefulWidget {
   const SingleConsigmentView({super.key});
@@ -18,7 +14,8 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
   late Map<String, dynamic> deliveryAddresses;
   late Map<String, dynamic> pickupAddresses;
   List<dynamic> groupedConsignments = [];
-
+  List<String> consignmentIds = []; 
+final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   void initState() {
     super.initState();
@@ -34,9 +31,15 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
         ? json.decode(Get.arguments['pickup_addresses']) as Map<String, dynamic>
         : Get.arguments['pickup_addresses'] as Map<String, dynamic>;
 
-    if (Get.arguments['grouped_consignments'] != null) {
+   if (Get.arguments['grouped_consignments'] != null) {
       groupedConsignments = json.decode(Get.arguments['grouped_consignments']) as List<dynamic>;
-      print("Grouped Consignments: $groupedConsignments");
+      // Collect consignment IDs
+      for (var consignment in groupedConsignments) {
+        if (consignment['id'] != null) {
+          consignmentIds.add(consignment['id'].toString());
+        }
+      
+    }
 
       // Print names and company names of all consignments
       for (var consignment in groupedConsignments) {
@@ -64,7 +67,11 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
 
   @override
   Widget build(BuildContext context) {
+    bool isPickup = Get.arguments['consignment_type'] == 'pickup';
+  String appBarTitle = isPickup ? 'Pickup' : 'Delivery ';
+  String buttonText = isPickup ? 'POP Capture' : 'POD Capture';
     return Scaffold(
+      key: _scaffoldKey,  
       backgroundColor: AppColors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -80,7 +87,9 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+       _scaffoldKey.currentState?.openEndDrawer();
+            },
             icon: Icon(
               Icons.more_horiz,
               size: 20.sp,
@@ -89,7 +98,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
         ],
         centerTitle: true,
         title: Text(
-          AppText.delivery,
+          appBarTitle,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
       ),
@@ -128,10 +137,10 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                                 borderRadius: BorderRadius.circular(50.sp),
                                 border: Border.all(),
                               ),
-                              child: SvgPicture.asset(
-                                AppSvgs.mapMarker,
-                                color: AppColors.black,
-                              ),
+                              child: Image.asset(
+                            AppImages.map,
+                            color: AppColors.black,
+                          ),
                             ),
                           ),
                         ],
@@ -629,11 +638,17 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
                     height: 2.h,
                   ),
                      CustomElevatedButton(
-                      label: AppText.podCapture,
-                      onPressed: () {
-                        Get.toNamed(AppRoutes.proofOfDelivery,
-                            arguments: Get.arguments);
-                      }),
+  label: buttonText,
+  onPressed: () {
+    Get.toNamed(
+      AppRoutes.proofOfDelivery,
+      arguments: {
+        ...Get.arguments.cast<String, dynamic>(),
+        'consignmentIds': consignmentIds, 
+      }
+    );
+  }
+),
                   SizedBox(
                     height: 8.h,
                   ),
@@ -643,6 +658,7 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
           ),
         ),
       ),
+      endDrawer: const CustomDrawer(),
     );
   }
 }

@@ -64,58 +64,60 @@ void _groupSelectedConsignments() async {
     return;
   }
 
-    final date = jsonDecode(selectedConsignments[0]['run_sheets'])['date'] ?? 'Not Provided';
-    final String selectedProductTypeName = jsonDecode(selectedConsignments[0]['product_types'])['name'] ?? 'Unknown';
-    final List<dynamic> groupedConsignments = [];
-    final List<String> consignmentNames = [];
-    final List<String> companyNames = [];
+  print('Selected Consignment IDs: $consignmentIds');
 
-    for (var consignment in selectedConsignments) {
-      final consignmentDate = jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
-      final String consignmentProductTypeName = jsonDecode(consignment['product_types'])['name'] ?? 'Unknown';
+  final date = jsonDecode(selectedConsignments[0]['run_sheets'])['date'] ?? 'Not Provided';
+  final String selectedProductTypeName = jsonDecode(selectedConsignments[0]['product_types'])['name'] ?? 'Unknown';
+  final List<dynamic> groupedConsignments = [];
+  final List<String> consignmentNames = [];
+  final List<String> companyNames = [];
+
+  for (var consignment in selectedConsignments) {
+    final consignmentDate = jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
+    final String consignmentProductTypeName = jsonDecode(consignment['product_types'])['name'] ?? 'Unknown';
       
-      if (consignmentDate == date && consignmentProductTypeName == selectedProductTypeName) {
-        groupedConsignments.add(consignment);
-        consignmentNames.add(consignment['name'] ?? 'Unnamed');
-        Map? deliveryAddresses = json.decode(consignment['delivery_addresses']);
-        Map? pickupAddresses = json.decode(consignment['pickup_addresses']);
-        final companyName = consignment['consignment_type'] == 'delivery'
-            ? (deliveryAddresses?['company_name'] ?? 'Not Provided')
-            : (pickupAddresses?['company_name'] ?? 'Not Provided');
-        companyNames.add(companyName);
-      } else {
-        Get.snackbar(
-          'Error',
-          'Cannot group consignments of different product types or dates.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
-    }
-
-    if (groupedConsignments.isNotEmpty) {
-      final totalCartons = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['carton'] as int? ?? 0));
-      final totalPallets = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['pallet'] as int? ?? 0));
-      final totalSpace = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['space'] as int? ?? 0));
-      final totalWeight = groupedConsignments.fold<double>(0.0, (prev, element) => prev + (element['weight'] as double? ?? 0.0));
-
-      Map<String, dynamic> groupedConsignment = selectedConsignments[0];
-      groupedConsignment['grouped_consignments'] = jsonEncode(groupedConsignments);
-      groupedConsignment['total_grouped_consignments'] = groupedConsignments.length;
-      groupedConsignment['carton'] = totalCartons;
-      groupedConsignment['pallet'] = totalPallets;
-      groupedConsignment['space'] = totalSpace;
-      groupedConsignment['weight'] = totalWeight;
-      groupedConsignment['consignment_names'] = consignmentNames;
-      groupedConsignment['company_names'] = companyNames;
-
-      Get.offAndToNamed(
-        AppRoutes.singleConsigment,
-        arguments: groupedConsignment,
+    if (consignmentDate == date && consignmentProductTypeName == selectedProductTypeName) {
+      groupedConsignments.add(consignment);
+      consignmentNames.add(consignment['name'] ?? 'Unnamed');
+      Map? deliveryAddresses = json.decode(consignment['delivery_addresses']);
+      Map? pickupAddresses = json.decode(consignment['pickup_addresses']);
+      final companyName = consignment['consignment_type'] == 'delivery'
+          ? (deliveryAddresses?['company_name'] ?? 'Not Provided')
+          : (pickupAddresses?['company_name'] ?? 'Not Provided');
+      companyNames.add(companyName);
+    } else {
+      Get.snackbar(
+        'Error',
+        'Cannot group consignments of different product types or dates.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
+      return;
     }
   }
+
+  if (groupedConsignments.isNotEmpty) {
+    final totalCartons = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['carton'] as int? ?? 0));
+    final totalPallets = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['pallet'] as int? ?? 0));
+    final totalSpace = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['space'] as int? ?? 0));
+    final totalWeight = groupedConsignments.fold<double>(0.0, (prev, element) => prev + (element['weight'] as double? ?? 0.0));
+
+    Map<String, dynamic> groupedConsignment = selectedConsignments[0];
+    groupedConsignment['grouped_consignments'] = jsonEncode(groupedConsignments);
+    groupedConsignment['total_grouped_consignments'] = groupedConsignments.length;
+    groupedConsignment['carton'] = totalCartons;
+    groupedConsignment['pallet'] = totalPallets;
+    groupedConsignment['space'] = totalSpace;
+    groupedConsignment['weight'] = totalWeight;
+    groupedConsignment['consignment_names'] = consignmentNames;
+    groupedConsignment['company_names'] = companyNames;
+
+    Get.offAndToNamed(
+      AppRoutes.singleConsigment,
+      arguments: groupedConsignment,
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -198,16 +200,16 @@ void _groupSelectedConsignments() async {
                   ),
                 ),
                 for (var date in groupedConsignmentsByDate.keys) ...[
-                  // Padding(
-                  //   padding: EdgeInsets.symmetric(vertical: 2.h),
-                  //   child: Text(
-                  //     date, // Display date here
-                  //     style: Theme.of(context)
-                  //         .textTheme
-                  //         .headlineMedium
-                  //         ?.copyWith(fontWeight: FontWeight.bold),
-                  //   ),
-                  // ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 2.h),
+                    child: Text(
+                      date,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                   for (var consignment in groupedConsignmentsByDate[date]!) ...[
                     GestureDetector(
                       onTap: () {

@@ -78,6 +78,37 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
     );
   }
 
+  List<Widget> _buildConsignmentWidgets(
+    List<Map<String, dynamic>> consignments,
+    AsyncSnapshot precheckSnapshot,
+  ) {
+    consignments.sort((a, b) => a['sort'].compareTo(b['sort']));
+    List<Widget> widgets = consignments.map<Widget>((consignment) {
+      int index = consignments.indexOf(consignment) + 1;
+
+      return GestureDetector(
+        onTap: () {
+          if ((precheckSnapshot.data![0]['checklist'] == 1 &&
+              precheckSnapshot.data![0]['outbound'] == 1)) {
+            Get.toNamed(
+              AppRoutes.singleConsigment,
+              arguments: consignment,
+            );
+          }
+        },
+        child: CustomMyConsigmentContainer(
+          consignment: consignment,
+          isLoading: false,
+          index: index,
+          isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
+              precheckSnapshot.data![0]['outbound'] == 1),
+        ),
+      );
+    }).toList();
+
+    return widgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -348,47 +379,24 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                   },
                                 ],
                               ),
+                              SizedBox(
+                                height: 1.h,
+                              ),
                               for (var date in sortedDates) ...[
+                                  Text(
+                                    date, 
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.start,
+                                  ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     SizedBox(height: 1.h),
-                                    ...groupedByDate[date]!
-                                        .asMap()
-                                        .entries
-                                        .map((entry) {
-                                      int index = currentIndex++;
-                                      var consignment = entry.value;
-
-                                      return GestureDetector(
-                                        onTap: () {
-                                          if ((precheckSnapshot.data![0]
-                                                          ['checklist'] ==
-                                                      0 &&
-                                                  precheckSnapshot.data![0]
-                                                          ['outbound'] ==
-                                                      0)) {
-                                            Get.toNamed(
-                                              AppRoutes.singleConsigment,
-                                              arguments: consignment,
-                                            );
-                                          }
-                                        },
-                                        child:
-                                            CustomMyConsigmentContainer(
-                                          consignment: consignment,
-                                          isLoading: false,
-                                          index: index,
-                                          isPrecheckDone: (precheckSnapshot
-                                                              .data![0]
-                                                          ['checklist'] ==
-                                                      1 &&
-                                                  precheckSnapshot.data![0]
-                                                          ['outbound'] ==
-                                                      1),
-                                        ),
-                                      );
-                                    }).toList(),
+                                    ..._buildConsignmentWidgets(
+                                        groupedByDate[date]!, precheckSnapshot),
                                   ],
                                 ),
                                 SizedBox(height: 2.h),

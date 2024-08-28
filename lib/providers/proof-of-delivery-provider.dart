@@ -135,6 +135,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _base64Images = {};
     _pictureSources = {};
     resetSignatureState();
+     _isFormValid = false;
   }
 
   backToDefault() {
@@ -143,10 +144,21 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _images = [];
     _base64Images = {};
     _pictureSources = {};
+    _selectedDeliveryType = DeliveryType.full;
   }
+ 
 
   setDeviceInfo(Map<String, dynamic> deviceInfo) {
     _data['device'] = deviceInfo;
     notifyListeners();
   }
+bool _isFormValid = false;
+
+bool get isFormValid => _isFormValid;
+
+void validateForm(GlobalKey<FormBuilderState> formKey) {
+  _isFormValid = formKey.currentState?.validate() ?? false;
+  notifyListeners(); 
+}
+
 }

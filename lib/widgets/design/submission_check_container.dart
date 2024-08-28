@@ -1,21 +1,25 @@
 import 'package:coldxpress/export.dart';
 
+
 class SubmissionCheckContainer extends StatelessWidget {
-  final String leadingSVG;
+  final String? leadingSVG;
+  final String? leadingImage;
   final String title;
   final String subtitle;
   final LinearGradient backgroundColor;
   final bool isLoading;
   final VoidCallback onPressed;
+
   const SubmissionCheckContainer({
     super.key,
-    required this.leadingSVG,
+    this.leadingSVG,
+    this.leadingImage, 
     required this.title,
     required this.subtitle,
     required this.backgroundColor,
     this.isLoading = false,
     required this.onPressed,
-  });
+  }) : assert(leadingSVG != null || leadingImage != null, 'Either leadingSVG, leadingIcon, or leadingImage must be provided.');
 
   @override
   Widget build(BuildContext context) {
@@ -54,11 +58,15 @@ class SubmissionCheckContainer extends StatelessWidget {
                           color: AppColors.grey.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(10.sp),
                         ),
-                        child: SvgPicture.asset(
-                          leadingSVG,
-                          // ignore: deprecated_member_use
-                          color: AppColors.white,
-                        ),
+                        child: leadingSVG != null
+                            ? SvgPicture.asset(
+                                leadingSVG!,
+                                color: AppColors.white,
+                              )
+                              : Image.asset(
+                                  leadingImage!,
+                                  fit: BoxFit.contain,
+                                ),
                       ),
                       SizedBox(width: 3.w),
                       Flexible(

@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:coldxpress/export.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 
 class EditTime extends StatefulWidget {
   const EditTime({super.key});
@@ -22,6 +24,7 @@ class _EditTimeState extends State<EditTime> {
 
   @override
   void initState() {
+    super.initState();
     consignment = Get.arguments;
     deliveryAddresses = consignment['delivery_addresses'].runtimeType == String
         ? json.decode(consignment['delivery_addresses'])
@@ -29,32 +32,28 @@ class _EditTimeState extends State<EditTime> {
     pickupAddresses = consignment['pickup_addresses'].runtimeType == String
         ? json.decode(consignment['pickup_addresses'])
         : consignment['pickup_addresses'];
+
     startTime = consignment['consignment_type'] == 'delivery'
-        ? deliveryAddresses['service_time_start'] == null
-            ? null
-            : DateTime.parse(deliveryAddresses['service_time_start'])
-        : pickupAddresses['service_time_start'] == null
-            ? null
-            : DateTime.parse(pickupAddresses['service_time_start']);
+        ? deliveryAddresses['service_time_start'] != null
+            ? DateTime.parse(deliveryAddresses['service_time_start'])
+            : null
+        : pickupAddresses['service_time_start'] != null
+            ? DateTime.parse(pickupAddresses['service_time_start'])
+            : null;
     endTime = consignment['consignment_type'] == 'delivery'
-        ? deliveryAddresses['service_time_end'] == null
-            ? null
-            : DateTime.parse(deliveryAddresses['service_time_end'])
-        : pickupAddresses['service_time_end'] == null
-            ? null
-            : DateTime.parse(pickupAddresses['service_time_end']);
+        ? deliveryAddresses['service_time_end'] != null
+            ? DateTime.parse(deliveryAddresses['service_time_end'])
+            : null
+        : pickupAddresses['service_time_end'] != null
+            ? DateTime.parse(pickupAddresses['service_time_end'])
+            : null;
+
     _startTime = startTime == null
         ? PickedTime(h: 6, m: 30)
         : PickedTime(h: startTime!.hour, m: startTime!.minute);
     _endTime = endTime == null
         ? PickedTime(h: 15, m: 30)
         : PickedTime(h: endTime!.hour, m: endTime!.minute);
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
   }
 
   @override
@@ -491,8 +490,10 @@ class _EditTimeState extends State<EditTime> {
       ),
     );
   }
-
-  DateTime parseDate(String date) {
+  DateTime parseDate(String? date) {
+    if (date == null) {
+      return DateTime.now(); 
+    }
     List<String> value = date.split('/');
     return DateTime(
         int.parse(value[2]), int.parse(value[1]), int.parse(value[0]));

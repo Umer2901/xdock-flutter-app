@@ -18,5 +18,12 @@ class AppImages {
   static const String priority = 'assets/images/priority.png';
   static const String cardboard = 'assets/images/cardboard_boxes.png';
   static const String clock = 'assets/images/Clock.png';
-   static const String refresh = 'assets/images/Refresh.png';
+  static const String refresh = 'assets/images/Refresh.png';
+  static const String call = 'assets/images/call.png';
+  static const String map = 'assets/images/map.png';
+  static const String consignmentbox = 'assets/images/consignmentbox.png';
+  static const String zoom = 'assets/images/zoom.png';
+  static const String zoomclose = 'assets/images/zoomclose.png';
+  static const String consignmentboxblack = 'assets/images/consignmentboxblack.png';
+      static const String checklist = 'assets/images/Checklist.png';
 }

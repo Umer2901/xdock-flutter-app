@@ -32,6 +32,7 @@ class CustomConsignmentContainer extends StatelessWidget {
     final companyName = consignment!['consignment_type'] == 'delivery'
         ? (deliveryAddresses?['company_name'] ?? 'Not Provided')
         : (pickupAddresses?['company_name'] ?? 'Not Provided');
+      
 
     return Container(
       width: double.infinity,
@@ -104,7 +105,7 @@ class CustomConsignmentContainer extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    '${AppText.ctn}: ${consignment!['cartons'] ?? 0}',
+                                    '${AppText.ctn}: ${consignment!['carton'] ?? 0}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -115,7 +116,7 @@ class CustomConsignmentContainer extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    '${AppText.plt}: ${consignment!['pallets'] ?? 0}',
+                                    '${AppText.plt}: ${consignment!['pallet'] ?? 0}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium

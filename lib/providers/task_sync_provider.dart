@@ -53,6 +53,7 @@ class TaskSyncProvider with ChangeNotifier {
         String status = json.decode(response.body)['status'];
         if (status == 'success') {
           taskDatabase?.delete(taskId);
+          print(response.body);
         }
       }
     } catch (e) {

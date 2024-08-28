@@ -166,18 +166,14 @@ class TaskSyncpofProvider extends ChangeNotifier {
         BlocProvider.of<AuthenticationCubit>(context).state;
 
     if (state is Authenticated) {
-      try {
-         final Map postData = context.read<ProofOfDeliveryProvider>().data;
-        for (var task in tasks) {
-          final taskData = json.decode(task['data']);
-          // print("i am taskdata ${taskData}");
-          // print("Task Data:");
-        // taskData.forEach((key, value) {
-        //   print('$key: $value');
-        // });
-          final consignmentId = taskData['consignments'];
-          final isGroup = taskData['is_group'];
-          debugPrint("Consignment ID: $consignmentId");
+    try {
+      final Map postData = context.read<ProofOfDeliveryProvider>().data;
+      for (var task in tasks) {
+        final taskData = json.decode(task['data']);
+        final rawConsignmentId = taskData['consignments'].toString();
+        final consignmentId = rawConsignmentId.replaceAll(RegExp(r'[\[\]]'), ''); 
+        final isGroup = taskData['is_group'];
+        debugPrint("Consignment ID: $consignmentId");
 
           final consignmentType =
               Get.arguments?['consignment_type'] ?? 'delivery';
@@ -233,7 +229,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
     "carton": taskData['carton'],
     "pallet": taskData['pallet'],
     "space":taskData['space'],
-    "weigth": taskData['weigth'],
+    "weigth": taskData['weight'],
     "first_name": taskData['first_name'],
     "last_name": taskData['last_name'],
     "temperature": taskData['temperature'],

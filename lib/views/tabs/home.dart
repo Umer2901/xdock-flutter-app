@@ -179,7 +179,7 @@ String getTodayDate() {
                             children: [
                               if (data[0]['checklist'] == 0)
                                 SubmissionCheckContainer(
-                                  leadingSVG: AppSvgs.checkList,
+                                  leadingImage: AppImages.checklist,
                                   title: AppText.preStartCheckReq,
                                   subtitle: AppText.preStartSubtext,
                                   onPressed: () {
@@ -509,7 +509,7 @@ class ConsignmentContainer extends StatelessWidget {
                                   maxLines: 1,
                                 ),
                                 Text(
-                                  '${AppText.ctn}: ${consignment?['cartons'] ?? 0}',
+                                  '${AppText.ctn}: ${consignment?['carton'] ?? 0}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -519,7 +519,7 @@ class ConsignmentContainer extends StatelessWidget {
                                   maxLines: 1,
                                 ),
                                 Text(
-                                  '${AppText.plt}: ${consignment?['pallets'] ?? 0}',
+                                  '${AppText.plt}: ${consignment?['pallet'] ?? 0}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium

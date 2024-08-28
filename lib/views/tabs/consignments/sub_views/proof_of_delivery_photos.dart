@@ -18,7 +18,8 @@ late Map productTypes;
 late Map deliveryAddresses;
 late Map pickupAddresses;
 List groupedConsignments = [];
-
+final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+     
 class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -63,7 +65,9 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {  
+       _scaffoldKey.currentState?.openEndDrawer();
+            },
             icon: Icon(
               Icons.more_horiz,
               size: 20.sp,
@@ -389,6 +393,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
           ),
         ),
       ),
+      endDrawer: const CustomDrawer(),
     );
   }
 

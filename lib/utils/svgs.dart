@@ -18,12 +18,14 @@ class AppSvgs {
   static const String reorderBlack = 'assets/svg/reorderBlack.svg';
   static const String groupBlack = 'assets/svg/groupBlack.svg';
   static const String reset = 'assets/svg/reset.svg';
-  static const String mapMarker = 'assets/svg/mapMarker.svg';
+  static const String mapMarker = 'assets/svg/Map Marker.svg';
   static const String expand = 'assets/svg/expand.svg';
   static const String expandInactive = 'assets/svg/expandInactive.svg';
   static const String carton = 'assets/svg/carton.svg';
   static const String space = 'assets/svg/space.svg';
   static const String weight = 'assets/svg/weight.svg';
   static const String refresh = 'assets/svg/refresh.svg';
+  static const String box = 'assets/svg/Cardboard Box.svg';
+  static const String newchecklist = 'assets/svg/PreChecklist.svg';
 
 }

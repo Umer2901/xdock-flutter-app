@@ -13,6 +13,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   final List<dynamic> _consignments = [];
   Map<String, List<dynamic>> groupedConsignments = {};
   List<int> consignmentIds = [];
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -20,11 +21,13 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
     final arguments = json.decode(json.encode(Get.arguments));
     _consignments.addAll(arguments);
     groupedConsignments = _groupConsignmentsByDate();
+    _updateConsignmentIds();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.white,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
@@ -40,7 +43,9 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
+            },
             icon: Icon(
               Icons.more_horiz,
               size: 20.sp,
@@ -120,13 +125,21 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Padding(
-                          //   padding: EdgeInsets.symmetric(vertical: 1.h),
-                          //   child: Text(
-                          //     date,
-                          //     style: Theme.of(context).textTheme.headlineSmall,
-                          //   ),
-                          // ),
+                           Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                             children: [
+                               Padding(
+                                                   padding: EdgeInsets.symmetric(vertical: 2.h),
+                                                   child: Text(
+                                                     date, 
+                                                     style: Theme.of(context)
+                                                         .textTheme
+                                                         .headlineMedium
+                                                         ?.copyWith(fontWeight: FontWeight.bold),
+                                                   ),
+                                                 ),
+                             ],
+                           ),
                           ReorderableListView(
                             physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
@@ -139,7 +152,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                                 consignments.insert(newIndex, item);
 
                                 // Update the consignmentIds list to reflect new order
-                                consignmentIds = _consignments.map((consignment) => consignment['id'] as int).toList();
+                                _updateConsignmentIdsFromConsignments(consignments);
                               });
                             },
                             children: List.generate(
@@ -183,7 +196,16 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
           ),
         ),
       ),
+      endDrawer: const CustomDrawer(),
     );
+  }
+
+  void _updateConsignmentIds() {
+    consignmentIds = _consignments.map((consignment) => consignment['id'] as int).toList();
+  }
+
+  void _updateConsignmentIdsFromConsignments(List<dynamic> updatedConsignments) {
+    consignmentIds = updatedConsignments.map((consignment) => consignment['id'] as int).toList();
   }
 
   Map<String, List<dynamic>> _groupConsignmentsByDate() {

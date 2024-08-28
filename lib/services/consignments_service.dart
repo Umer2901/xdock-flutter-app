@@ -1,120 +1,3 @@
-// import 'dart:io';
-// import 'package:coldxpress/export.dart';
-// import 'package:http/http.dart' as http;
-// import 'dart:convert';
-
-// class ConsignmentService {
-//   final Database _database;
-
-//   ConsignmentService(this._database);
-  
-
-
-//   Future<void> fetchAndStore(String accessToken) async {
-//   try {
-//     final result = await InternetAddress.lookup('google.com');
-//     if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-//       final response = await http.get(
-//         Uri.parse(AppHost.consignments),
-//         headers: <String, String>{
-//           'Authorization': 'Bearer $accessToken',
-//           'Content-Type': 'application/json',
-//           'Accept': 'application/json',
-//         },
-//       );
-
-//       if (response.statusCode == 200) {
-//         final dynamic data = json.decode(response.body);
-//         try {
-//           if (data['status'] == 'success') {
-//             final Map<String, dynamic> dataByDate = data['data'];
-//             for (var date in dataByDate.keys) {
-//               List<dynamic> submissionData = dataByDate[date]['consignments'];
-//               for (var dataIteration in submissionData) {
-//                 dataIteration['delivery_addresses'] = json.encode(
-//                   dataIteration['delivery_addresses'],
-//                 );
-//                 dataIteration['pickup_addresses'] = json.encode(
-//                   dataIteration['pickup_addresses'],
-//                 );
-//                 dataIteration['delivery_runs'] = json.encode(
-//                   dataIteration['delivery_runs'],
-//                 );
-//                 dataIteration['customers'] = json.encode(
-//                   dataIteration['customers'],
-//                 );
-//                 dataIteration['product_types'] = json.encode(
-//                   dataIteration['product_types'],
-//                 );
-//                 dataIteration['run_sheets'] = json.encode(
-//                   dataIteration['run_sheets'],
-//                 );
-//                 dataIteration['consignment_pallets'] = json.encode(
-//                   dataIteration['consignment_pallets'],
-//                 );
-//                 dataIteration['grouped_consignments'] =
-//                     dataIteration.containsKey('grouped_consignments')
-//                         ? json.encode(
-//                             dataIteration['grouped_consignments'],
-//                           )
-//                         : null;
-//                 dataIteration.addAll({
-//                   'access_token': accessToken,
-//                   'datetime': DateFormat('dd/MM/yyyy').format(DateTime.now()),
-//                   'is_complete': 0,
-//                 });
-//                 List consignment = await ConsignmentDatabase(_database)
-//                     .readById(dataIteration['id']);
-//                 if (consignment.isEmpty) {
-//                   await ConsignmentDatabase(_database).create(dataIteration);
-//                 } else {
-//                   await ConsignmentDatabase(_database).update(
-//                     dataIteration['id'],
-//                     {
-//                       'access_token': accessToken,
-//                     },
-//                   );
-//                 }
-//               }
-//             }
-//           } else {
-//             throw Exception(
-//               'Unsuccessful to fetch submission data! (Error: ${data['message']})',
-//             );
-//           }
-//         } catch (e) {
-//           debugPrint('Data Error: $e');
-//         }
-//       } else {
-//         throw Exception(
-//             'Unsuccessful to fetch submission data! (Error Code: ${response.statusCode})');
-//       }
-//     }
-//   } on SocketException catch (e) {
-//     throw Exception('No Internet ($e)');
-//   } catch (e) {
-//     debugPrint('Unsuccessful to fetch submission data! $e');
-//   }
-// }
-
-
-//   void reorderConsignments(List consignmentIds, String accessToken) async {
-//     for (int id in consignmentIds) {
-//       await ConsignmentDatabase(_database).update(
-//         id,
-//         {'sort': consignmentIds.indexOf(id) + 1},
-//       );
-//     }
-//     await TaskSyncDatabase(_database).create({
-//       'task_name': 'Re-order Consignments',
-//       'task_type': 'reorder',
-//       'data': json.encode(
-//         {DateFormat('yyyy-MM-dd').format(DateTime.now()): consignmentIds},
-//       ),
-//       'access_token': accessToken,
-//     });
-//   }
-// }
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -192,24 +75,33 @@ class ConsignmentService {
       }
     }
   }
-
-  Future<void> reorderConsignments(List<int> consignmentIds, String accessToken) async {
+ Future<void> reorderConsignments(List<int> consignmentIds, String accessToken) async {
     await _database.transaction((txn) async {
-      for (var id in consignmentIds) {
-        await txn.update(
-          'consignments',
-          {'sort': consignmentIds.indexOf(id) + 1},
-          where: 'id = ?',
-          whereArgs: [id]
-        );
-      }
+      List<Map> tables = await txn.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='sync_task'");
+      print("Checking table existence: $tables");
+      
+      if (tables.isNotEmpty) {
+        for (var id in consignmentIds) {
+          await txn.update(
+            'consignments',
+            {'sort': consignmentIds.indexOf(id) + 1},
+            where: 'id = ?',
+            whereArgs: [id]
+          );
+        }
 
-      await txn.insert('task_sync', {
-        'task_name': 'Re-order Consignments',
-        'task_type': 'reorder',
-        'data': json.encode({DateFormat('yyyy-MM-dd').format(DateTime.now()): consignmentIds}),
-        'access_token': accessToken
-      });
+        await txn.insert('sync_task', {
+          'task_name': 'Re-order Consignments',
+          'task_type': 'reorder',
+          'data': json.encode({DateFormat('yyyy-MM-dd').format(DateTime.now()): consignmentIds}),
+          'access_token': accessToken
+        });
+        print('Reorder saved to sync_task');
+         List<Map> syncTaskData = await txn.rawQuery('SELECT * FROM sync_task');
+      print('Data in sync_task table: $syncTaskData');
+      } else {
+        print("Table sync_task does not exist. Check your database initialization.");
+      }
     });
   }
 }

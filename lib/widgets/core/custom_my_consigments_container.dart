@@ -23,7 +23,15 @@ class CustomMyConsigmentContainer extends StatefulWidget {
 class _CustomMyConsigmentContainerState
     extends State<CustomMyConsigmentContainer> {
   bool isExpanded = false;
-
+  Map<String, dynamic> _decodeIfString(dynamic data) {
+    if (data is String) {
+      return json.decode(data) as Map<String, dynamic>;
+    } else if (data is Map<String, dynamic>) {
+      return data;
+    } else {
+      throw TypeError();
+    }
+  }
   @override
   Widget build(BuildContext context) {
     Map productTypes = json.decode(widget.consignment?['product_types']);
@@ -159,8 +167,8 @@ final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
                               color: AppColors.white,
                               borderRadius: BorderRadius.circular(50.sp),
                               border: Border.all()),
-                          child: SvgPicture.asset(
-                            AppSvgs.mapMarker,
+                          child: Image.asset(
+                            AppImages.map,
                             color: AppColors.black,
                           ),
                         ),
@@ -246,17 +254,13 @@ final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
                                               : isExpanded = false;
                                         });
                                       },
-                                      child: SvgPicture.asset(
+                                      child: Image.asset(
                                         widget.consignment!['is_group']
                                                     .toString() !=
                                                 'null'
-                                            ? AppSvgs.expand
-                                            : AppSvgs.expandInactive,
-                                        color: widget.consignment!['is_group']
-                                                    .toString() !=
-                                                'null'
-                                            ? AppColors.lightBlue
-                                            : AppColors.grey,
+                                            ? AppImages.zoom
+                                            : AppImages.zoomclose,
+                                        
                                       )),
                                 ),
                               ],
@@ -312,8 +316,28 @@ final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
                   isExpanded
                       ? Column(
                           children: [
-                            for (var subConsignment in groupedConsignments) ...{
-                              SizedBox(height: 1.5.h),
+                           if (groupedConsignments.isNotEmpty) ...[],
+                  ...groupedConsignments.map<Widget>((subConsignment) {
+                    final deliveryAddresses = _decodeIfString(subConsignment['delivery_addresses']);
+                    final pickupAddresses = _decodeIfString(subConsignment['pickup_addresses']);
+
+                    final companyName = subConsignment['consignment_type'] == 'delivery'
+                        ? (deliveryAddresses['company_name'] ?? 'No Company Name')
+                        : (pickupAddresses['company_name'] ?? 'No Company Name');
+                    
+                    final address = subConsignment['consignment_type'] == 'delivery'
+                        ? deliveryAddresses['full_address']
+                        : pickupAddresses['full_address'];
+
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 2.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (groupedConsignments.indexOf(subConsignment) == 0) ...[
+                     
+                          ],
+                               SizedBox(height: 1.5.h),
                               const Divider(
                                 color: AppColors.belowMidGreyTwo,
                               ),
@@ -337,7 +361,7 @@ final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
                                   }
                                 },
                                 title: Text(
-                                  '${AppText.supplier}: ${(subConsignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
+                                  '${AppText.supplier}: ${companyName}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -415,9 +439,14 @@ final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
                                   ],
                                 ),
                               ),
-                            }
-                          ],
-                        )
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                    SizedBox(
+                    height: 2.h,
+                  ),
+                 ] )
                       : const SizedBox.shrink(),
                 ],
               ),
@@ -425,3 +454,4 @@ final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
     );
   }
 }
+
