@@ -1,5 +1,4 @@
-// ignore_for_file: file_names
-
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:coldxpress/export.dart';
 
@@ -27,8 +26,9 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   Map<String, String> get pictureSources => _pictureSources;
   DeliveryType get selectedDeliveryType => _selectedDeliveryType;
   Uint8List? get signature => _signatureData;
-  List<String> get selectedOrderRejectionReasons =>
-      _selectedOrderRejectionReasons;
+  List<String> get selectedOrderRejectionReasons => _selectedOrderRejectionReasons;
+  bool _isFormValid = false;
+  bool get isFormValid => _isFormValid;
 
   setIndex(int value) {
     _index = value;
@@ -135,7 +135,8 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _base64Images = {};
     _pictureSources = {};
     resetSignatureState();
-     _isFormValid = false;
+    _isFormValid = false;  
+    notifyListeners();
   }
 
   backToDefault() {
@@ -145,20 +146,39 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _base64Images = {};
     _pictureSources = {};
     _selectedDeliveryType = DeliveryType.full;
+    notifyListeners();
   }
- 
 
   setDeviceInfo(Map<String, dynamic> deviceInfo) {
     _data['device'] = deviceInfo;
     notifyListeners();
   }
-bool _isFormValid = false;
 
-bool get isFormValid => _isFormValid;
+  void validateForm() {
+    _isFormValid = _data['temp']?.isNotEmpty == true &&
+                   _data['lengthOfDelivery']?.isNotEmpty == true &&
+                   _data['first_name']?.isNotEmpty == true &&
+                   _data['last_name']?.isNotEmpty == true &&
+                   _signatureData != null;
+                 
+    debugPrint('Temp: ${_data['temp']}');
+    debugPrint('Length of Delivery: ${_data['lengthOfDelivery']}');
+    debugPrint('First Name: ${_data['first_name']}');
+    debugPrint('Last Name: ${_data['last_name']}');
+    debugPrint('Signature Data: $_signatureData');
+    debugPrint('Is Form Valid: $_isFormValid');
 
-void validateForm(GlobalKey<FormBuilderState> formKey) {
-  _isFormValid = formKey.currentState?.validate() ?? false;
-  notifyListeners(); 
-}
+    notifyListeners();
+  }
 
+  void updateField(String key, String? value) {
+    _data[key] = value;
+    validateForm();
+  }
+
+  void updateSignature(Uint8List signatureData) {
+    _signatureData = signatureData;
+    _data['signature'] = 'data:image/png;base64, ${base64Encode(signatureData)}';
+    validateForm();
+  }
 }

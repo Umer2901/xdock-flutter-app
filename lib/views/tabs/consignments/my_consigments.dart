@@ -9,7 +9,7 @@ class MyConsigmentTab extends StatefulWidget {
 }
 
 class _MyConsigmentTabState extends State<MyConsigmentTab> {
-  late ConsignmentDatabase consignment;
+   late ConsignmentDatabase consignment;
   late PreCheckDatabase precheck;
   final ScrollController _scrollController = ScrollController();
   final _formKey = GlobalKey<FormBuilderState>();
@@ -78,33 +78,73 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
     );
   }
 
-  List<Widget> _buildConsignmentWidgets(
-    List<Map<String, dynamic>> consignments,
-    AsyncSnapshot precheckSnapshot,
-  ) {
-    consignments.sort((a, b) => a['sort'].compareTo(b['sort']));
-    List<Widget> widgets = consignments.map<Widget>((consignment) {
-      int index = consignments.indexOf(consignment) + 1;
+  Map<String, List<Map<String, dynamic>>> _groupConsignmentsByDate(
+      List<Map<String, dynamic>> consignments) {
+    final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
 
-      return GestureDetector(
-        onTap: () {
-          if ((precheckSnapshot.data![0]['checklist'] == 1 &&
-              precheckSnapshot.data![0]['outbound'] == 1)) {
-            Get.toNamed(
-              AppRoutes.singleConsigment,
-              arguments: consignment,
-            );
-          }
-        },
-        child: CustomMyConsigmentContainer(
-          consignment: consignment,
-          isLoading: false,
-          index: index,
-          isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
-              precheckSnapshot.data![0]['outbound'] == 1),
+    for (var consignment in consignments) {
+      final date = consignment['delivery_date'] ?? 'Not Provided';
+      if (!groupedByDate.containsKey(date)) {
+        groupedByDate[date] = [];
+      }
+      groupedByDate[date]!.add(consignment);
+    }
+
+    return groupedByDate;
+  }
+
+  List<Widget> _buildGroupedConsignments(
+      Map<String, List<Map<String, dynamic>>> groupedConsignments,
+      AsyncSnapshot precheckSnapshot) {
+    List<Widget> widgets = [];
+
+    groupedConsignments.forEach((date, consignments) {
+      widgets.add(
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 2.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                date,
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       );
-    }).toList();
+
+      widgets.addAll(
+        consignments.map((consignment) {
+          int index = consignments.indexOf(consignment) + 1;
+          return GestureDetector(
+            onTap: () {
+              if ((precheckSnapshot.data![0]['checklist'] == 0 &&
+                  precheckSnapshot.data![0]['outbound'] == 0)) {
+                Get.toNamed(
+                  AppRoutes.singleConsigment,
+                  arguments: consignment,
+                );
+              }
+            },
+            child: Column(
+              children: [
+                CustomMyConsigmentContainer(
+                  consignment: consignment,
+                  isLoading: false,
+                  index: index,
+                  isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
+                      precheckSnapshot.data![0]['outbound'] == 1),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      );
+    });
 
     return widgets;
   }
@@ -168,6 +208,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                           );
                         } else if (consignmentSnapshot.hasData) {
                           List<Map<String, dynamic>> allConsignments = [];
+
                           if (query != null && query!.isNotEmpty) {
                             for (Map<String, dynamic> itr
                                 in consignmentSnapshot.data ?? []) {
@@ -216,22 +257,8 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                 .addAll(consignmentSnapshot.data ?? []);
                           }
 
-                          Map<String, List<Map<String, dynamic>>> groupedByDate =
-                              {};
-                          for (var consignment in allConsignments) {
-                            final Map runSheets =
-                                jsonDecode(consignment['run_sheets']);
-                            final date = runSheets['date'] ?? 'Not Provided';
-                            if (!groupedByDate.containsKey(date)) {
-                              groupedByDate[date] = [];
-                            }
-                            groupedByDate[date]!.add(consignment);
-                          }
-                          final sortedDates = groupedByDate.keys.toList()
-                            ..sort((a, b) =>
-                                DateTime.parse(b).compareTo(DateTime.parse(a)));
-
-                          int currentIndex = 1;
+                          Map<String, List<Map<String, dynamic>>> groupedConsignments =
+                              _groupConsignmentsByDate(allConsignments);
 
                           return Column(
                             children: [
@@ -312,7 +339,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 1.5.h),
+                               SizedBox(height: 1.5.h),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -379,28 +406,9 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                   },
                                 ],
                               ),
-                              SizedBox(
-                                height: 1.h,
-                              ),
-                              for (var date in sortedDates) ...[
-                                  Text(
-                                    date, 
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                        textAlign: TextAlign.start,
-                                  ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(height: 1.h),
-                                    ..._buildConsignmentWidgets(
-                                        groupedByDate[date]!, precheckSnapshot),
-                                  ],
-                                ),
-                                SizedBox(height: 2.h),
-                              ],
+                              SizedBox(height: 1.5.h),
+                              ..._buildGroupedConsignments(
+                                  groupedConsignments, precheckSnapshot),
                               GestureDetector(
                                 onTap: () {
                                   _scrollController.animateTo(

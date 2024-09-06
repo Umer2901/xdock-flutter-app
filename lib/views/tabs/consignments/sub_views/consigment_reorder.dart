@@ -9,6 +9,7 @@ class MyConsigmentReorder extends StatefulWidget {
 }
 
 class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
+ 
   final ScrollController _scrollController = ScrollController();
   final List<dynamic> _consignments = [];
   Map<String, List<dynamic>> groupedConsignments = {};
@@ -41,17 +42,6 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
             size: 15.sp,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              _scaffoldKey.currentState?.openEndDrawer();
-            },
-            icon: Icon(
-              Icons.more_horiz,
-              size: 20.sp,
-            ),
-          )
-        ],
         centerTitle: true,
         title: Text(
           AppText.reorder,
@@ -125,21 +115,21 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                             children: [
-                               Padding(
-                                                   padding: EdgeInsets.symmetric(vertical: 2.h),
-                                                   child: Text(
-                                                     date, 
-                                                     style: Theme.of(context)
-                                                         .textTheme
-                                                         .headlineMedium
-                                                         ?.copyWith(fontWeight: FontWeight.bold),
-                                                   ),
-                                                 ),
-                             ],
-                           ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 2.h),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  date,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
                           ReorderableListView(
                             physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
@@ -150,9 +140,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                                 }
                                 final item = consignments.removeAt(oldIndex);
                                 consignments.insert(newIndex, item);
-
-                                // Update the consignmentIds list to reflect new order
-                                _updateConsignmentIdsFromConsignments(consignments);
+                                _updateConsignmentIdsFromConsignments();
                               });
                             },
                             children: List.generate(
@@ -201,18 +189,26 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   }
 
   void _updateConsignmentIds() {
-    consignmentIds = _consignments.map((consignment) => consignment['id'] as int).toList();
+    final List<dynamic> allConsignments = [];
+    groupedConsignments.forEach((key, value) {
+      allConsignments.addAll(value);
+    });
+    consignmentIds = allConsignments.map((consignment) => consignment['id'] as int).toList();
   }
 
-  void _updateConsignmentIdsFromConsignments(List<dynamic> updatedConsignments) {
-    consignmentIds = updatedConsignments.map((consignment) => consignment['id'] as int).toList();
+  void _updateConsignmentIdsFromConsignments() {
+    final List<dynamic> allConsignments = [];
+    groupedConsignments.forEach((key, value) {
+      allConsignments.addAll(value);
+    });
+    consignmentIds = allConsignments.map((consignment) => consignment['id'] as int).toList();
   }
 
   Map<String, List<dynamic>> _groupConsignmentsByDate() {
     final Map<String, List<dynamic>> groupedByDate = {};
 
     for (var consignment in _consignments) {
-      final date = jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
+      final date = consignment['delivery_date'] ?? 'Not Provided';
       if (!groupedByDate.containsKey(date)) {
         groupedByDate[date] = [];
       }

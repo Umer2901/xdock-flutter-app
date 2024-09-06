@@ -104,23 +104,22 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                           'REF: ${Get.arguments?['customer_reference'] ?? 'Not Provided'}',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                        InkWell(
-                          onTap: () {},
-                          child: Container(
-                            width: 13.5.w,
-                            height: 6.h,
-                            decoration: BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(50.sp),
-                              border: Border.all(),
-                            ),
-                            child: SvgPicture.asset(
-                              AppSvgs.mapMarker,
-                              // ignore: deprecated_member_use
-                              color: AppColors.black,
+                         InkWell(
+                            onTap: () {},
+                            child: Container(
+                              width: 13.5.w,
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all(),
+                              ),
+                              child: Image.asset(
+                            AppImages.map,
+                            color: AppColors.black,
+                          ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -419,9 +418,9 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
         );
       });
 
-      // Debug prints
-      debugPrint('Image Source: By Camera');
-      debugPrint('Image Path: ${image.path}');
+    
+      // debugPrint('Image Source: By Camera');
+      // debugPrint('Image Path: ${image.path}');
     }
   } catch (e) {
     debugPrint('Error picking image from camera: $e');

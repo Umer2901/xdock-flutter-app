@@ -1,5 +1,8 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:coldxpress/providers/pof_services_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:coldxpress/export.dart';
@@ -31,31 +34,39 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
   late Map productTypes;
   late Map deliveryAddresses;
   late Map pickupAddresses;
-  late Map runSheets;
+  late UserDatabase staff;
   List groupedConsignments = [];
   List<dynamic> consignmentIds = [];
- final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+   Map<String, dynamic>? userData;
 
   @override
   void initState() {
     super.initState();
     _setDeviceInfo();
     config();
-    
-     Future.microtask(() {
+    Future.microtask(() {
     if (mounted) {
       _resetToFullDelivery();
     }
   });
+     AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+       if (state is Authenticated) {
+      staff = UserDatabase(
+        context.read<DatabaseProvider>().database,
+        accessToken: state.token,
+      );
+       fetchAndPrintUserData();
+    }
     productTypes = parseMap(Get.arguments?['product_types']);
-    runSheets = parseMap(Get.arguments?['run_sheets']);
+   // runSheets = parseMap(Get.arguments?['run_sheets']);
     deliveryAddresses = parseMap(Get.arguments?['delivery_addresses']);
     pickupAddresses = parseMap(Get.arguments?['pickup_addresses']);
     groupedConsignments = parseList(Get.arguments?['grouped_consignments']);
-     consignmentIds = groupedConsignments.map((c) => c['id'].toString()).toList();
-    debugPrint("consignmentIds: ${consignmentIds}");
-    debugPrint("Run Sheets Data: ${jsonEncode(runSheets)}");
-    debugPrint("our group data: ${Get.arguments?['is_group']}");
+    consignmentIds = groupedConsignments.map((c) => c['id'].toString()).toList();
+   // debugPrint("consignmentIds: ${consignmentIds}");
+   // debugPrint("Run Sheets Data: ${jsonEncode(runSheets)}");
+    //debugPrint("our group data: ${Get.arguments?['is_group']}");
   }
 
   Map<String, dynamic> parseMap(dynamic source) {
@@ -72,6 +83,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
+    staff.dispose();
     super.dispose();
   }
 
@@ -86,113 +98,30 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
     });
   }
 }
+Future<void> fetchAndPrintUserData() async {
+    try {
+      // Fetch user data from the database using the read() method
+      List<Map<String, dynamic>> userDataList = await staff.read();
 
+      if (userDataList.isNotEmpty) {
+        // Store the fetched user data in the state variable
+        setState(() {
+          userData = userDataList.first;
+        });
+
+        // Print the fetched user data
+        debugPrint("User Data: ${json.encode(userData)}");
+      } else {
+        debugPrint('No user data found.');
+      }
+    } catch (e) {
+      debugPrint('Error fetching user data: $e');
+    }
+  }
   void _resetToFullDelivery() {
     Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateSelectedDeliveryType(DeliveryType.full);
   }
   
-  void showSignaturePopup(SignatureController controller) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          backgroundColor: Colors.white,
-          child: Transform.rotate(
-            angle: 90 * 3.14159 / 180,
-            child: SizedBox(
-              height: 47.h,
-              width: 80.w,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      CupertinoButton(
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          controller.clear();
-                          context
-                              .read<ProofOfDeliveryProvider>()
-                              .resetSignatureState();
-                        },
-                      ),
-                      Text(
-                        "Signature",
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      CupertinoButton(
-                        child: const Text(
-                          "Done",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () async {
-                          await controller.toPngBytes().then(
-                            (bytes) {
-                              if (bytes != null) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .updateSignatureData(bytes);
-                                Navigator.pop(context);
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  Center(
-                    child: Container(
-                      height: 24.h,
-                      width: 90.w,
-                      alignment: Alignment.center,
-                      child: Signature(
-                        controller: controller,
-                        width: 85.w,
-                        height: 20.h,
-                        backgroundColor: Colors.transparent,
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Center(
-                        child: Divider(
-                          height: 1,
-                          thickness: 2,
-                          color: AppColors.grey,
-                        ),
-                      ),
-                      CupertinoButton(
-                        child: const Text(
-                          "Clear",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        onPressed: () {
-                          controller.clear();
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   void _setDeviceInfo() async {
     final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
@@ -238,10 +167,115 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
+
+   void showSignaturePopup(SignatureController controller) {
+  showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        backgroundColor: Colors.white,
+        child: Transform.rotate(
+          angle: 90 * 3.14159 / 180,
+          child: SizedBox(
+            height: 47.h,
+            width: 80.w,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CupertinoButton(
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        controller.clear();
+                        provider.validateForm();
+                        context
+                            .read<ProofOfDeliveryProvider>()
+                            .resetSignatureState();
+                      },
+                    ),
+                    Text(
+                      "Signature",
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    CupertinoButton(
+                      child: const Text(
+                        "Done",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      onPressed: () async {
+                        await controller.toPngBytes().then(
+                          (bytes) {
+                            if (bytes != null) {
+                              context
+                                  .read<ProofOfDeliveryProvider>()
+                                  .updateSignatureData(bytes);
+                              provider.updateSignature(bytes); // Use bytes directly
+                              provider.validateForm();
+                              Navigator.pop(context);
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                Center(
+                  child: Container(
+                    height: 24.h,
+                    width: 90.w,
+                    alignment: Alignment.center,
+                    child: Signature(
+                      controller: controller,
+                      width: 85.w,
+                      height: 20.h,
+                      backgroundColor: Colors.transparent,
+                    ),
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Center(
+                      child: Divider(
+                        height: 1,
+                        thickness: 2,
+                        color: AppColors.grey,
+                      ),
+                    ),
+                    CupertinoButton(
+                      child: const Text(
+                        "Clear",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      onPressed: () {
+                        controller.clear();
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
     debugPrint({Get.arguments}.toString());
     bool isGroupedConsignment = groupedConsignments.isNotEmpty;
-
-  
     return Scaffold(
       key: _scaffoldKey,
         backgroundColor: AppColors.white,
@@ -302,21 +336,21 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                               style: Theme.of(context).textTheme.headlineSmall,
                             ),
                             InkWell(
-                              onTap: () {},
-                              child: Container(
-                                width: 13.5.w,
-                                height: 6.h,
-                                decoration: BoxDecoration(
-                                    color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(50.sp),
-                                    border: Border.all()),
-                                child: SvgPicture.asset(
-                                  AppSvgs.mapMarker,
-                                  // ignore: deprecated_member_use
-                                  color: AppColors.black,
-                                ),
+                            onTap: () {},
+                            child: Container(
+                              width: 13.5.w,
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(50.sp),
+                                border: Border.all(),
                               ),
+                              child: Image.asset(
+                            AppImages.map,
+                            color: AppColors.black,
+                          ),
                             ),
+                          ),
                           ],
                         ),
                       ),
@@ -412,7 +446,20 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                       ),
                       CustomDropdown(
                         name: 'deliveryType',
-                        hintText: 'Please Select',
+                        hintWidget:Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: Colors.green,
+                                  radius: 3.sp,
+                                ),
+                                SizedBox(
+                                  width: 2.w,
+                                ),
+                                const Text('Full Delivery',style: TextStyle(
+                                  color: AppColors.black
+                                ),),
+                              ],
+                            ),
                         fillColor: AppColors.white,
                         onChanged: (newValue) {
                           context
@@ -475,7 +522,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                       SizedBox(
                         height: 2.h,
                       ),
-                      if (Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType == DeliveryType.full)
+    if (Provider.of<ProofOfDeliveryProvider>(context).selectedDeliveryType == DeliveryType.full)
                      
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,9 +621,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
     return null;
   },
                               onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['temperature'] = value;
+                                  context.read<ProofOfDeliveryProvider>().updateField('temp', value);
                                     
                               },
                             ),
@@ -665,9 +710,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                   return null;
                                    },
                               onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['lengthOfDelivery'] = value;
+                                 context.read<ProofOfDeliveryProvider>().updateField('lengthOfDelivery', value);
                                     
                               },
                             ),
@@ -691,9 +734,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                   return null;
                                    },
                               onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['first_name'] = value;
+                               context.read<ProofOfDeliveryProvider>().updateField('first_name', value);
                                      
                               },
                             ),
@@ -710,10 +751,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                   return null;
                                    },
                               onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['last_name'] = value;
-                                     context.read<ProofOfDeliveryProvider>().validateForm(_formKey);
+                                 context.read<ProofOfDeliveryProvider>().updateField('last_name', value);
                               },
                             ),
                             SizedBox(
@@ -730,13 +768,13 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                         showSignaturePopup(controller);
                                         final bytes =
                                             await controller.toPngBytes();
-                                        if (bytes != null) {
-                                          provider.updateSignatureData(bytes);
-                                          provider.addEntities({
-                                            "signature":
-                                                'data:image/png;base64, ${base64Encode(bytes)}',
-                                          });
-                                        }
+                                   if (bytes != null) {
+  print("Signature updated");
+  provider.updateSignature('data:image/png;base64, ${base64Encode(bytes)}' as Uint8List);
+  provider.validateForm();
+}
+
+
                                       }
                                     },
                                     child: Stack(
@@ -847,28 +885,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
   builder: (context, provider, _) => CustomButton(
     label: "Next",
     onPressed: provider.isFormValid ? () {
-      if (provider.signature == null || provider.signature!.isEmpty) {
-        // Show dialog if signature is missing
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("Missing Signature"),
-              content: Text("Please provide your signature before proceeding."),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
-                  child: Text("OK"),
-                ),
-              ],
-            );
-          },
-        );
-        return; // Stop further execution
-      }
-
+    
       String deliveryType = Get.arguments['delivery_type'] ?? 'delivery';
       if (deliveryType != 'pickup') {
         int cartons = int.parse(_formKey.currentState!.fields['cartons']!.value.toString());
@@ -945,6 +962,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
         }
       }
 
+
       if (_formKey.currentState != null) {
         final temperature = int.tryParse(_formKey.currentState!.fields['temp']!.value) ?? 0;
         final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
@@ -961,29 +979,40 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
         final latitude = context.read<LocationProvider>().current!.latitude;
         final longitude = context.read<LocationProvider>().current!.longitude;
         final images = jsonEncode(provider.base64Images);
-        final driverId = runSheets['driver_id'];
-        final address_id = (Get.arguments['delivery_type'] == 'pickup')
-            ? Get.arguments['pickup_address_string_id']
-            : Get.arguments['delivery_address_string_id'];
-
+        final driverId = userData!['id'];
+         final address_id = (Get.arguments['consignment_type'] == 'pickup')
+            ? pickupAddresses['id']
+            : deliveryAddresses['id'];
         final space = Get.arguments['space'];
         final weight = Get.arguments['weight'];
         final customer_reference = Get.arguments['customer_reference'];
-        final service_window = pickupAddresses['service_window'];
+        final service_window = int.tryParse(_formKey.currentState!.fields['length']!.value) ?? 0;
         final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
+        final consignmentbrac= Get.arguments['id'];
+        if (Get.arguments?['is_group'] == 'parent') {
+          consignmentIds.add(consignmentbrac.toString());
+}
+
         final consignments = (Get.arguments?['is_group']== 'parent')
             ? consignmentIds
-            :Get.arguments['id'];
-
+            :[ consignmentbrac];    
+        final consignment_id = Get.arguments['id'];
         final consignmentType = Get.arguments['consignment_type'] ?? 'delivery';
         provider.data['pod_type'] = (consignmentType == 'delivery') ? 2 : 5;
+ int pod_type;
+  if (Get.arguments?['is_group'] == 'parent') {
+    pod_type = (consignmentType == 'delivery') ? 2 : 5;
+  } else {
+    pod_type = (consignmentType == 'delivery') ? 0 : 4;
+  }
 
+  provider.data['pod_type'] = pod_type;
         final temp = {
           "temperature": temperature,
           "first_name": first_name,
           "last_name": last_name,
           "lengthOfDelivery": lengthofDelivery,
-          "pod_type": provider.data['pod_type'],
+          "pod_type": pod_type,
           "device": jsonEncode(deviceinfo),
           "carton": cartons,
           "pallet": pallets,
@@ -996,6 +1025,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
           "longitude": longitude,
           "current_app_version": "3.15.2",
           "app_version": "3.15.2",
+          "consignment_id": consignment_id, 
           "consignments": jsonEncode(consignments),
           "driver_id": driverId,
           "date_delivered": DateTime.now().toIso8601String(),
@@ -1012,9 +1042,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
         provider.addEntities(temp.entries);
         Get.toNamed(AppRoutes.podphotos, arguments: Get.arguments);
       }
-    } : () {
-      // If the form is invalid or the signature is missing, do nothing or handle accordingly
-    },
+    } : () {},
     backgroundColor: provider.isFormValid ? AppColors.blue : AppColors.grey,
     borderColor: provider.isFormValid ? AppColors.blue : AppColors.grey,
   ),
@@ -1025,9 +1053,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                             ),
                           ],
                         ),
-                      if (Provider.of<ProofOfDeliveryProvider>(context)
-                              .selectedDeliveryType ==
-                          DeliveryType.partial)
+                     
+              if (Provider.of<ProofOfDeliveryProvider>(context) .selectedDeliveryType ==DeliveryType.partial)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1048,7 +1075,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                   hintText: '0',
                                   initialValue: int.tryParse(context
                                               .read<ProofOfDeliveryProvider>()
-                                              .data['cartons']
+                                              .data['carton']
                                               ?.toString() ??
                                           '0') ??
                                       0,
@@ -1158,9 +1185,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                       return null;
                                         },
                               onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['temperature'] = value;
+                                   context.read<ProofOfDeliveryProvider>().updateField('temp', value);
                                     
                               },
                             ),
@@ -1249,10 +1274,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                       return null;
                                         },
                               onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['lengthOfDelivery'] = value;
-                                       
+                                context.read<ProofOfDeliveryProvider>().updateField('lengthOfDelivery', value);
                               },
                             ),
                             SizedBox(
@@ -1275,9 +1297,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                       return null;
                                         },
                               onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['first_name'] = value;
+                              context.read<ProofOfDeliveryProvider>().updateField('first_name', value);
                               },
                             ),
                             SizedBox(
@@ -1292,11 +1312,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                         }
                                       return null;
                                         },
-                              onChanged: (value) {
-                                context
-                                    .read<ProofOfDeliveryProvider>()
-                                    .data['last_name'] = value;
-                                       context.read<ProofOfDeliveryProvider>().validateForm(_formKey);
+                              onChanged: (value) {                        
+                                context.read<ProofOfDeliveryProvider>().updateField('last_name', value);
                               },
                             ),
                             SizedBox(
@@ -1315,11 +1332,13 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                         final bytes =
                                             await controller.toPngBytes();
                                         if (bytes != null) {
-                                          provider.updateSignatureData(bytes);
-                                          provider.addEntities({
-                                            "signature":
-                                                'data:image/png;base64, ${base64Encode(bytes)}',
-                                          });
+                                          provider.updateSignature('data:image/png;base64, ${base64Encode(bytes)}' as Uint8List);
+                                          provider.validateForm();
+                                          // provider.updateSignatureData(bytes);
+                                          // provider.addEntities({
+                                          //   "signature":
+                                          //       'data:image/png;base64, ${base64Encode(bytes)}',
+                                          // });
                                         }
                                       }
                                     },
@@ -1433,29 +1452,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
         label: "Next",
         onPressed: () {
           if (_formKey.currentState != null && provider.isFormValid) {
-            if (provider.signature == null || provider.signature!.isEmpty) {
-              // Show dialog if signature is missing
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text("Missing Signature"),
-                    content: Text("Please provide your signature before proceeding."),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Close the dialog
-                        },
-                        child: Text("OK"),
-                      ),
-                    ],
-                  );
-                },
-              );
-              return; // Stop further execution if no signature
-            }
-
-            // Extract form values and continue with processing
+       
             final temperature = int.tryParse(_formKey.currentState!.fields['temp']!.value) ?? 0;
             final first_name = _formKey.currentState!.fields['receiverFirstName']!.value.toString();
             final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
@@ -1472,15 +1469,19 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
             final latitude = context.read<LocationProvider>().current!.latitude;
             final longitude = context.read<LocationProvider>().current!.longitude;
             final images = jsonEncode(provider.base64Images);
-            final consignments = Get.arguments['id'];
-            final driverId = runSheets['driver_id'];
-            final address_id = (Get.arguments['delivery_type'] == 'pickup')
-                ? Get.arguments['pickup_address_string_id']
-                : Get.arguments['delivery_address_string_id'];
+             final consignmentbrac= Get.arguments['id'];
+             final consignments = (Get.arguments?['is_group']== 'parent')
+            ? consignmentIds
+            :[ consignmentbrac];
+            final consignment_id = Get.arguments['id'];
+             final driverId = userData!['id'];
+             final address_id = (Get.arguments['consignment_type'] == 'pickup')
+            ? pickupAddresses['id']
+            : deliveryAddresses['id'];
             final space = Get.arguments['space'];
             final weight = Get.arguments['weight'];
             final customer_reference = Get.arguments['customer_reference'];
-            final service_window = pickupAddresses['service_window'];
+            final service_window = int.tryParse(_formKey.currentState!.fields['length']!.value) ?? 0;
             final platforms = jsonEncode(["android", "cordova", "mobile", "hybrid"]);
 
             final temp = {
@@ -1502,7 +1503,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
               "longitude": longitude,
               "current_app_version": "3.15.2",
               "app_version": "3.15.2",
-              "consignments": jsonEncode([consignments]),
+              "consignment_id": consignment_id, 
+              "consignments": jsonEncode(consignments),
               "driver_id": driverId,
               "date_delivered": DateTime.now().toIso8601String(),
               "space": space,
@@ -1537,6 +1539,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                             ),
                           ],
                         ),
+                     
                       if (provider.selectedDeliveryType == DeliveryType.none)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1661,11 +1664,15 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                               .read<ProofOfDeliveryProvider>();
                                           final rejection_reason =
                                               provider.data['rejection_reason'];
-                                          final consignments =
-                                              Get.arguments['id'];
-                                         final driverId = runSheets['driver_id'];
-                                          final address_id =
-                                              Get.arguments['address_id'];
+                                            final consignmentbrac= Get.arguments['id'];
+                                           final consignments = (Get.arguments?['is_group']== 'parent')
+            ? consignmentIds
+            :[ consignmentbrac];
+                                           final consignment_id = Get.arguments['id'];
+                                         final driverId = Get.arguments['weight'];
+                                           final address_id = (Get.arguments['consignment_type'] == 'pickup')
+            ? pickupAddresses['id']
+            : deliveryAddresses['id'];
                                           final date_delivered =
                                               Get.arguments['date_delivered'];
                                           final space = Get.arguments['space'];
@@ -1732,8 +1739,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
                                             "adhoc_charges": false,
                                             "space": space,
                                             "weight": weight,
-                                            "consignments":
-                                                jsonEncode([consignments]),
+                                            "consignment_id": consignment_id, 
+                                             "consignments": jsonEncode(consignments),
                                             "device": jsonEncode(deviceinfo),
                                             "date_delivered": DateTime.now()
                                                 .toIso8601String(),

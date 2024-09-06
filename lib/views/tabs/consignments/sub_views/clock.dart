@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:coldxpress/export.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 class EditTime extends StatefulWidget {
   const EditTime({super.key});
@@ -56,8 +55,37 @@ class _EditTimeState extends State<EditTime> {
         : PickedTime(h: endTime!.hour, m: endTime!.minute);
   }
 
+  Future<void> saveTimeUpdateToTaskSync(
+      DatabaseProvider dbProvider, String accessToken, int addressId, PickedTime startTime, PickedTime endTime) async {
+    // Prepare the data to be saved in the TaskSyncDatabase
+    final requestBody = {
+      "addressId": addressId,
+      "startTime": "${startTime.h.toString().padLeft(2, '0')}:${startTime.m.toString().padLeft(2, '0')}",
+      "endTime": "${endTime.h.toString().padLeft(2, '0')}:${endTime.m.toString().padLeft(2, '0')}"
+    };
+
+    // Save the data in TaskSyncDatabase
+    final taskData = {
+      "task_name": "update time", // Task name for the update time task
+      "task_type": "update_time", // Task type to indicate this is a time update
+      "data": jsonEncode(requestBody), // Store the requestBody as JSON string
+      "access_token": accessToken // Store the access token for future API calls
+    };
+
+    try {
+      await dbProvider.database.insert('sync_task', taskData);
+      print('Task saved to TaskSyncDatabase successfully');
+    } catch (e) {
+      debugPrint('Error saving task to TaskSyncDatabase: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final address_id = (Get.arguments['consignment_type'] == 'pickup')
+        ? pickupAddresses['id']
+        : deliveryAddresses['id'];
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -95,9 +123,7 @@ class _EditTimeState extends State<EditTime> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 2.h,
-                  ),
+                  SizedBox(height: 2.h),
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -111,23 +137,19 @@ class _EditTimeState extends State<EditTime> {
                                         ? deliveryAddresses['customer_name']
                                         : pickupAddresses['customer_name']) ??
                                     'Not Provided',
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium,
+                                style: Theme.of(context).textTheme.headlineMedium,
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(
-                          height: 1.h,
-                        ),
+                        SizedBox(height: 1.h),
                         InkWell(
                           onTap: () async {
                             final Uri launchUri = Uri(
                               scheme: 'tel',
-                              path:
-                                  consignment['consignment_type'] == 'delivery'
-                                      ? deliveryAddresses['telephone']
-                                      : pickupAddresses['telephone'],
+                              path: consignment['consignment_type'] == 'delivery'
+                                  ? deliveryAddresses['telephone']
+                                  : pickupAddresses['telephone'],
                             );
                             await launchUrl(launchUri);
                           },
@@ -149,13 +171,9 @@ class _EditTimeState extends State<EditTime> {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
+                  SizedBox(height: 2.h),
                   const Divider(),
-                  SizedBox(
-                    height: 2.h,
-                  ),
+                  SizedBox(height: 2.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -170,24 +188,16 @@ class _EditTimeState extends State<EditTime> {
                                 backgroundColor: Color(0xFFE29400),
                                 radius: 5,
                               ),
-                              SizedBox(
-                                width: 1.w,
-                              ),
+                              SizedBox(width: 1.w),
                               Text(
                                 "Start Time",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(color: AppColors.black),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.black),
                               ),
                             ],
                           ),
                           Text(
                             "${_startTime.h}:${_startTime.m}",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(color: const Color(0xFFE29400)),
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: const Color(0xFFE29400)),
                           ),
                         ],
                       ),
@@ -205,47 +215,30 @@ class _EditTimeState extends State<EditTime> {
                                   radius: 2,
                                 ),
                               ),
-                              SizedBox(
-                                width: 1.w,
-                              ),
+                              SizedBox(width: 1.w),
                               Text(
                                 "End Time",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(color: AppColors.black),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.black),
                               ),
                             ],
                           ),
                           Text(
                             "${_endTime.h}:${_endTime.m}",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(color: AppColors.blue),
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: AppColors.blue),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: 1.h,
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
+                  SizedBox(height: 1.h),
+                  SizedBox(height: 2.h),
                   Center(
                     child: Text(
                       "*24 HR CLOCK",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(color: AppColors.grey),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey),
                     ),
                   ),
-                  SizedBox(
-                    height: 1.h,
-                  ),
+                  SizedBox(height: 1.h),
                   Center(
                     child: SizedBox(
                       height: 31.h,
@@ -288,10 +281,8 @@ class _EditTimeState extends State<EditTime> {
                                     stops: [0.0, 1.0],
                                   ),
                                 ),
-                                baseColor:
-                                    const Color.fromARGB(255, 200, 198, 198),
-                                initHandlerDecoration:
-                                    TimePickerHandlerDecoration(
+                                baseColor: const Color.fromARGB(255, 200, 198, 198),
+                                initHandlerDecoration: TimePickerHandlerDecoration(
                                   color: AppColors.grey,
                                   shape: BoxShape.circle,
                                   radius: 12.0,
@@ -301,8 +292,7 @@ class _EditTimeState extends State<EditTime> {
                                     color: AppColors.yellow,
                                   ),
                                 ),
-                                endHandlerDecoration:
-                                    TimePickerHandlerDecoration(
+                                endHandlerDecoration: TimePickerHandlerDecoration(
                                   color: AppColors.grey,
                                   shape: BoxShape.circle,
                                   radius: 12.0,
@@ -319,21 +309,14 @@ class _EditTimeState extends State<EditTime> {
                       ),
                     ),
                   ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
+                  SizedBox(height: 2.h),
                   Center(
                     child: Text(
                       "*Changing these hours may impact drop order",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(color: AppColors.grey),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey),
                     ),
                   ),
-                  SizedBox(
-                    height: 3.h,
-                  ),
+                  SizedBox(height: 3.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -355,128 +338,99 @@ class _EditTimeState extends State<EditTime> {
                         child: CustomButton(
                           label: "Save",
                           onPressed: () async {
-                            await ConsignmentDatabase(
-                                    context.read<DatabaseProvider>().database)
-                                .readById(consignment['id'])
-                                .then((value) {
-                              if (value.isNotEmpty) {
-                                if (consignment['consignment_type'] ==
-                                    'delivery') {
-                                  deliveryAddresses['service_time_start'] =
-                                      startTime != null
-                                          ? startTime!
-                                              .copyWith(
-                                                hour: _startTime.h,
-                                                minute: _startTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first
-                                          : parseDate(consignment['date'])
-                                              .copyWith(
-                                                hour: _startTime.h,
-                                                minute: _startTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first;
-                                  deliveryAddresses['service_time_end'] =
-                                      endTime != null
-                                          ? endTime!
-                                              .copyWith(
-                                                hour: _endTime.h,
-                                                minute: _endTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first
-                                          : parseDate(consignment['date'])
-                                              .copyWith(
-                                                hour: _endTime.h,
-                                                minute: _endTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first;
+                            // Get the user's token from the authentication state
+                            AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+                            if (state is Authenticated) {
+                              String accessToken = state.token;
 
-                                  String temp = json.encode(deliveryAddresses);
+                              // Save the time update task to TaskSyncDatabase
+                              await saveTimeUpdateToTaskSync(
+                                  context.read<DatabaseProvider>(),
+                                  accessToken,
+                                  address_id,
+                                  _startTime,
+                                  _endTime);
 
-                                  ConsignmentDatabase(context
-                                          .read<DatabaseProvider>()
-                                          .database)
-                                      .update(
-                                    consignment['id'],
-                                    {'delivery_addresses': temp},
-                                  );
-                                } else {
-                                  pickupAddresses['service_time_start'] =
-                                      startTime != null
-                                          ? startTime!
-                                              .copyWith(
-                                                hour: _startTime.h,
-                                                minute: _startTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first
-                                          : parseDate(consignment['date'])
-                                              .copyWith(
-                                                hour: _startTime.h,
-                                                minute: _startTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first;
-                                  pickupAddresses['service_time_end'] =
-                                      endTime != null
-                                          ? endTime!
-                                              .copyWith(
-                                                hour: _endTime.h,
-                                                minute: _endTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first
-                                          : parseDate(consignment['date'])
-                                              .copyWith(
-                                                hour: _endTime.h,
-                                                minute: _endTime.m,
-                                              )
-                                              .toString()
-                                              .split('.')
-                                              .first;
+                              // Now, update the consignment data in the local database
+                              await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+                                  .readById(consignment['id'])
+                                  .then((value) {
+                                if (value.isNotEmpty) {
+                                  // Update consignment delivery or pickup data
+                                  if (consignment['consignment_type'] == 'delivery') {
+                                    deliveryAddresses['service_time_start'] =
+                                        startTime != null
+                                            ? startTime!
+                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first
+                                            : parseDate(consignment['date'])
+                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first;
 
-                                  String temp = json.encode(pickupAddresses);
+                                    deliveryAddresses['service_time_end'] =
+                                        endTime != null
+                                            ? endTime!.copyWith(hour: _endTime.h, minute: _endTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first
+                                            : parseDate(consignment['date'])
+                                                .copyWith(hour: _endTime.h, minute: _endTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first;
 
-                                  ConsignmentDatabase(context
-                                          .read<DatabaseProvider>()
-                                          .database)
-                                      .update(
-                                    consignment['id'],
-                                    {'pickup_addresses': temp},
-                                  );
+                                    // Save the updated delivery addresses
+                                    String temp = json.encode(deliveryAddresses);
+                                    ConsignmentDatabase(context.read<DatabaseProvider>().database)
+                                        .update(consignment['id'], {'delivery_addresses': temp});
+                                  } else {
+                                    pickupAddresses['service_time_start'] =
+                                        startTime != null
+                                            ? startTime!
+                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first
+                                            : parseDate(consignment['date'])
+                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first;
+
+                                    pickupAddresses['service_time_end'] =
+                                        endTime != null
+                                            ? endTime!.copyWith(hour: _endTime.h, minute: _endTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first
+                                            : parseDate(consignment['date'])
+                                                .copyWith(hour: _endTime.h, minute: _endTime.m)
+                                                .toString()
+                                                .split('.')
+                                                .first;
+
+                                    // Save the updated pickup addresses
+                                    String temp = json.encode(pickupAddresses);
+                                    ConsignmentDatabase(context.read<DatabaseProvider>().database)
+                                        .update(consignment['id'], {'pickup_addresses': temp});
+                                  }
                                 }
-                              }
-                              var timeProvider = Provider.of<TimeProvider>(
-                                context,
-                                listen: false,
-                              );
-                              timeProvider.updateTimes(
-                                DateTime(
-                                    DateTime.now().year,
-                                    DateTime.now().month,
-                                    DateTime.now().day,
-                                    _startTime.h,
-                                    _startTime.m),
-                                DateTime(
-                                    DateTime.now().year,
-                                    DateTime.now().month,
-                                    DateTime.now().day,
-                                    _endTime.h,
-                                    _endTime.m),
-                              );
-                              Navigator.pop(context);
-                            });
+
+                                // Update the time in TimeProvider
+                                var timeProvider = Provider.of<TimeProvider>(context, listen: false);
+                                timeProvider.updateTimes(
+                                  DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, _startTime.h, _startTime.m),
+                                  DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, _endTime.h, _endTime.m)
+                                );
+
+                                // Go back to the previous screen
+                                Navigator.pop(context);
+                              });
+                            }
                           },
                         ),
                       ),
@@ -490,21 +444,19 @@ class _EditTimeState extends State<EditTime> {
       ),
     );
   }
+
   DateTime parseDate(String? date) {
     if (date == null) {
-      return DateTime.now(); 
+      return DateTime.now();
     }
     List<String> value = date.split('/');
-    return DateTime(
-        int.parse(value[2]), int.parse(value[1]), int.parse(value[0]));
+    return DateTime(int.parse(value[2]), int.parse(value[1]), int.parse(value[0]));
   }
 }
 
 class TimeProvider extends ChangeNotifier {
-  DateTime _startTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30);
-  DateTime _endTime = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day, 19, 30);
+  DateTime _startTime = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30);
+  DateTime _endTime = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 19, 30);
 
   DateTime get startTime => _startTime;
   DateTime get endTime => _endTime;

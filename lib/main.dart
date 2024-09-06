@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
             create: (_) => LocationProvider(),
           ),
           ChangeNotifierProvider(
-            create: (_) => TimeProvider(),
+            create: (context) => TimeProvider(),
             child: const EditTime(),
           ),
           ChangeNotifierProvider(

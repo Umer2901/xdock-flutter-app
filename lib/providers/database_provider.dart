@@ -148,6 +148,8 @@ class DatabaseProvider with ChangeNotifier {
         delivery_address INTEGER,
         datetime TEXT,
         access_token TEXT,
+        address_grouping INTEGER,
+       
         is_complete INTEGER DEFAULT 0
       )
     ''');
@@ -273,7 +275,8 @@ class DatabaseProvider with ChangeNotifier {
         pictureSources TEXT,
         app_version TEXT,
         current_app_version TEXT,
-        platforms TEXT
+        platforms TEXT,
+        consignment_id INTEGER
       )
     ''');
 

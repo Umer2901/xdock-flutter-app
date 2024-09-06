@@ -45,8 +45,7 @@ class _CustomMyConsigmentContainerState
         widget.consignment?['grouped_consignments'],
       );
     }
-final Map runSheets = jsonDecode(widget.consignment?['run_sheets']);
-    final date = runSheets['date'] ?? 'Not Provided';
+
     return Padding(
       padding: EdgeInsets.only(top: 2.h),
       child: widget.isLoading

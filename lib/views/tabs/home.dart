@@ -56,7 +56,8 @@ class _HomeTabState extends State<HomeTab> {
  
   List<Map> filterConsignmentsByDate(List<Map> consignments, String targetDate) {
   return consignments.where((consignment) {
-    final date = _decodeJson(consignment['run_sheets'])['date'] ?? '';
+   final String date = consignment['date'] ?? 'Not Provided';
+
     return date == targetDate;
   }).toList();
 }

@@ -39,8 +39,8 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
   void _groupConsignmentsByDate() {
     Map<String, List<dynamic>> tempGroupedConsignments = {};
     for (var consignment in _consignments) {
-      final Map runSheets = jsonDecode(consignment['run_sheets']);
-      final date = runSheets['date'] ?? 'Not Provided';
+
+       final date = consignment['delivery_date'] ?? 'Not Provided';
       if (!tempGroupedConsignments.containsKey(date)) {
         tempGroupedConsignments[date] = [];
       }
