@@ -122,8 +122,8 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
           int index = consignments.indexOf(consignment) + 1;
           return GestureDetector(
             onTap: () {
-              if ((precheckSnapshot.data![0]['checklist'] == 0 &&
-                  precheckSnapshot.data![0]['outbound'] == 0)) {
+              if ((precheckSnapshot.data![0]['checklist'] == 1 &&
+                  precheckSnapshot.data![0]['outbound'] == 1)) {
                 Get.toNamed(
                   AppRoutes.singleConsigment,
                   arguments: consignment,

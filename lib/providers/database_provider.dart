@@ -149,7 +149,7 @@ class DatabaseProvider with ChangeNotifier {
         datetime TEXT,
         access_token TEXT,
         address_grouping INTEGER,
-       
+        required_delivery_time TEXT,
         is_complete INTEGER DEFAULT 0
       )
     ''');

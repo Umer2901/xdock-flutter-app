@@ -539,11 +539,17 @@ Future<void> fetchAndPrintUserData() async {
   children: [
     if (Get.arguments?['consignment_type'] == 'pickup')
       PalletContainer(
-        name: 'cartons',
+        name: 'fullcartons',
         heading: AppText.cartons,
         icon: SvgPicture.asset(AppSvgs.boundpallets),
         hintText: '0',
-        initialValue: Get.arguments?['carton'] ?? 0,
+        //initialValue: Get.arguments?['carton'] ?? 0,
+         initialValue: int.tryParse(context
+                                              .read<ProofOfDeliveryProvider>()
+                                              .data['carton']
+                                              ?.toString() ??
+                                          '0') ??
+                                      0,
         totalPallet: int.tryParse(Get.arguments?['carton']?.toString() ?? '0') ?? 0,
         contentPadding: EdgeInsets.symmetric(
           horizontal: 4.w,
@@ -553,7 +559,7 @@ Future<void> fetchAndPrintUserData() async {
     else
       IgnorePointer(
         child: PalletContainer(
-          name: 'cartons',
+          name: 'fullcartons',
           heading: AppText.cartons,
           icon: SvgPicture.asset(AppSvgs.boundpallets),
           hintText: '0',
@@ -567,16 +573,22 @@ Future<void> fetchAndPrintUserData() async {
       ),
     if (Get.arguments?['consignment_type'] == 'pickup')
       PalletContainer(
-        name: 'pallets',
+        name: 'fullpallets',
         heading: AppText.pallets,
         hintText: '0',
-        initialValue: Get.arguments?['pallet'] ?? 0,
+        //initialValue: Get.arguments?['pallet'] ?? 0,
+         initialValue: int.tryParse(context
+                                              .read<ProofOfDeliveryProvider>()
+                                              .data['pallet']
+                                              ?.toString() ??
+                                          '0') ??
+                                      0,
         totalPallet: int.tryParse(Get.arguments?['pallet']?.toString() ?? '0') ?? 0,
       )
     else
       IgnorePointer(
         child: PalletContainer(
-          name: 'pallets',
+          name: 'fullpallets',
           heading: AppText.pallets,
           hintText: '0',
           initialValue: Get.arguments?['pallet'] ?? 0,
@@ -888,8 +900,8 @@ Future<void> fetchAndPrintUserData() async {
     
       String deliveryType = Get.arguments['delivery_type'] ?? 'delivery';
       if (deliveryType != 'pickup') {
-        int cartons = int.parse(_formKey.currentState!.fields['cartons']!.value.toString());
-        int pallets = int.parse(_formKey.currentState!.fields['pallets']!.value.toString());
+        int cartons = int.parse(_formKey.currentState!.fields['fullcartons']!.value.toString());
+        int pallets = int.parse(_formKey.currentState!.fields['fullpallets']!.value.toString());
         int requiredCartons = Get.arguments['carton'];
         int requiredPallets = Get.arguments['pallet'];
 
@@ -972,8 +984,8 @@ Future<void> fetchAndPrintUserData() async {
         final service_time_start = '${serviceTimeProvider.startTime}';
         final service_time_end = '${serviceTimeProvider.endTime}';
         final lengthofDelivery = int.tryParse(_formKey.currentState!.fields['length']!.value) ?? 0;
-        final cartons = int.tryParse(_formKey.currentState!.fields['cartons']!.value) ?? 0;
-        final pallets = int.tryParse(_formKey.currentState!.fields['pallets']!.value) ?? 0;
+        final cartons = int.tryParse(_formKey.currentState!.fields['fullcartons']!.value) ?? 0;
+        final pallets = int.tryParse(_formKey.currentState!.fields['fullpallets']!.value) ?? 0;
         final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
         final pictureSources = jsonEncode(provider.pictureSources);
         final latitude = context.read<LocationProvider>().current!.latitude;
@@ -1069,7 +1081,7 @@ Future<void> fetchAndPrintUserData() async {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 PalletContainer(
-                                  name: 'cartons',
+                                  name: 'partailcartons',
                                   heading: AppText.cartons,
                                   icon: SvgPicture.asset(AppSvgs.boundpallets),
                                   hintText: '0',
@@ -1090,7 +1102,7 @@ Future<void> fetchAndPrintUserData() async {
                                   ),
                                 ),
                                 PalletContainer(
-                                  name: 'pallets',
+                                  name: 'partailpallets',
                                   heading: AppText.pallets,
                                   hintText: '0',
                                   initialValue: int.tryParse(context
@@ -1461,8 +1473,8 @@ Future<void> fetchAndPrintUserData() async {
             final service_time_start = '${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
             final service_time_end = '${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
             final lengthofDelivery = int.tryParse(_formKey.currentState!.fields['length']!.value) ?? 0;
-            final cartons = int.tryParse(_formKey.currentState!.fields['cartons']!.value) ?? 0;
-            final pallets = int.tryParse(_formKey.currentState!.fields['pallets']!.value) ?? 0;
+            final cartons = int.tryParse(_formKey.currentState!.fields['partailcartons']!.value) ?? 0;
+            final pallets = int.tryParse(_formKey.currentState!.fields['partailpallets']!.value) ?? 0;
             final signature = jsonEncode('data:image/png;base64, ${base64Encode(provider.signature!)}');
             final reason = _formKey.currentState!.fields['Reasonpartial']!.value.toString();
             final pictureSources = jsonEncode(provider.pictureSources);
@@ -1551,16 +1563,16 @@ Future<void> fetchAndPrintUserData() async {
                             SizedBox(
                               height: 1.h,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                IgnorePointer(
-                                  child: PalletContainer(
-                                    name: 'cartons',
+                            IgnorePointer(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  PalletContainer(
+                                    name: 'nonecartons',
                                     heading: AppText.cartons,
                                     icon: SvgPicture.asset(AppSvgs.boundpallets),
                                     hintText: '0',
-                                    initialValue: 0,
+                                     initialValue:0,
                                     totalPallet: int.tryParse(Get
                                                 .arguments?['carton']
                                                 ?.toString() ??
@@ -1568,13 +1580,11 @@ Future<void> fetchAndPrintUserData() async {
                                         0,
                                     isErrorState: true,
                                   ),
-                                ),
-                                IgnorePointer(
-                                  child: PalletContainer(
-                                    name: 'pallets',
+                                  PalletContainer(
+                                    name: 'nonepallets',
                                     heading: AppText.pallets,
                                     hintText: '0',
-                                    initialValue: 0,
+                                     initialValue: 0,
                                    totalPallet: int.tryParse(Get
                                                 .arguments?['pallet']
                                                 ?.toString() ??
@@ -1582,8 +1592,8 @@ Future<void> fetchAndPrintUserData() async {
                                         0,
                                     isErrorState: true,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             SizedBox(
                               height: 3.h,

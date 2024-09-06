@@ -199,7 +199,7 @@ class ConsignmentService {
     'datetime',
     'access_token',
     'address_grouping',
-    //'required_delivery_time',
+    'required_delivery_time',
     'is_complete'
   ];
 
