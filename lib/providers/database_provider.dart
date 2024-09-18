@@ -176,6 +176,7 @@ class DatabaseProvider with ChangeNotifier {
         weight TEXT,
         first_name TEXT,
         last_name TEXT,
+        temp TEXT,
         temperature TEXT,
         signature TEXT,
         comments TEXT,
@@ -201,6 +202,7 @@ class DatabaseProvider with ChangeNotifier {
         driver_id INTEGER,
         date_delivered TEXT,
         platforms TEXT,
+        access_token,
         current_app_version TEXT
       )
     ''');
@@ -217,6 +219,7 @@ class DatabaseProvider with ChangeNotifier {
         first_name TEXT,
         last_name TEXT,
         temperature TEXT,
+        temp TEXT,
         signature TEXT,
         comments TEXT,
         service_window TEXT,
@@ -244,6 +247,7 @@ class DatabaseProvider with ChangeNotifier {
         current_app_version TEXT,
         reason TEXT,
         lodgeError TEXT,
+        access_token,
         platforms TEXT
       )
     ''');
@@ -253,6 +257,7 @@ class DatabaseProvider with ChangeNotifier {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         pod_type INTEGER,
         error_type TEXT,
+        temp TEXT,
         rejection_reason TEXT,
         comments TEXT,
         record_error INTEGER,
@@ -276,6 +281,7 @@ class DatabaseProvider with ChangeNotifier {
         app_version TEXT,
         current_app_version TEXT,
         platforms TEXT,
+        access_token,
         consignment_id INTEGER
       )
     ''');
@@ -309,6 +315,7 @@ class DatabaseProvider with ChangeNotifier {
         driver_id INTEGER,
         date_delivered TEXT,
         platforms TEXT,
+        access_token,
         current_app_version TEXT
       )
     ''');

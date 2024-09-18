@@ -161,12 +161,12 @@ class ProofOfDeliveryProvider with ChangeNotifier {
                    _data['last_name']?.isNotEmpty == true &&
                    _signatureData != null;
                  
-    debugPrint('Temp: ${_data['temp']}');
-    debugPrint('Length of Delivery: ${_data['lengthOfDelivery']}');
-    debugPrint('First Name: ${_data['first_name']}');
-    debugPrint('Last Name: ${_data['last_name']}');
-    debugPrint('Signature Data: $_signatureData');
-    debugPrint('Is Form Valid: $_isFormValid');
+    // debugPrint('Temp: ${_data['temp']}');
+    // debugPrint('Length of Delivery: ${_data['lengthOfDelivery']}');
+    // debugPrint('First Name: ${_data['first_name']}');
+    // debugPrint('Last Name: ${_data['last_name']}');
+    // debugPrint('Signature Data: $_signatureData');
+    // debugPrint('Is Form Valid: $_isFormValid');
 
     notifyListeners();
   }

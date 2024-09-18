@@ -18,8 +18,8 @@ late Map productTypes;
 late Map deliveryAddresses;
 late Map pickupAddresses;
 List groupedConsignments = [];
-final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-     
+
+ late Map<String, dynamic> arguments;     
 class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
   void initState() {
@@ -39,14 +39,14 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
         Get.arguments?['grouped_consignments'],
       );
     }
-
+ arguments = (Get.arguments != null) ? Map<String, dynamic>.from(Get.arguments) : {};
     debugPrint("our group data: ${Get.arguments['is_group']}");
   }
 
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
-
+final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.white,
@@ -338,51 +338,49 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                     children: [
                       SizedBox(
                         width: 50.w,
-                        child: CustomButton(
-                          
-                          label: "Submit POD",
-                          onPressed: context
-                                  .watch<ProofOfDeliveryProvider>()
-                                  .images
-                                  .isNotEmpty
-                              ? () {
-                                final temp = {
-                                           
-                                              "pictures":  
-                                                jsonEncode(context
-                                                .read<ProofOfDeliveryProvider>()
-                                                .base64Images),
-                                              "pictureSources": 
-                                               jsonEncode(
-                                                context
-                                                    .read<
-                                                        ProofOfDeliveryProvider>()
-                                                    .pictureSources)
-                                            };
+                        child: 
+                  CustomButton(
+  label: "Submit POD",
+  onPressed: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
+      ? () {
+          final temp = {
+            "pictures": jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images),
+            "pictureSources": jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources),
+          };
 
-                                            context
-                                                .read<ProofOfDeliveryProvider>()
-                                                .addEntities(temp.entries);
-                                            
-                                          
-                                  Provider.of<TaskSyncpofProvider>(context,
-                                          listen: false)
-                                      .submitData(context);
-                                }
-                              : () {},
-                          backgroundColor: context
-                                  .watch<ProofOfDeliveryProvider>()
-                                  .images
-                                  .isNotEmpty
-                              ? AppColors.blue
-                              : AppColors.grey,
-                          borderColor: context
-                                  .watch<ProofOfDeliveryProvider>()
-                                  .images
-                                  .isNotEmpty
-                              ? AppColors.blue
-                              : AppColors.grey,
-                        ),
+          context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
+          print("Added entities to ProofOfDeliveryProvider.");
+
+          Provider.of<TaskSyncpofProvider>(context, listen: false).submitData(context);
+
+          // Check if the consignment type is either 'pickup' or 'return'
+          if (arguments.isNotEmpty && (arguments['consignment_type'] == 'pickup' || arguments['consignment_type'] == 'return')) {
+            print("Consignment type is '${arguments['consignment_type']}', navigating to 'delivery'.");
+            context.read<ProofOfDeliveryProvider>().restoreToDefault();
+
+            Get.toNamed(
+              AppRoutes.proofOfDelivery,
+              arguments: {
+                ...arguments,
+                'consignment_type': 'delivery',
+              },
+            );
+          } else {
+            print("Consignment type is not 'pickup' or 'return', or arguments are empty.");
+          }
+        }
+      : () {
+          // If the button is disabled because no images are present
+          print("Submit POD button pressed but no images are available.");
+        },
+  backgroundColor: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
+      ? AppColors.blue
+      : AppColors.grey,
+  borderColor: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
+      ? AppColors.blue
+      : AppColors.grey,
+),
+
                       ),
                     ],
                   ),

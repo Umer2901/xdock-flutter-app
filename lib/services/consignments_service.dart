@@ -279,34 +279,39 @@ class ConsignmentService {
     }
   }
 
-  Future<void> reorderConsignments(List<int> consignmentIds, String accessToken) async {
-    await _database.transaction((txn) async {
-      List<Map> tables = await txn.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='sync_task'");
-   //   print("Checking table existence: $tables");
-      
-      if (tables.isNotEmpty) {
-        for (var id in consignmentIds) {
-          await txn.update(
-            'consignments',
-            {'sort': consignmentIds.indexOf(id) + 1},
-            where: 'id = ?',
-            whereArgs: [id]
-          );
+Future<void> sendReorderedConsignments(
+      Map<String, List<int>> finalConsignments, String accessToken) async {
+    try {
+      print('Sending reorder API request with data: $finalConsignments');
+
+      final response = await http.post(
+        Uri.parse(AppHost.reorderConsignments), // Use the correct API endpoint
+        body: jsonEncode(finalConsignments),
+        headers: <String, String>{
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      print('Reorder API response code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        var responseData = json.decode(response.body);
+        String status = responseData['status'];
+        print('Reorder API response: $responseData');
+
+        if (status == 'success') {
+          print('Reorder successful.');
+        } else {
+          print('Reorder failed with status: $status, Message: ${responseData['msg']}');
         }
-
-        await txn.insert('sync_task', {
-          'task_name': 'Re-order Consignments',
-          'task_type': 'reorder',
-          'data': json.encode({DateFormat('yyyy-MM-dd').format(DateTime.now()): consignmentIds}),
-          'access_token': accessToken
-        });
-       // print('Reorder saved to sync_task');
-
-        List<Map> syncTaskData = await txn.rawQuery('SELECT * FROM sync_task');
-      //  print('Data in sync_task table: $syncTaskData');
       } else {
-     //   print("Table sync_task does not exist. Check your database initialization.");
+        print('Reorder API failed with status code: ${response.statusCode} and response: ${response.body}');
       }
-    });
+    } catch (e) {
+      print('Error during reorder API call: $e');
+    }
   }
+
 }

@@ -33,15 +33,12 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
    if (Get.arguments['grouped_consignments'] != null) {
       groupedConsignments = json.decode(Get.arguments['grouped_consignments']) as List<dynamic>;
-      // Collect consignment IDs
       for (var consignment in groupedConsignments) {
         if (consignment['id'] != null) {
           consignmentIds.add(consignment['id'].toString());
         }
       
     }
-
-      // Print names and company names of all consignments
       for (var consignment in groupedConsignments) {
         final deliveryAddresses = _decodeIfString(consignment['delivery_addresses']);
         final pickupAddresses = _decodeIfString(consignment['pickup_addresses']);
@@ -68,7 +65,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     bool isPickup = Get.arguments['consignment_type'] == 'pickup';
-  String appBarTitle = isPickup ? 'Pickup' : 'Delivery ';
+  String appBarTitle = isPickup ? 'PICKUP' : 'DELIVERY';
   String buttonText = isPickup ? 'POP Capture' : 'POD Capture';
     return Scaffold(
       key: _scaffoldKey,  

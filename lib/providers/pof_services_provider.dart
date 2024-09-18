@@ -106,6 +106,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
       }
 
       final podType = provider.selectedDeliveryType.toString().split('.').last;
+      print("i am pod type ${podType}");
       final Map<String, dynamic> taskToSave = {
         'task_name': 'delivery',
         'task_type': podType,
@@ -113,7 +114,9 @@ class TaskSyncpofProvider extends ChangeNotifier {
       };
 
       debugPrint('Saving the following data to TaskSyncDatabase: $taskToSave');
-
+ taskData.forEach((key, value) {
+          debugPrint('$key: $value');
+        });
       await TaskSyncDatabase(context.read<DatabaseProvider>().database)
           .create(taskToSave);
 
@@ -138,7 +141,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
         final taskDatabase =
             TaskSyncDatabase(context.read<DatabaseProvider>().database);
         final tasks = await taskDatabase.read();
-        await postDataToApi(tasks);
+       // await postDataToApi(tasks);
       }
     } catch (e) {
       debugPrint('Error saving data to database: $e');

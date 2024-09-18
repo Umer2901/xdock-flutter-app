@@ -59,14 +59,10 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
        fetchAndPrintUserData();
     }
     productTypes = parseMap(Get.arguments?['product_types']);
-   // runSheets = parseMap(Get.arguments?['run_sheets']);
     deliveryAddresses = parseMap(Get.arguments?['delivery_addresses']);
     pickupAddresses = parseMap(Get.arguments?['pickup_addresses']);
     groupedConsignments = parseList(Get.arguments?['grouped_consignments']);
     consignmentIds = groupedConsignments.map((c) => c['id'].toString()).toList();
-   // debugPrint("consignmentIds: ${consignmentIds}");
-   // debugPrint("Run Sheets Data: ${jsonEncode(runSheets)}");
-    //debugPrint("our group data: ${Get.arguments?['is_group']}");
   }
 
   Map<String, dynamic> parseMap(dynamic source) {
@@ -100,16 +96,12 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
 }
 Future<void> fetchAndPrintUserData() async {
     try {
-      // Fetch user data from the database using the read() method
       List<Map<String, dynamic>> userDataList = await staff.read();
 
       if (userDataList.isNotEmpty) {
-        // Store the fetched user data in the state variable
         setState(() {
           userData = userDataList.first;
         });
-
-        // Print the fetched user data
         debugPrint("User Data: ${json.encode(userData)}");
       } else {
         debugPrint('No user data found.');
@@ -150,9 +142,8 @@ Future<void> fetchAndPrintUserData() async {
           "version": iosInfo.systemVersion,
         };
       }
-//    print("Device Info: $deviceinfo");
     } catch (e) {
-      //  print("Error fetching device info: $e");
+    print("Error fetching device info: $e");
     }
 
     if (deviceinfo.isNotEmpty) {
@@ -276,6 +267,7 @@ Future<void> fetchAndPrintUserData() async {
 
     debugPrint({Get.arguments}.toString());
     bool isGroupedConsignment = groupedConsignments.isNotEmpty;
+    
     return Scaffold(
       key: _scaffoldKey,
         backgroundColor: AppColors.white,
@@ -1004,13 +996,12 @@ Future<void> fetchAndPrintUserData() async {
         if (Get.arguments?['is_group'] == 'parent') {
           consignmentIds.add(consignmentbrac.toString());
 }
-
         final consignments = (Get.arguments?['is_group']== 'parent')
             ? consignmentIds
             :[ consignmentbrac];    
         final consignment_id = Get.arguments['id'];
         final consignmentType = Get.arguments['consignment_type'] ?? 'delivery';
-        provider.data['pod_type'] = (consignmentType == 'delivery') ? 2 : 5;
+      //  provider.data['pod_type'] = (consignmentType == 'delivery') ? 2 : 5;
  int pod_type;
   if (Get.arguments?['is_group'] == 'parent') {
     pod_type = (consignmentType == 'delivery') ? 2 : 5;
@@ -1047,9 +1038,9 @@ Future<void> fetchAndPrintUserData() async {
           "comments": comments,
           "address_id": address_id,
           "pictures": images,
+          "access_token": userData!['access_token'],
           "platforms": platforms,
         };
-
         debugPrint('Consignment IDs: ${consignmentIds}');
         provider.addEntities(temp.entries);
         Get.toNamed(AppRoutes.podphotos, arguments: Get.arguments);
@@ -1525,6 +1516,7 @@ Future<void> fetchAndPrintUserData() async {
               "comments": comments,
               "address_id": address_id,
               "pictures": images,
+              "access_token": userData!['access_token'],
               "lodgeError": jsonEncode({
                 "comments": comments,
                 "errorPictures": images,
@@ -1763,6 +1755,7 @@ Future<void> fetchAndPrintUserData() async {
                                             "where_temp_checked": "",
                                             "customer_probe_checked": null,
                                             "customer_probe_why": null,
+                                            "access_token": userData!['access_token'],
                                             "pictures": images,
                                             "pictureSources": pictureSources,
                                             "app_version": "3.15.2",
