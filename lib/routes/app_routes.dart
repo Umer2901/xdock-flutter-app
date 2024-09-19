@@ -19,4 +19,9 @@ abstract class AppRoutes {
   static const String stopwatch = '/StopwatchWidget';
   static const String podphotos = '/ProofOfDeliveryPhotos';
   static const String consigmentGroup = '/consigmentGroup';
+  static const String podhistory = '/podhistory';
+  static const String podhistoryview = '/podhistoryview';
+  static const String pending = '/pendingview';
+
+
 }

@@ -17,12 +17,14 @@ class CustomTextField extends StatelessWidget {
   final void Function(String?)? onChanged;
   final VoidCallback? onEditComplete;
   final int maxLines;
+  final double? hight;
   final int? minLines;
   final TextInputType keyboardType;
   final EdgeInsets? contentPadding;
   final bool isErrorState;
   const CustomTextField({
     super.key,
+    this.hight,
     required this.name,
     this.hintText,
     this.onEditComplete,
@@ -48,7 +50,8 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.sizeOf(context).width * 0.9,
+        width: 90.w,
+      height: 6.h,
       child: FormBuilderTextField(
         textInputAction: textInputAction,
         validator: validator,
@@ -71,7 +74,7 @@ class CustomTextField extends StatelessWidget {
           suffixIcon: suffixIcon,
           hintText: hintText,
           hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                letterSpacing: 1,
+                letterSpacing: 1,height: 1,
                 color: AppColors.black.withOpacity(0.5),
               ),
           fillColor: fillColor,

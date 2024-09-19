@@ -181,4 +181,18 @@ class AppText {
 
   static const String totalDelivery = 'Total Delivery';
   static const String suppliers = 'Suppliers';
+  static const String name = 'Drew Moran';
+
+  static const String spaces = 'Spaces';
+  static const String reference = 'Reference';
+  static const String driverid = 'Driver id';
+  static const String ID = 'ID';
+  static const String singlepod = 'Single POD';
+  static const String groupedpod = 'Grouped POD';
+  static const String partialpod = 'Partial POD';
+  static const String podhistoryview = 'POD History View';
+
+
+
+  
 }
