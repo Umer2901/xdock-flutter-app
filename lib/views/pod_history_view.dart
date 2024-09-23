@@ -1,7 +1,6 @@
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/widgets/core/custom-widget.dart';
 import 'package:coldxpress/widgets/core/custom_text.dart';
-import 'package:flutter/material.dart';
 
 import '../widgets/core/custom-container.dart';
 
@@ -63,16 +62,19 @@ class _PodHistoryViewState extends State<PodHistoryView> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(top: 15.0,left: 14,right: 14),
+          padding: const EdgeInsets.only(top: 15.0, left: 14, right: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CustomContainer(podStatus: 'single pod',
-              //   ontab: () {
-              //   Get.toNamed(AppRoutes.pending);
-              // },
+              CustomContainer(
+                podStatus: 'single pod',
+                //   ontab: () {
+                //   Get.toNamed(AppRoutes.pending);
+                // },
               ),
-              SizedBox(height: 1.h,),
+              SizedBox(
+                height: 1.h,
+              ),
               Container(
                 height: 27.3.h,
                 width: double.infinity,
@@ -81,25 +83,33 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 10.0, left: 15, right: 10),
+                  padding:
+                      const EdgeInsets.only(top: 10.0, left: 15, right: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CustomWidget(text: "POD Histories view", onTap:(){}),
-                      SizedBox(height: 2.h,),
+                      CustomWidget(text: "POD Histories view", onTap: () {}),
+                      SizedBox(
+                        height: 2.h,
+                      ),
                       Container(
                         height: 15.h,
                         width: 27.w,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Image.asset(AppImages.simplePic,fit: BoxFit.contain,),
+                        child: Image.asset(
+                          AppImages.simplePic,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 1.h,),
+              SizedBox(
+                height: 1.h,
+              ),
               Container(
                 height: 27.3.h,
                 width: double.infinity,
@@ -108,12 +118,16 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 10.0, left: 15, right: 10),
+                  padding:
+                      const EdgeInsets.only(top: 10.0, left: 15, right: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(child: CustomWidget(text: "Signature", onTap:(){})),
-                      SizedBox(height: 2.h,),
+                      Center(
+                          child: CustomWidget(text: "Signature", onTap: () {})),
+                      SizedBox(
+                        height: 2.h,
+                      ),
                       Container(
                         height: 15.h,
                         width: 27.w,
@@ -134,7 +148,9 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                   ),
                 ),
               ),
-              SizedBox(height: 1.5.h,),
+              SizedBox(
+                height: 1.5.h,
+              ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Container(
@@ -145,20 +161,25 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 10.0, left: 15, right: 10),
+                    padding:
+                        const EdgeInsets.only(top: 10.0, left: 15, right: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 1.h,),
-                        CustomWidget(text: "Payload", onTap:(){}),
-                        SizedBox(height: 2.h,),
+                        SizedBox(
+                          height: 1.h,
+                        ),
+                        CustomWidget(text: "Payload", onTap: () {}),
+                        SizedBox(
+                          height: 2.h,
+                        ),
                         Container(
                           height: 35.h,
                           width: 85.w,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child:Container(
+                          child: Container(
                             height: 20.h,
                             width: 20.w,
                             decoration: BoxDecoration(
@@ -166,31 +187,23 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                               color: AppColors.white,
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 8.0,left: 10,right: 10,bottom: 8),
-                             child: CustomTextDisplay(
-                               text: "sksnksnksn",
-                             ),
+                              padding: const EdgeInsets.only(
+                                  top: 8.0, left: 10, right: 10, bottom: 8),
+                              child: CustomTextDisplay(
+                                text: "sksnksnksn",
+                              ),
                             ),
-                          ) ,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-
-
-
-
-
-
-
             ],
           ),
         ),
       ),
-
     );
   }
 }
-

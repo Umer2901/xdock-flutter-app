@@ -38,6 +38,7 @@ class PendingView extends StatelessWidget {
         leading: IconButton(
           onPressed: () {
             //context.read<BottomNavProvider>().changeTabView(1);
+            Navigator.pop();
           },
           icon: Icon(
             Icons.arrow_back_ios,
