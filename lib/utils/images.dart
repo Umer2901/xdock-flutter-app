@@ -26,4 +26,8 @@ class AppImages {
   static const String zoomclose = 'assets/images/zoomclose.png';
   static const String consignmentboxblack = 'assets/images/consignmentboxblack.png';
       static const String checklist = 'assets/images/Checklist.png';
+  static const String simplePic = 'assets/images/simplepic.png';
+  static const String upload = 'assets/images/upload.png';
+  static const String refreshicon = 'assets/images/refreshicon.png';
+
 }

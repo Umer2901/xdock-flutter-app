@@ -27,5 +27,6 @@ class AppSvgs {
   static const String refresh = 'assets/svg/refresh.svg';
   static const String box = 'assets/svg/Cardboard Box.svg';
   static const String newchecklist = 'assets/svg/PreChecklist.svg';
+  static const String upload = 'assets/svg/uploadicon.svg';
 
 }

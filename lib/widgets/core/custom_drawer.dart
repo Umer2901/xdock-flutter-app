@@ -213,13 +213,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           drawerItem(
                             icon: Icons.pentagon_outlined,
                             title: AppText.pending,
-                            onTap: () {},
+                            onTap: () {
+                              Get.toNamed(AppRoutes.pending);
+                            },
                           ),
                           SizedBox(height: 2.h),
                           drawerItem(
                             icon: Icons.history,
                             title: AppText.podHoistory,
-                            onTap: () {},
+                            onTap: () {
+                              Get.toNamed(AppRoutes.podhistory);
+                            },
                           ),
                           SizedBox(height: 2.h),
                           Divider(

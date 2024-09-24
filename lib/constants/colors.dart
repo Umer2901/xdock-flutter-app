@@ -85,6 +85,7 @@ class AppColors {
   static const Color lightRed = Color(0xFFFC4343);
   static const Color lightpink = Color(0xFFFFF0F1);
   static const Color yellow = Color(0xFFFFC30B);
+  static const Color green = Color(0xff6DA66C);
 
   static final kEnableBorder = OutlineInputBorder(
     borderRadius: BorderRadius.circular(10.sp),

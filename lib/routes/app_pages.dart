@@ -1,7 +1,11 @@
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/views/pending_view.dart';
+import 'package:coldxpress/views/pod_history_view.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/clock.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery_photos.dart';
+
+import '../views/pod_history.dart';
 
 class AppPages extends AppRoutes {
   static const String initialRoute = AppRoutes.splash;
@@ -87,6 +91,21 @@ class AppPages extends AppRoutes {
     GetPage(
       name: AppRoutes.consigmentGroup,
       page: () => const MyConsigmentGroup(),
+      arguments: Get.arguments,
+    ),
+    GetPage(
+      name: AppRoutes.podhistory,
+      page: () => const PodHistory(),
+      arguments: Get.arguments,
+    ),
+    GetPage(
+      name: AppRoutes.podhistoryview,
+      page: () => const PodHistoryView(),
+      arguments: Get.arguments,
+    ),
+    GetPage(
+      name: AppRoutes.pending,
+      page: () => const PendingView(),
       arguments: Get.arguments,
     ),
   ];
