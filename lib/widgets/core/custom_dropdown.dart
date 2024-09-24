@@ -1,9 +1,8 @@
 // import 'package:coldxpress/export.dart';
 
-
 // class CustomDropdown extends StatelessWidget {
 //   final String name;
-//   final String hintText;
+//   final Widget? hintWidget; // Changed to hintWidget to clarify it's a widget
 //   final Icon? prefixIcon;
 //   final Widget? suffixIcon;
 //   final bool obscureText;
@@ -18,10 +17,12 @@
 //   final TextInputType keyboardType;
 //   final List<DropdownMenuItem> items;
 //   final bool isErrorState;
+//   final dynamic value; // Added value property to track the selected value
+
 //   const CustomDropdown({
 //     super.key,
 //     required this.name,
-//     required this.hintText,
+//     this.hintWidget, // Now accepts a widget for the hint
 //     this.prefixIcon,
 //     this.suffixIcon,
 //     this.obscureText = false,
@@ -35,20 +36,20 @@
 //     this.keyboardType = TextInputType.name,
 //     this.onChanged,
 //     required this.items,
-//     this.isErrorState = false, 
+//     this.isErrorState = false,
+//     this.value, // Added value
 //   });
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return SizedBox(
 //       width: MediaQuery.sizeOf(context).width * 0.9,
-//       child: FormBuilderDropdown(
+//       child: DropdownButtonFormField(
 //         iconDisabledColor: AppColors.lightGrey,
 //         iconEnabledColor: AppColors.darkGrey,
 //         validator: validator,
 //         onTap: onTap,
-//         name: name,
-//         initialValue: initialValue,
+//         value: value, // Set the dropdown's value to the selected value
 //         style: Theme.of(context)
 //             .textTheme
 //             .bodyMedium
@@ -57,11 +58,6 @@
 //           contentPadding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 4.w),
 //           prefixIcon: prefixIcon,
 //           suffixIcon: suffixIcon,
-//           hintText: hintText,
-//           hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 letterSpacing: 1,
-//                 color: AppColors.darkGrey,
-//               ),
 //           fillColor: fillColor,
 //           filled: true,
 //           enabledBorder: OutlineInputBorder(
@@ -89,12 +85,14 @@
 //             ),
 //           ),
 //         ),
+//         hint: hintWidget, // Using hintWidget directly in DropdownButtonFormField
 //         onChanged: onChanged,
 //         items: items,
 //       ),
 //     );
 //   }
 // }
+
 import 'package:coldxpress/export.dart';
 
 class CustomDropdown extends StatelessWidget {

@@ -202,7 +202,7 @@ class DatabaseProvider with ChangeNotifier {
         driver_id INTEGER,
         date_delivered TEXT,
         platforms TEXT,
-        access_token,
+        access_token TEXT,
         current_app_version TEXT
       )
     ''');
@@ -247,7 +247,7 @@ class DatabaseProvider with ChangeNotifier {
         current_app_version TEXT,
         reason TEXT,
         lodgeError TEXT,
-        access_token,
+        access_token TEXT,
         platforms TEXT
       )
     ''');
@@ -260,10 +260,11 @@ class DatabaseProvider with ChangeNotifier {
         temp TEXT,
         rejection_reason TEXT,
         comments TEXT,
+        customer_reference TEXT,
         record_error INTEGER,
         adhoc_charges INTEGER, 
-        space REAL,
-        weight REAL,
+        space INTEGER,
+        weight INTEGER,
         consignments TEXT, 
         device TEXT,
         date_delivered TEXT,
@@ -281,7 +282,7 @@ class DatabaseProvider with ChangeNotifier {
         app_version TEXT,
         current_app_version TEXT,
         platforms TEXT,
-        access_token,
+        access_token TEXT,
         consignment_id INTEGER
       )
     ''');

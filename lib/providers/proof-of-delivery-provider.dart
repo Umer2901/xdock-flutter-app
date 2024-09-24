@@ -16,6 +16,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   bool _showSignature = false;
   String? signatureData;
   XFile? _image;
+  String _probeChecked = 'Yes'; 
 
   int get index => _index;
   Map get data => _data;
@@ -29,6 +30,7 @@ class ProofOfDeliveryProvider with ChangeNotifier {
   List<String> get selectedOrderRejectionReasons => _selectedOrderRejectionReasons;
   bool _isFormValid = false;
   bool get isFormValid => _isFormValid;
+  String get probeChecked => _probeChecked;
 
   setIndex(int value) {
     _index = value;
@@ -181,4 +183,11 @@ class ProofOfDeliveryProvider with ChangeNotifier {
     _data['signature'] = 'data:image/png;base64, ${base64Encode(signatureData)}';
     validateForm();
   }
+
+  void setProbeChecked(String value) {
+    _probeChecked = value;
+    notifyListeners();
+  }
+
+
 }

@@ -145,7 +145,6 @@ class AppText {
   static const String help = 'Help';
   static const String logout = 'Log Out';
   static const String version = 'Version 1.0.0';
-
   //phase 2
   //My Consigments
   static const String myConsignment = 'My Consignments';

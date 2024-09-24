@@ -19,7 +19,7 @@ class ProofOfDeliveryView extends StatefulWidget {
   State<ProofOfDeliveryView> createState() => _ProofOfDeliveryViewState();
 }
 
-class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsBindingObserver {
+class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   final SignatureController controller = SignatureController(
     penStrokeWidth: 3,
     penColor: AppColors.black,
@@ -38,8 +38,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
   List groupedConsignments = [];
   List<dynamic> consignmentIds = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-   Map<String, dynamic>? userData;
-
+  Map<String, dynamic>? userData; 
+  late Map<String, dynamic> arguments;
   @override
   void initState() {
     super.initState();
@@ -47,9 +47,10 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
     config();
     Future.microtask(() {
     if (mounted) {
-      _resetToFullDelivery();
-    }
-  });
+     _resetToFullDelivery();
+   }
+  }
+  );
      AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
        if (state is Authenticated) {
       staff = UserDatabase(
@@ -63,6 +64,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
     pickupAddresses = parseMap(Get.arguments?['pickup_addresses']);
     groupedConsignments = parseList(Get.arguments?['grouped_consignments']);
     consignmentIds = groupedConsignments.map((c) => c['id'].toString()).toList();
+      arguments = (Get.arguments != null)
+        ? Map<String, dynamic>.from(Get.arguments)
+        : {};
   }
 
   Map<String, dynamic> parseMap(dynamic source) {
@@ -78,42 +82,28 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> with WidgetsB
   }
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
+   // WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
     staff.dispose();
     super.dispose();
   }
 
 
-@override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-  if (state == AppLifecycleState.resumed) {
-    Future.microtask(() {
-      if (mounted) {
-        _resetToFullDelivery();
-      }
-    });
-  }
-}
-Future<void> fetchAndPrintUserData() async {
-    try {
-      List<Map<String, dynamic>> userDataList = await staff.read();
-
-      if (userDataList.isNotEmpty) {
-        setState(() {
-          userData = userDataList.first;
-        });
-        debugPrint("User Data: ${json.encode(userData)}");
-      } else {
-        debugPrint('No user data found.');
-      }
-    } catch (e) {
-      debugPrint('Error fetching user data: $e');
-    }
-  }
+// @override
+//   void didChangeAppLifecycleState(AppLifecycleState state) {
+//   if (state == AppLifecycleState.resumed) {
+//     Future.microtask(() {
+//       if (mounted) {
+//         _resetToFullDelivery();
+//       }
+//     });
+//   }
+// }
+ 
   void _resetToFullDelivery() {
     Provider.of<ProofOfDeliveryProvider>(context, listen: false).updateSelectedDeliveryType(DeliveryType.full);
   }
   
+
 
   void _setDeviceInfo() async {
     final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
@@ -155,10 +145,28 @@ Future<void> fetchAndPrintUserData() async {
     }
   }
 
+   Future<void> fetchAndPrintUserData() async {
+    try {
+      List<Map<String, dynamic>> userDataList = await staff.read();
+
+      if (userDataList.isNotEmpty) {
+        setState(() {
+          userData = userDataList.first;
+        });
+        debugPrint("User Data: ${json.encode(userData)}");
+      } else {
+        debugPrint('No user data found.');
+      }
+    } catch (e) {
+      debugPrint('Error fetching user data: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
-
+ bool isPickup = arguments['consignment_type'] == 'pickup';
+    String appBarTitle = isPickup ? 'Pickup' : 'Delivery';
    void showSignaturePopup(SignatureController controller) {
   showDialog(
     barrierDismissible: false,
@@ -296,10 +304,10 @@ Future<void> fetchAndPrintUserData() async {
             )
           ],
           centerTitle: true,
-          title: Text(
-            AppText.proofOfDelivery,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          title:Text(
+          appBarTitle,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         ),
         body: SafeArea(
           child: Padding(
@@ -438,6 +446,7 @@ Future<void> fetchAndPrintUserData() async {
                       ),
                       CustomDropdown(
                         name: 'deliveryType',
+                        //value: provider.selectedDeliveryType,
                         hintWidget:Row(
                               children: [
                                 CircleAvatar(
@@ -1662,6 +1671,7 @@ Future<void> fetchAndPrintUserData() async {
                                       borderColor: AppColors.red,
                                       onPressed: () {
                                         if (_formKey.currentState != null) {
+                                         
                                           final provider = context
                                               .read<ProofOfDeliveryProvider>();
                                           final rejection_reason =
@@ -1671,7 +1681,7 @@ Future<void> fetchAndPrintUserData() async {
             ? consignmentIds
             :[ consignmentbrac];
                                            final consignment_id = Get.arguments['id'];
-                                         final driverId = Get.arguments['weight'];
+                                            final driverId = userData!['id'];
                                            final address_id = (Get.arguments['consignment_type'] == 'pickup')
             ? pickupAddresses['id']
             : deliveryAddresses['id'];
@@ -1704,6 +1714,14 @@ Future<void> fetchAndPrintUserData() async {
 
                                           String? comments = '';
                                           int error_type = 1;
+Get.toNamed(
+  AppRoutes.podphotos,
+  arguments: {
+    'rejection_reason': provider.data['rejection_reason'],
+    'error_type': error_type,
+    ...Get.arguments // Merges the existing Get.arguments with the new ones
+  },
+);
 
                                           if (rejection_reason ==
                                               'Temperature issue') {
@@ -1731,7 +1749,7 @@ Future<void> fetchAndPrintUserData() async {
                                             error_type = 6;
                                           }
 
-                                          final temp = {
+                                           final temp = {
                                             "pod_type": "3",
                                             "error_type": error_type,
                                             "rejection_reason":
@@ -1764,10 +1782,20 @@ Future<void> fetchAndPrintUserData() async {
                                           };
 
                                           provider.addEntities(temp.entries);
-                                          Provider.of<TaskSyncpofProvider>(
-                                                  context,
-                                                  listen: false)
-                                              .submitData(context);
+                                          // Provider.of<TaskSyncpofProvider>(
+                                          //         context,
+                                          //         listen: false)
+                                          //     .submitData(context);
+                                       Get.toNamed(
+  AppRoutes.podphotos,
+  arguments: {
+    if (Get.arguments != null) ...Get.arguments as Map, 
+    'rejection_reason': provider.data['rejection_reason'],
+    'error_type': error_type,
+  },
+);
+
+
                                         } else {
                                           debugPrint("Form key is null");
                                         }
@@ -1810,8 +1838,7 @@ class CustomContainerState extends State<CustomContainer> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProofOfDeliveryProvider>(context);
-    bool isChecked =
-        provider.selectedOrderRejectionReasons.contains(widget.title);
+    bool isChecked = provider.selectedOrderRejectionReasons.contains(widget.title);
 
     return GestureDetector(
       onTap: () {
@@ -1867,53 +1894,53 @@ class CustomContainerState extends State<CustomContainer> {
               ],
             ),
           ),
-          if (isChecked && widget.title == 'Other Rejection')
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 3.h,
-                ),
-                Text(
-                  "Order Rejection",
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                Text(
-                  "Please provide more detail",
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                SizedBox(
-                  height: 1.h,
-                ),
-                Stack(
-                  children: [
-                    Container(
-                      height: 15.h,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.navyBlue),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(5.sp),
-                        ),
-                      ),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 1.h, horizontal: 2.w),
-                      child: CustomTextField(
-                        borderColor: AppColors.white,
-                        name: 'Order rejection',
-                        hintText:
-                            "Lorem ipsum dolor sit amet consectetur. Leo laoreet malesuada eget ipsum.",
-                        onChanged: (value) {
-                          context
-                              .read<ProofOfDeliveryProvider>()
-                              .data['comments'] = value;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          // Show the container for 'Wrong Address', 'Receiver Not Open', and 'Other Rejection'
+          // if (isChecked && (widget.title == 'Other Rejection' || widget.title == 'Wrong Address' || widget.title == 'Receiver Not Open'))
+          //   Column(
+          //     mainAxisAlignment: MainAxisAlignment.start,
+          //     crossAxisAlignment: CrossAxisAlignment.start,
+          //     children: [
+          //       SizedBox(
+          //         height: 3.h,
+          //       ),
+          //       // Dynamically change the title based on the rejection reason
+          //       Text(
+          //         "${widget.title} Details",
+          //         style: Theme.of(context).textTheme.headlineMedium,
+          //       ),
+          //       Text(
+          //         "Please provide more details",
+          //         style: Theme.of(context).textTheme.bodyMedium,
+          //       ),
+          //       SizedBox(
+          //         height: 1.h,
+          //       ),
+          //       Stack(
+          //         children: [
+          //           Container(
+          //             height: 15.h,
+          //             decoration: BoxDecoration(
+          //               border: Border.all(color: AppColors.navyBlue),
+          //               borderRadius: BorderRadius.all(
+          //                 Radius.circular(5.sp),
+          //               ),
+          //             ),
+          //             padding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 2.w),
+          //             child: CustomTextField(
+          //               borderColor: AppColors.white,
+          //               name: '${widget.title} rejection',
+          //               hintText: "Please provide the reason for ${widget.title.toLowerCase()}.",
+          //               onChanged: (value) {
+          //                 context
+          //                     .read<ProofOfDeliveryProvider>()
+          //                     .data['comments'] = value;
+          //               },
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     ],
+          //   ),
         ],
       ),
     );

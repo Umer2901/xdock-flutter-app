@@ -44,13 +44,14 @@ class TaskSyncDatabase {
   }
 
   void _startListeningToChanges() {
-    _timer = Timer.periodic(const Duration(milliseconds: 800), (timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       _refreshStream();
     });
   }
 
   Future<void> _refreshStream() async {
     final result = await read();
+
     if (!_streamController.isClosed) {
       _streamController.add(result);
     }

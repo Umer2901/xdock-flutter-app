@@ -65,7 +65,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     bool isPickup = Get.arguments['consignment_type'] == 'pickup';
-  String appBarTitle = isPickup ? 'PICKUP' : 'DELIVERY';
+  String appBarTitle = isPickup ? 'Pickup' : 'Delivery';
   String buttonText = isPickup ? 'POP Capture' : 'POD Capture';
     return Scaffold(
       key: _scaffoldKey,  
@@ -634,18 +634,37 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                     SizedBox(
                     height: 2.h,
                   ),
-                     CustomElevatedButton(
+                  CustomElevatedButton(
   label: buttonText,
   onPressed: () {
+    // Copy the arguments to a new map to prevent directly modifying the original Get.arguments
+    Map<String, dynamic> updatedArguments = Map.from(Get.arguments);
+    print(updatedArguments['status']);
+
+    // Convert status to int (if it's a string) and then check if it's 10
+    int status = int.tryParse(updatedArguments['status'].toString()) ?? -1;
+
+    // Check if the status is 10
+    if (status == 10) {
+      updatedArguments['consignment_type'] = 'delivery';
+      debugPrint('Status is 10, consignment_type set to delivery.');
+    } else {
+      debugPrint('Status is not 10, no changes made to consignment_type.');
+    }
+
+    // Navigate to Proof of Delivery with updated arguments
     Get.toNamed(
       AppRoutes.proofOfDelivery,
       arguments: {
-        ...Get.arguments.cast<String, dynamic>(),
-        'consignmentIds': consignmentIds, 
-      }
+        ...updatedArguments, // Ensure that the updated arguments are passed
+        'consignmentIds': consignmentIds,
+      },
     );
-  }
+  },
 ),
+
+
+
                   SizedBox(
                     height: 8.h,
                   ),

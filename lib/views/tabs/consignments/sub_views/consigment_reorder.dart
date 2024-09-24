@@ -236,8 +236,11 @@
 // }
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+
 
 class MyConsigmentReorder extends StatefulWidget {
   const MyConsigmentReorder({super.key});
@@ -256,7 +259,6 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
   @override
   void initState() {
     super.initState();
-    // Parse arguments from the previous screen
     final arguments = json.decode(json.encode(Get.arguments));
     _consignments.addAll(arguments);
     groupedConsignments = _groupConsignmentsByDate();
@@ -342,11 +344,8 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                 .toList();
           }
         }
-
-        // Send the combined final consignments to the API
-        await ConsignmentService(
-                context.read<DatabaseProvider>().database)
-            .sendReorderedConsignments(
+        await 
+            sendReorderedConsignments(
               finalConsignments,
               authState.token,
             );
@@ -355,7 +354,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No reordering changes were made.')),
+        const SnackBar(content: Text('No reordering changes were made.')),
       );
     }
   },
@@ -485,4 +484,47 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
 
     return sortedGroupedByDate;
   }
+Future<void> sendReorderedConsignments(
+    Map<String, List<int>> finalConsignments, String accessToken) async {
+  try {
+    print('Sending reorder API request with data: $finalConsignments');
+    final response = await http.post(
+      Uri.parse(AppHost.reorderConsignments),
+      body: jsonEncode(finalConsignments),
+      headers: <String, String>{
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+
+    print('Reorder API response code: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      var responseData = json.decode(response.body);
+      String status = responseData['status'];
+      print('Reorder API response: $responseData');
+
+      if (status == 'success') {
+        print('Reorder successful.');
+      } else {
+        print('Reorder failed with status: $status, Message: ${responseData['msg']}');
+         ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+      );
+      }
+    } else {
+      print('Reorder API failed with status code: ${response.statusCode} and response: ${response.body}');
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+      );
+    }
+  } catch (e) {
+    print('Error during reorder API call: $e');
+     ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+      );
+  }
+}
+
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:coldxpress/export.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 
@@ -54,31 +55,78 @@ class _EditTimeState extends State<EditTime> {
         ? PickedTime(h: 15, m: 30)
         : PickedTime(h: endTime!.hour, m: endTime!.minute);
   }
-
-  Future<void> saveTimeUpdateToTaskSync(
-      DatabaseProvider dbProvider, String accessToken, int addressId, PickedTime startTime, PickedTime endTime) async {
-    // Prepare the data to be saved in the TaskSyncDatabase
-    final requestBody = {
+Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, PickedTime startTime, PickedTime endTime) async {
+  try {
+   
+   final requestBody = {
       "addressId": addressId,
       "startTime": "${startTime.h.toString().padLeft(2, '0')}:${startTime.m.toString().padLeft(2, '0')}",
       "endTime": "${endTime.h.toString().padLeft(2, '0')}:${endTime.m.toString().padLeft(2, '0')}"
     };
 
-    // Save the data in TaskSyncDatabase
-    final taskData = {
-      "task_name": "update time", // Task name for the update time task
-      "task_type": "update_time", // Task type to indicate this is a time update
-      "data": jsonEncode(requestBody), // Store the requestBody as JSON string
-      "access_token": accessToken // Store the access token for future API calls
-    };
+    // Proceed with sending the request since there is internet connection
+    final response = await http.post(
+      Uri.parse(AppHost.updatetime),
+      body: jsonEncode(requestBody),
+      headers: <String, String>{
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
 
-    try {
-      await dbProvider.database.insert('sync_task', taskData);
-      print('Task saved to TaskSyncDatabase successfully');
-    } catch (e) {
-      debugPrint('Error saving task to TaskSyncDatabase: $e');
+    print('Reorder API response code: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      var responseData = json.decode(response.body);
+      String status = responseData['status'];
+      print('Reorder API response: $responseData');
+
+      if (status == 'success') {
+        print('Reorder successful.');
+      } else {
+        print('Reorder failed with status: $status, Message: ${responseData['msg']}');
+         ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+      );
+      }
+    } else {
+      print('Reorder API failed with status code: ${response.statusCode} and response: ${response.body}');
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+      );
     }
+  } catch (e) {
+     ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+      );
   }
+}
+
+  // Future<void> saveTimeUpdateToTaskSync(
+  //     DatabaseProvider dbProvider, String accessToken, int addressId, PickedTime startTime, PickedTime endTime) async {
+  //   // Prepare the data to be saved in the TaskSyncDatabase
+  //   final requestBody = {
+  //     "addressId": addressId,
+  //     "startTime": "${startTime.h.toString().padLeft(2, '0')}:${startTime.m.toString().padLeft(2, '0')}",
+  //     "endTime": "${endTime.h.toString().padLeft(2, '0')}:${endTime.m.toString().padLeft(2, '0')}"
+  //   };
+
+  //   // Save the data in TaskSyncDatabase
+  //   final taskData = {
+  //     "task_name": "update time", // Task name for the update time task
+  //     "task_type": "update_time", // Task type to indicate this is a time update
+  //     "data": jsonEncode(requestBody), // Store the requestBody as JSON string
+  //     "access_token": accessToken // Store the access token for future API calls
+  //   };
+
+  //   try {
+  //     await dbProvider.database.insert('sync_task', taskData);
+  //     print('Task saved to TaskSyncDatabase successfully');
+  //   } catch (e) {
+  //     debugPrint('Error saving task to TaskSyncDatabase: $e');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -345,11 +393,10 @@ class _EditTimeState extends State<EditTime> {
 
                               // Save the time update task to TaskSyncDatabase
                               await saveTimeUpdateToTaskSync(
-                                  context.read<DatabaseProvider>(),
                                   accessToken,
                                   address_id,
                                   _startTime,
-                                  _endTime);
+                                  _endTime );
 
                               // Now, update the consignment data in the local database
                               await ConsignmentDatabase(context.read<DatabaseProvider>().database)

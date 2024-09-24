@@ -426,13 +426,13 @@ class ConsignmentContainer extends StatelessWidget {
     final Map productTypes = _decodeJson(consignment?['product_types']);
     final Map deliveryAddresses = _decodeJson(consignment?['delivery_addresses']);
     final Map pickupAddresses = _decodeJson(consignment?['pickup_addresses']);
-    final Map runSheets = _decodeJson(consignment?['run_sheets']);
+  //  final Map runSheets = _decodeJson(consignment?['run_sheets']);
 
     final companyName = consignment?['consignment_type'] == 'delivery'
         ? (deliveryAddresses['company_name'] ?? 'Not Provided')
         : (pickupAddresses['company_name'] ?? 'Not Provided');
 
-    final date = runSheets['date'] ?? 'Not Provided';
+      final date = consignment!['delivery_date'] ?? 'Not Provided';
 
     return Container(
       width: double.infinity,
@@ -577,10 +577,19 @@ class ConsignmentContainer extends StatelessWidget {
   }
 
  
-  Map _decodeJson(dynamic value) {
-    if (value is String) {
-      return json.decode(value) as Map;
-    }
-    return value as Map;
+Map<dynamic, dynamic> _decodeJson(dynamic value) {
+  if (value == null) {
+    return {}; // Return an empty map if the value is null
   }
+  if (value is String) {
+    try {
+      return json.decode(value) as Map<dynamic, dynamic>;
+    } catch (e) {
+      print("Error decoding JSON string: $e");
+      return {}; // Return an empty map in case of JSON decoding error
+    }
+  }
+  return value as Map<dynamic, dynamic>;
+}
+
 }
