@@ -1,7 +1,8 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:convert';
-import 'package:coldxpress/services/map_helper.dart';
+
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/services/map_helper.dart';
 
 class CustomMyConsigmentContainer extends StatefulWidget {
   const CustomMyConsigmentContainer({
@@ -32,6 +33,7 @@ class _CustomMyConsigmentContainerState
       throw TypeError();
     }
   }
+
   @override
   Widget build(BuildContext context) {
     Map productTypes = json.decode(widget.consignment?['product_types']);
@@ -107,13 +109,13 @@ class _CustomMyConsigmentContainerState
                               maxLines: 1,
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
-                          //   Padding(
-                          //   padding: EdgeInsets.symmetric(vertical: 1.h),
-                          //   child: Text(
-                          //     date,
-                          //     style: Theme.of(context).textTheme.headlineSmall,
-                          //   ),
-                          // ),
+                            //   Padding(
+                            //   padding: EdgeInsets.symmetric(vertical: 1.h),
+                            //   child: Text(
+                            //     date,
+                            //     style: Theme.of(context).textTheme.headlineSmall,
+                            //   ),
+                            // ),
                             Text(
                               maxLines: 1,
                               'Recipient: ${(widget.consignment!['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
@@ -259,7 +261,6 @@ class _CustomMyConsigmentContainerState
                                                 'null'
                                             ? AppImages.zoom
                                             : AppImages.zoomclose,
-                                        
                                       )),
                                 ),
                               ],
@@ -313,139 +314,146 @@ class _CustomMyConsigmentContainerState
                     ),
                   ),
                   isExpanded
-                      ? Column(
-                          children: [
-                           if (groupedConsignments.isNotEmpty) ...[],
-                  ...groupedConsignments.map<Widget>((subConsignment) {
-                    final deliveryAddresses = _decodeIfString(subConsignment['delivery_addresses']);
-                    final pickupAddresses = _decodeIfString(subConsignment['pickup_addresses']);
+                      ? Column(children: [
+                          if (groupedConsignments.isNotEmpty) ...[],
+                          ...groupedConsignments.map<Widget>((subConsignment) {
+                            final deliveryAddresses = _decodeIfString(
+                                subConsignment['delivery_addresses']);
+                            final pickupAddresses = _decodeIfString(
+                                subConsignment['pickup_addresses']);
 
-                    final companyName = subConsignment['consignment_type'] == 'delivery'
-                        ? (deliveryAddresses['company_name'] ?? 'No Company Name')
-                        : (pickupAddresses['company_name'] ?? 'No Company Name');
-                    
-                    final address = subConsignment['consignment_type'] == 'delivery'
-                        ? deliveryAddresses['full_address']
-                        : pickupAddresses['full_address'];
+                            final companyName =
+                                subConsignment['consignment_type'] == 'delivery'
+                                    ? (deliveryAddresses['company_name'] ??
+                                        'No Company Name')
+                                    : (pickupAddresses['company_name'] ??
+                                        'No Company Name');
 
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 2.h),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (groupedConsignments.indexOf(subConsignment) == 0) ...[
-                     
-                          ],
-                               SizedBox(height: 1.5.h),
-                              const Divider(
-                                color: AppColors.belowMidGreyTwo,
-                              ),
-                              ListTile(
-                                contentPadding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
-                                leading: CircleAvatar(
-                                  backgroundColor: AppColors.belowMidGreyTwo,
-                                  radius: 8.w,
-                                  child: SvgPicture.asset(
-                                    AppSvgs.boundpallets,
-                                    height: 3.h,
+                            final address =
+                                subConsignment['consignment_type'] == 'delivery'
+                                    ? deliveryAddresses['full_address']
+                                    : pickupAddresses['full_address'];
+
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: 2.h),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (groupedConsignments
+                                          .indexOf(subConsignment) ==
+                                      0)
+                                    ...[],
+                                  SizedBox(height: 1.5.h),
+                                  const Divider(
+                                    color: AppColors.belowMidGreyTwo,
                                   ),
-                                ),
-                                onTap: () {
-                                  if (widget.isPrecheckDone) {
-                                    Get.toNamed(
-                                      AppRoutes.singleConsigment,
-                                      arguments: subConsignment,
-                                    );
-                                  }
-                                },
-                                title: Text(
-                                  '${AppText.supplier}: ${companyName}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
+                                  ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          AppColors.belowMidGreyTwo,
+                                      radius: 8.w,
+                                      child: SvgPicture.asset(
+                                        AppSvgs.boundpallets,
+                                        height: 3.h,
                                       ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    ),
+                                    onTap: () {
+                                      if (widget.isPrecheckDone) {
+                                        Get.toNamed(
+                                          AppRoutes.singleConsigment,
+                                          arguments: subConsignment,
+                                        );
+                                      }
+                                    },
+                                    title: Text(
+                                      '${AppText.supplier}: ${companyName}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    subtitle: Column(
                                       children: [
-                                        Text(
-                                          '${AppText.id.toUpperCase()}: ${subConsignment['id']}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.black
-                                                    .withOpacity(0.5),
-                                              ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              '${AppText.id.toUpperCase()}: ${subConsignment['id']}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.black
+                                                        .withOpacity(0.5),
+                                                  ),
+                                            ),
+                                            Text(
+                                              '${AppText.ref.toUpperCase()}: ${subConsignment['customer_reference']}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.black
+                                                        .withOpacity(0.5),
+                                                  ),
+                                            ),
+                                          ],
                                         ),
-                                        Text(
-                                          '${AppText.ref.toUpperCase()}: ${subConsignment['customer_reference']}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.black
-                                                    .withOpacity(0.5),
-                                              ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              '${AppText.ctn.toUpperCase()}: ${subConsignment['carton']}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.black,
+                                                  ),
+                                            ),
+                                            Text(
+                                              '${AppText.plt.toUpperCase()}: ${subConsignment['pallet']}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.black,
+                                                  ),
+                                            ),
+                                            Text(
+                                              '${AppText.spc.toUpperCase()}: ${subConsignment['space']}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.black,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '${AppText.ctn.toUpperCase()}: ${subConsignment['carton']}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.black,
-                                              ),
-                                        ),
-                                        Text(
-                                          '${AppText.plt.toUpperCase()}: ${subConsignment['pallet']}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.black,
-                                              ),
-                                        ),
-                                        Text(
-                                          '${AppText.spc.toUpperCase()}: ${subConsignment['space']}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.black,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                    SizedBox(
-                    height: 2.h,
-                  ),
-                 ] )
+                            );
+                          }).toList(),
+                          SizedBox(
+                            height: 2.h,
+                          ),
+                        ])
                       : const SizedBox.shrink(),
                 ],
               ),
@@ -453,4 +461,3 @@ class _CustomMyConsigmentContainerState
     );
   }
 }
-

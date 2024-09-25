@@ -10,8 +10,8 @@ class DatabaseProvider with ChangeNotifier {
     final path = join(await getDatabasesPath(), 'coldxpress.db');
     _database = await openDatabase(path, version: 1, onCreate: createTables);
     // Debugging: List all tables to verify creation
-    List<Map> list = await _database.rawQuery('SELECT name FROM sqlite_master WHERE type="table"');
-    print("Database tables: $list");
+    List<Map> list = await _database
+        .rawQuery('SELECT name FROM sqlite_master WHERE type="table"');
     notifyListeners();
     return _database;
   }
@@ -160,7 +160,8 @@ class DatabaseProvider with ChangeNotifier {
         task_name TEXT,
         task_type TEXT,
         data TEXT,
-        access_token TEXT
+        access_token TEXT,
+        is_sync TEXT
       )
     ''');
 
@@ -202,6 +203,7 @@ class DatabaseProvider with ChangeNotifier {
         driver_id INTEGER,
         date_delivered TEXT,
         platforms TEXT,
+        company_name TEXT,
         access_token,
         current_app_version TEXT
       )
@@ -247,6 +249,7 @@ class DatabaseProvider with ChangeNotifier {
         current_app_version TEXT,
         reason TEXT,
         lodgeError TEXT,
+        company_name TEXT,
         access_token,
         platforms TEXT
       )
@@ -281,6 +284,7 @@ class DatabaseProvider with ChangeNotifier {
         app_version TEXT,
         current_app_version TEXT,
         platforms TEXT,
+        company_name TEXT,
         access_token,
         consignment_id INTEGER
       )

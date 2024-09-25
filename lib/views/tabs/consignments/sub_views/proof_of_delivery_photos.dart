@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:coldxpress/providers/pof_services_provider.dart';
+
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/providers/pof_services_provider.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 
 class ProofOfDeliveryPhotos extends StatefulWidget {
@@ -19,7 +20,8 @@ late Map deliveryAddresses;
 late Map pickupAddresses;
 List groupedConsignments = [];
 
- late Map<String, dynamic> arguments;     
+late Map<String, dynamic> arguments;
+
 class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
   @override
   void initState() {
@@ -39,14 +41,14 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
         Get.arguments?['grouped_consignments'],
       );
     }
- arguments = (Get.arguments != null) ? Map<String, dynamic>.from(Get.arguments) : {};
-    debugPrint("our group data: ${Get.arguments['is_group']}");
+    arguments =
+        (Get.arguments != null) ? Map<String, dynamic>.from(Get.arguments) : {};
   }
 
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
-final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.white,
@@ -65,8 +67,8 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
         ),
         actions: [
           IconButton(
-            onPressed: () {  
-       _scaffoldKey.currentState?.openEndDrawer();
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
             },
             icon: Icon(
               Icons.more_horiz,
@@ -104,22 +106,22 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                           'REF: ${Get.arguments?['customer_reference'] ?? 'Not Provided'}',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                         InkWell(
-                            onTap: () {},
-                            child: Container(
-                              width: 13.5.w,
-                              height: 6.h,
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                borderRadius: BorderRadius.circular(50.sp),
-                                border: Border.all(),
-                              ),
-                              child: Image.asset(
-                            AppImages.map,
-                            color: AppColors.black,
-                          ),
+                        InkWell(
+                          onTap: () {},
+                          child: Container(
+                            width: 13.5.w,
+                            height: 6.h,
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(50.sp),
+                              border: Border.all(),
+                            ),
+                            child: Image.asset(
+                              AppImages.map,
+                              color: AppColors.black,
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -338,49 +340,74 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                     children: [
                       SizedBox(
                         width: 50.w,
-                        child: 
-                  CustomButton(
-  label: "Submit POD",
-  onPressed: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
-      ? () {
-          final temp = {
-            "pictures": jsonEncode(context.read<ProofOfDeliveryProvider>().base64Images),
-            "pictureSources": jsonEncode(context.read<ProofOfDeliveryProvider>().pictureSources),
-          };
+                        child: CustomButton(
+                          label: "Submit POD",
+                          onPressed: context
+                                  .watch<ProofOfDeliveryProvider>()
+                                  .images
+                                  .isNotEmpty
+                              ? () {
+                                  final temp = {
+                                    "pictures": jsonEncode(context
+                                        .read<ProofOfDeliveryProvider>()
+                                        .base64Images),
+                                    "pictureSources": jsonEncode(context
+                                        .read<ProofOfDeliveryProvider>()
+                                        .pictureSources),
+                                  };
 
-          context.read<ProofOfDeliveryProvider>().addEntities(temp.entries);
-          print("Added entities to ProofOfDeliveryProvider.");
+                                  context
+                                      .read<ProofOfDeliveryProvider>()
+                                      .addEntities(temp.entries);
+                                  print(
+                                      "Added entities to ProofOfDeliveryProvider.");
 
-          Provider.of<TaskSyncpofProvider>(context, listen: false).submitData(context);
+                                  Provider.of<TaskSyncpofProvider>(context,
+                                          listen: false)
+                                      .submitData(context);
 
-          // Check if the consignment type is either 'pickup' or 'return'
-          if (arguments.isNotEmpty && (arguments['consignment_type'] == 'pickup' || arguments['consignment_type'] == 'return')) {
-            print("Consignment type is '${arguments['consignment_type']}', navigating to 'delivery'.");
-            context.read<ProofOfDeliveryProvider>().restoreToDefault();
+                                  // Check if the consignment type is either 'pickup' or 'return'
+                                  if (arguments.isNotEmpty &&
+                                      (arguments['consignment_type'] ==
+                                              'pickup' ||
+                                          arguments['consignment_type'] ==
+                                              'return')) {
+                                    print(
+                                        "Consignment type is '${arguments['consignment_type']}', navigating to 'delivery'.");
+                                    context
+                                        .read<ProofOfDeliveryProvider>()
+                                        .restoreToDefault();
 
-            Get.toNamed(
-              AppRoutes.proofOfDelivery,
-              arguments: {
-                ...arguments,
-                'consignment_type': 'delivery',
-              },
-            );
-          } else {
-            print("Consignment type is not 'pickup' or 'return', or arguments are empty.");
-          }
-        }
-      : () {
-          // If the button is disabled because no images are present
-          print("Submit POD button pressed but no images are available.");
-        },
-  backgroundColor: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
-      ? AppColors.blue
-      : AppColors.grey,
-  borderColor: context.watch<ProofOfDeliveryProvider>().images.isNotEmpty
-      ? AppColors.blue
-      : AppColors.grey,
-),
-
+                                    Get.toNamed(
+                                      AppRoutes.proofOfDelivery,
+                                      arguments: {
+                                        ...arguments,
+                                        'consignment_type': 'delivery',
+                                      },
+                                    );
+                                  } else {
+                                    print(
+                                        "Consignment type is not 'pickup' or 'return', or arguments are empty.");
+                                  }
+                                }
+                              : () {
+                                  // If the button is disabled because no images are present
+                                  print(
+                                      "Submit POD button pressed but no images are available.");
+                                },
+                          backgroundColor: context
+                                  .watch<ProofOfDeliveryProvider>()
+                                  .images
+                                  .isNotEmpty
+                              ? AppColors.blue
+                              : AppColors.grey,
+                          borderColor: context
+                                  .watch<ProofOfDeliveryProvider>()
+                                  .images
+                                  .isNotEmpty
+                              ? AppColors.blue
+                              : AppColors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -394,36 +421,33 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
     );
   }
 
- Future<void> _takePhoto() async {
-  final ImagePicker picker = ImagePicker();
-  try {
-    final XFile? image = await picker.pickImage(
-      imageQuality: 10,
-      source: ImageSource.camera,
-    );
+  Future<void> _takePhoto() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        imageQuality: 10,
+        source: ImageSource.camera,
+      );
 
-    if (image != null) {
-      debugPrint('Picked Image: ${image.path}');
-      Uint8List bytes = await image.readAsBytes();
-      String base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
-      debugPrint('Base64 Image: $base64String');
-      
-      setState(() {
-        context.read<ProofOfDeliveryProvider>().addImage(
-          image: image,
-          base64String: base64String,
-          source: 'By Camera',
-        );
-      });
+      if (image != null) {
+        debugPrint('Picked Image: ${image.path}');
+        Uint8List bytes = await image.readAsBytes();
+        String base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        debugPrint('Base64 Image: $base64String');
 
-    
-      // debugPrint('Image Source: By Camera');
-      // debugPrint('Image Path: ${image.path}');
+        setState(() {
+          context.read<ProofOfDeliveryProvider>().addImage(
+                image: image,
+                base64String: base64String,
+                source: 'By Camera',
+              );
+        });
+
+        // debugPrint('Image Source: By Camera');
+        // debugPrint('Image Path: ${image.path}');
+      }
+    } catch (e) {
+      debugPrint('Error picking image from camera: $e');
     }
-  } catch (e) {
-    debugPrint('Error picking image from camera: $e');
   }
-}
-
-
 }

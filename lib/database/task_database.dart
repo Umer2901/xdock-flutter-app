@@ -1,8 +1,11 @@
 import 'dart:async';
+
 import 'package:sqflite/sqflite.dart';
 
 class TaskSyncDatabase {
   final Database _database;
+
+  get database => _database;
 
   late StreamController<List<Map<String, dynamic>>> _streamController;
   Timer? _timer;

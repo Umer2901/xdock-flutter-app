@@ -75,13 +75,12 @@ class AppPages extends AppRoutes {
       page: () => const EditTime(),
       arguments: Get.arguments,
     ),
-   GetPage(
-  name: AppRoutes.proofOfDelivery,
-  page: () => ProofOfDeliveryView(
-    arguments: Get.arguments.cast<String, dynamic>(),
-  ),
-),
-
+    GetPage(
+      name: AppRoutes.proofOfDelivery,
+      page: () => ProofOfDeliveryView(
+        arguments: Get.arguments.cast<String, dynamic>(),
+      ),
+    ),
     GetPage(
       name: AppRoutes.podphotos,
       page: () => ProofOfDeliveryPhotos(

@@ -413,9 +413,7 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
       );
       return;
     }
-
-    print('Selected Consignment IDs: $consignmentIds');
-
+    
     final date = jsonDecode(selectedConsignments[0]['run_sheets'])['date'] ?? 'Not Provided';
     final String selectedProductTypeName = jsonDecode(selectedConsignments[0]['product_types'])['name'] ?? 'Unknown';
     final List<dynamic> groupedConsignments = [];
@@ -565,9 +563,6 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
                         final String consignmentType = consignment['consignment_type'] ?? 'Unknown';
                         final Map productTypes = jsonDecode(consignment['product_types']);
                         final String consignmentProductTypeName = productTypes?['name'] ?? 'Unknown';
-                        print('Product Type Name: $consignmentProductTypeName');
-                        print('Consignment Type: $consignmentType');
-                        print('Product Type: $productTypes');
 
                         if (consignmentIds.contains(consignment['id'])) {
                           setState(() {

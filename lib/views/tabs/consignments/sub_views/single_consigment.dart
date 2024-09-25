@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:coldxpress/export.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,8 +15,8 @@ class _SingleConsigmentViewState extends State<SingleConsigmentView> {
   late Map<String, dynamic> deliveryAddresses;
   late Map<String, dynamic> pickupAddresses;
   List<dynamic> groupedConsignments = [];
-  List<String> consignmentIds = []; 
-final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<String> consignmentIds = [];
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   void initState() {
     super.initState();
@@ -24,30 +25,31 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
         : Get.arguments['product_types'] as Map<String, dynamic>;
 
     deliveryAddresses = Get.arguments['delivery_addresses'] is String
-        ? json.decode(Get.arguments['delivery_addresses']) as Map<String, dynamic>
+        ? json.decode(Get.arguments['delivery_addresses'])
+            as Map<String, dynamic>
         : Get.arguments['delivery_addresses'] as Map<String, dynamic>;
 
     pickupAddresses = Get.arguments['pickup_addresses'] is String
         ? json.decode(Get.arguments['pickup_addresses']) as Map<String, dynamic>
         : Get.arguments['pickup_addresses'] as Map<String, dynamic>;
 
-   if (Get.arguments['grouped_consignments'] != null) {
-      groupedConsignments = json.decode(Get.arguments['grouped_consignments']) as List<dynamic>;
+    if (Get.arguments['grouped_consignments'] != null) {
+      groupedConsignments =
+          json.decode(Get.arguments['grouped_consignments']) as List<dynamic>;
       for (var consignment in groupedConsignments) {
         if (consignment['id'] != null) {
           consignmentIds.add(consignment['id'].toString());
         }
-      
-    }
+      }
       for (var consignment in groupedConsignments) {
-        final deliveryAddresses = _decodeIfString(consignment['delivery_addresses']);
-        final pickupAddresses = _decodeIfString(consignment['pickup_addresses']);
+        final deliveryAddresses =
+            _decodeIfString(consignment['delivery_addresses']);
+        final pickupAddresses =
+            _decodeIfString(consignment['pickup_addresses']);
 
         final companyName = consignment['consignment_type'] == 'delivery'
             ? (deliveryAddresses['company_name'] ?? 'No Company Name')
             : (pickupAddresses['company_name'] ?? 'No Company Name');
-
-        print('Company Name: $companyName');
       }
     }
   }
@@ -65,10 +67,10 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     bool isPickup = Get.arguments['consignment_type'] == 'pickup';
-  String appBarTitle = isPickup ? 'PICKUP' : 'DELIVERY';
-  String buttonText = isPickup ? 'POP Capture' : 'POD Capture';
+    String appBarTitle = isPickup ? 'PICKUP' : 'DELIVERY';
+    String buttonText = isPickup ? 'POP Capture' : 'POD Capture';
     return Scaffold(
-      key: _scaffoldKey,  
+      key: _scaffoldKey,
       backgroundColor: AppColors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -85,7 +87,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
         actions: [
           IconButton(
             onPressed: () {
-       _scaffoldKey.currentState?.openEndDrawer();
+              _scaffoldKey.currentState?.openEndDrawer();
             },
             icon: Icon(
               Icons.more_horiz,
@@ -135,9 +137,9 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                 border: Border.all(),
                               ),
                               child: Image.asset(
-                            AppImages.map,
-                            color: AppColors.black,
-                          ),
+                                AppImages.map,
+                                color: AppColors.black,
+                              ),
                             ),
                           ),
                         ],
@@ -181,9 +183,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             Text(
-                              'Recipient: ${(Get.arguments['consignment_type'] == 'delivery'
-                                      ? deliveryAddresses['customer_name']
-                                      : pickupAddresses['customer_name']) ?? 'Not Provided'}',
+                              'Recipient: ${(Get.arguments['consignment_type'] == 'delivery' ? deliveryAddresses['customer_name'] : pickupAddresses['customer_name']) ?? 'Not Provided'}',
                               style: Theme.of(context).textTheme.bodySmall,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -203,9 +203,10 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                         onTap: () async {
                           final Uri launchUri = Uri(
                             scheme: 'tel',
-                            path: Get.arguments['consignment_type'] == 'delivery'
-                                ? deliveryAddresses['telephone']
-                                : pickupAddresses['telephone'],
+                            path:
+                                Get.arguments['consignment_type'] == 'delivery'
+                                    ? deliveryAddresses['telephone']
+                                    : pickupAddresses['telephone'],
                           );
                           await launchUrl(launchUri);
                         },
@@ -238,19 +239,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                     child: CustomProductTypeAndTime(
                       type: (productTypes['id']) == 1 ? '1' : '2',
                       time:
-                          '${(Get.arguments['consignment_type'] == 'delivery'
-                              ? deliveryAddresses['service_time_start'] == null
-                                  ? '--.--'
-                                  : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_start']))
-                              : pickupAddresses['service_time_start'] == null
-                                  ? '--.--'
-                                  : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(Get.arguments['consignment_type'] == 'delivery'
-                              ? deliveryAddresses['service_time_end'] == null
-                                  ? '--.--'
-                                  : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_end']))
-                              : pickupAddresses['service_time_end'] == null
-                                  ? '--.--'
-                                  : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
+                          '${(Get.arguments['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_start'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_start'])) : pickupAddresses['service_time_start'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_start'])))} - ${(Get.arguments['consignment_type'] == 'delivery' ? deliveryAddresses['service_time_end'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(deliveryAddresses['service_time_end'])) : pickupAddresses['service_time_end'] == null ? '--.--' : DateFormat('HH.mm').format(DateTime.parse(pickupAddresses['service_time_end'])))}',
                       svgImage: SvgPicture.asset(AppSvgs.frozen),
                     ),
                   ),
@@ -258,7 +247,8 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                     height: 2.h,
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppColors.greyWhite,
@@ -291,7 +281,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                         SizedBox(
                           height: 2.h,
                         ),
-                         if (groupedConsignments.isEmpty)
+                        if (groupedConsignments.isEmpty)
                           CustomOrderTracking(
                               title: "Supplier",
                               subText: 'Acme Corporation',
@@ -334,8 +324,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                       ],
                     ),
                   ),
-                      
- SizedBox(
+                  SizedBox(
                     height: 3.h,
                   ),
                   Column(
@@ -392,40 +381,44 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                     ],
                   ),
                   SizedBox(
-                    height:2.h,
+                    height: 2.h,
                   ),
-            
-               
-                  if (groupedConsignments.isNotEmpty) ...[
-                  
-                    
-                  ],
+                  if (groupedConsignments.isNotEmpty) ...[],
                   ...groupedConsignments.map<Widget>((subConsignment) {
-                    final deliveryAddresses = _decodeIfString(subConsignment['delivery_addresses']);
-                    final pickupAddresses = _decodeIfString(subConsignment['pickup_addresses']);
+                    final deliveryAddresses =
+                        _decodeIfString(subConsignment['delivery_addresses']);
+                    final pickupAddresses =
+                        _decodeIfString(subConsignment['pickup_addresses']);
 
-                    final companyName = subConsignment['consignment_type'] == 'delivery'
-                        ? (deliveryAddresses['company_name'] ?? 'No Company Name')
-                        : (pickupAddresses['company_name'] ?? 'No Company Name');
-                    
-                    final address = subConsignment['consignment_type'] == 'delivery'
-                        ? deliveryAddresses['full_address']
-                        : pickupAddresses['full_address'];
+                    final companyName =
+                        subConsignment['consignment_type'] == 'delivery'
+                            ? (deliveryAddresses['company_name'] ??
+                                'No Company Name')
+                            : (pickupAddresses['company_name'] ??
+                                'No Company Name');
+
+                    final address =
+                        subConsignment['consignment_type'] == 'delivery'
+                            ? deliveryAddresses['full_address']
+                            : pickupAddresses['full_address'];
 
                     return Padding(
                       padding: EdgeInsets.only(bottom: 2.h),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (groupedConsignments.indexOf(subConsignment) == 0) ...[
-                         
+                          if (groupedConsignments.indexOf(subConsignment) ==
+                              0) ...[
                             const Divider(),
                             SizedBox(height: 2.h),
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 AppText.suppliers.toUpperCase(),
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
                                       fontWeight: FontWeight.w700,
                                     ),
                               ),
@@ -433,7 +426,8 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                             SizedBox(height: 2.h),
                           ],
                           Container(
-                            padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 4.w),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 2.h, horizontal: 4.w),
                             decoration: BoxDecoration(
                               color: AppColors.greyWhite,
                               borderRadius: BorderRadius.circular(10.sp),
@@ -446,7 +440,10 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                     Expanded(
                                       child: Text(
                                         companyName,
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
                                               fontWeight: FontWeight.w800,
                                             ),
                                       ),
@@ -463,7 +460,10 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                     Expanded(
                                       child: Text(
                                         'ID: ${subConsignment['id']}',
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
                                               fontWeight: FontWeight.w800,
                                             ),
                                       ),
@@ -473,31 +473,41 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                 SizedBox(height: 0.5.h),
                                 Text(
                                   address ?? 'Not Provided',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
                                         color: AppColors.grey,
                                         fontWeight: FontWeight.w700,
                                       ),
                                 ),
                                 SizedBox(height: 1.h),
                                 Container(
-                                  padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 4.w),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 2.h, horizontal: 4.w),
                                   decoration: BoxDecoration(
                                     color: AppColors.white,
                                     borderRadius: BorderRadius.circular(10.sp),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Column(
                                         children: [
                                           Text(
                                             AppText.cartons,
-                                            style: Theme.of(context).textTheme.bodySmall,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
                                           ),
                                           SizedBox(height: 1.h),
                                           Text(
                                             '${subConsignment['carton']}',
-                                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
                                                   fontWeight: FontWeight.w700,
                                                 ),
                                           ),
@@ -514,12 +524,17 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                         children: [
                                           Text(
                                             AppText.pallets,
-                                            style: Theme.of(context).textTheme.bodySmall,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
                                           ),
                                           SizedBox(height: 1.h),
                                           Text(
                                             '${subConsignment['pallet']}',
-                                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
                                                   fontWeight: FontWeight.w700,
                                                 ),
                                           ),
@@ -536,23 +551,34 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                         children: [
                                           Text(
                                             AppText.space,
-                                            style: Theme.of(context).textTheme.bodySmall,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
                                           ),
                                           SizedBox(height: 1.h),
                                           Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 '${subConsignment['space']}',
-                                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                                      fontWeight: FontWeight.w700,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                     ),
                                               ),
                                               SizedBox(width: 1.w),
                                               Text(
                                                 'sqft',
-                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                      fontWeight: FontWeight.w700,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       fontSize: 10.sp,
                                                     ),
                                               ),
@@ -571,23 +597,34 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                         children: [
                                           Text(
                                             AppText.weight,
-                                            style: Theme.of(context).textTheme.bodySmall,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
                                           ),
                                           SizedBox(height: 1.h),
                                           Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 '${subConsignment['weight']}',
-                                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                                      fontWeight: FontWeight.w700,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                     ),
                                               ),
                                               SizedBox(width: 1.w),
                                               Text(
                                                 'KG',
-                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                      fontWeight: FontWeight.w700,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       fontSize: 10.sp,
                                                     ),
                                               ),
@@ -601,22 +638,29 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                                 SizedBox(height: 1.h),
                                 Container(
                                   width: 100.w,
-                                  padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 4.w),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 2.h, horizontal: 4.w),
                                   decoration: BoxDecoration(
                                     color: AppColors.white,
                                     borderRadius: BorderRadius.circular(10.sp),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         AppText.specialInstructions,
-                                        style: Theme.of(context).textTheme.bodySmall,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
                                       ),
                                       SizedBox(height: 1.h),
                                       Text(
                                         '${subConsignment['special_instruction']}',
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
                                               fontWeight: FontWeight.w500,
                                             ),
                                         textAlign: TextAlign.justify,
@@ -631,21 +675,17 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                       ),
                     );
                   }).toList(),
-                    SizedBox(
+                  SizedBox(
                     height: 2.h,
                   ),
-                     CustomElevatedButton(
-  label: buttonText,
-  onPressed: () {
-    Get.toNamed(
-      AppRoutes.proofOfDelivery,
-      arguments: {
-        ...Get.arguments.cast<String, dynamic>(),
-        'consignmentIds': consignmentIds, 
-      }
-    );
-  }
-),
+                  CustomElevatedButton(
+                      label: buttonText,
+                      onPressed: () {
+                        Get.toNamed(AppRoutes.proofOfDelivery, arguments: {
+                          ...Get.arguments.cast<String, dynamic>(),
+                          'consignmentIds': consignmentIds,
+                        });
+                      }),
                   SizedBox(
                     height: 8.h,
                   ),

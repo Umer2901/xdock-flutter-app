@@ -1,23 +1,48 @@
+import 'dart:convert';
+
 import 'package:coldxpress/export.dart';
-import 'package:coldxpress/widgets/core/custom_text.dart';
-import 'package:flutter/material.dart';
 
-import '../widgets/core/custom-container.dart';
+import '../widgets/core/custom_pod_history_container.dart';
 
-class PodHistory extends StatelessWidget {
+class PodHistory extends StatefulWidget {
   const PodHistory({super.key});
+
+  @override
+  State<PodHistory> createState() => _PodHistoryState();
+}
+
+class _PodHistoryState extends State<PodHistory> {
+  TaskSyncDatabase? taskDatabase;
+  Stream<List<Map<String, dynamic>>>? taskStream;
+  String? query = ''; // This will store the search query
+
+  @override
+  void initState() {
+    super.initState();
+    _startSync(); // Initialize the database and stream
+  }
+
+  void _startSync() async {
+    Database database = await context.read<DatabaseProvider>().database;
+    taskDatabase = TaskSyncDatabase(database);
+
+    if (taskDatabase != null) {
+      setState(() {
+        taskStream = taskDatabase!.stream; // Initialize the task stream
+      });
+    } else {
+      print('Error: TaskSyncDatabase is null.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.blue,
-        shape: CircleBorder(),
-        onPressed: () {
-
-        },
-        child:Image.asset(AppImages.upload,height: 30,width: 30,),
-        // Icon(Icons.file_upload_outlined,color: AppColors.white,size: 34,),
+        shape: const CircleBorder(),
+        onPressed: () {},
+        child: Image.asset(AppImages.upload, height: 30, width: 30),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       appBar: AppBar(
@@ -25,7 +50,7 @@ class PodHistory extends StatelessWidget {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           onPressed: () {
-            //context.read<BottomNavProvider>().changeTabView(1);
+            Navigator.of(context).pop(); // Navigate back
           },
           icon: Icon(
             Icons.arrow_back_ios,
@@ -35,7 +60,7 @@ class PodHistory extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {
-            //  _scaffoldKey.currentState?.openEndDrawer();
+              // Handle more actions here
             },
             icon: Icon(
               Icons.more_horiz,
@@ -45,140 +70,138 @@ class PodHistory extends StatelessWidget {
         ],
         centerTitle: true,
         title: Text(
-          AppText.podHoistory,
+          AppText.podHoistory, // Assuming AppText contains text constants
           style: Theme.of(context).textTheme.headlineSmall,
         ),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(top: 10.0,left: 14,right: 14),
+          padding: const EdgeInsets.only(top: 10.0, left: 14, right: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            Container(
-              height: 83,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Color(0xffF4F4F4),
-                 shape: BoxShape.rectangle,
-              ),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12.0,left: 15,right: 15,bottom: 12),
-                  child: CustomTextField(
-                    maxLines: 1,
-                    hight: 6.h,
-                    name: 'search',
-                    borderColor: AppColors.white,
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: AppColors.black.withOpacity(0.5),
+              // Search bar
+              Container(
+                height: 83,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xffF4F4F4),
+                  shape: BoxShape.rectangle,
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 12.0,
+                      left: 15,
+                      right: 15,
+                      bottom: 12,
                     ),
-                    hintText:
-                    'Search',
-                    onChanged: (value) {
-                      // setState(() {
-                      //   query = value;
-                      // });
-                    },
+                    child: CustomTextField(
+                      maxLines: 1,
+                      hight: 6.h,
+                      name: 'search',
+                      borderColor: AppColors.white,
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppColors.black.withOpacity(0.5),
+                      ),
+                      hintText: 'Search by ID or Company Name',
+                      onChanged: (value) {
+                        setState(() {
+                          query = value; // Update the search query
+                        });
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
-              SizedBox(height: 3.h,),
-              CustomContainer(
-                podStatus: 'single pod',ontab: () {
-                Get.toNamed(AppRoutes.podhistoryview);
-              },),
-              CustomContainer(podStatus: 'grouped pod'),
-              CustomContainer(podStatus: 'partial pod'),
-              CustomContainer(podStatus: 'single pod'),  // for yellow container
-              CustomContainer(podStatus: 'grouped pod'), // for green container
-              CustomContainer(podStatus: 'partial pod'),
-        
-        
-              // Container(
-              //   height: 18.3.h,
-              //   width: double.infinity,
-              //   decoration: BoxDecoration(
-              //     color: Color(0xffF4F4F4),
-              //     borderRadius: BorderRadius.circular(10),
-              //
-              //   ),
-              //   child: Padding(
-              //     padding: const EdgeInsets.only(top: 10.0,left: 15,right: 10),
-              //     child: Column(
-              //        crossAxisAlignment: CrossAxisAlignment.start,
-              //       children: [
-              //         Text(AppText.name, style: TextStyle(fontWeight: FontWeight.w700,fontSize: 16.sp,),),
-              //         Row(
-              //          mainAxisAlignment: MainAxisAlignment.start,
-              //          children: [
-              //                CustomTextDisplay(text: AppText.cartons + ": 1"),
-              //                SizedBox(width: 1.5.w,),
-              //                CustomTextDisplay(text: "|",),
-              //                SizedBox(width: 1.5.w,),
-              //                CustomTextDisplay(text: AppText.pallets +": 0"),
-              //                SizedBox(width: 1.5.w,),
-              //                CustomTextDisplay(text: "|",),
-              //                SizedBox(width: 1.5.w,),
-              //               CustomTextDisplay(text: AppText.space + ": 0",),
-              //          ],
-              //        ),
-              //         SizedBox(height: 0.5.h,),
-              //         Row(
-              //           mainAxisAlignment: MainAxisAlignment.start,
-              //           children: [
-              //             CustomTextDisplay(text: AppText.ID + ": 239183"),
-              //             SizedBox(width: 1.5.w,),
-              //             CustomTextDisplay(text: "|",),
-              //             SizedBox(width: 1.5.w,),
-              //             CustomTextDisplay(text: AppText.reference +": 0"),
-              //
-              //           ],
-              //         ),
-              //         SizedBox(height: 0.5.h,),
-              //         Row(
-              //           mainAxisAlignment: MainAxisAlignment.start,
-              //           children: [
-              //             CustomTextDisplay(text: AppText.driverid + ": 1"),
-              //             SizedBox(width: 1.5.w,),
-              //             CustomTextDisplay(text: "|",),
-              //             SizedBox(width: 1.5.w,),
-              //             CustomTextDisplay(text: AppText.time +": 09--02-2024 "+"15:15:15"),
-              //           ],
-              //         ),
-              //         SizedBox(height: 0.5.h,),
-              //         Container(
-              //           height: 3.h,
-              //           width: 24.w,
-              //           decoration: BoxDecoration(
-              //             color: AppColors.yellow,
-              //             borderRadius: BorderRadius.circular(5),
-              //           ),
-              //           child: Center(
-              //             child: Text(
-              //               AppText.singlepod,
-              //               style: TextStyle(
-              //                   fontSize: 10.sp,
-              //                   fontWeight: FontWeight.w700,
-              //                 color: AppColors.white,
-              //               ),),
-              //           ),
-              //         )
-              //
-              //       ],
-              //     ),
-              //   ),
-              // )
-        
-        
-        
+              SizedBox(
+                height: 3.h,
+              ),
+              // Display tasks in a ListView with search filtering applied to the stream
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: taskStream?.map((tasks) {
+                  // Apply search filter on the stream data
+                  if (query != null && query!.isNotEmpty) {
+                    return tasks.where((task) {
+                      String taskId =
+                          task['id']?.toString().toLowerCase() ?? '';
+                      String companyName = '';
+
+                      // Extract company name from delivery or pickup addresses
+                      if (task['consignment_type'] == 'delivery') {
+                        Map? deliveryAddresses =
+                            task['delivery_addresses'] != null
+                                ? json.decode(task['delivery_addresses'])
+                                : null;
+                        companyName = deliveryAddresses != null &&
+                                deliveryAddresses['company_name'] != null
+                            ? deliveryAddresses['company_name']
+                                .toString()
+                                .toLowerCase()
+                            : '';
+                      } else {
+                        Map? pickupAddresses = task['pickup_addresses'] != null
+                            ? json.decode(task['pickup_addresses'])
+                            : null;
+                        companyName = pickupAddresses != null &&
+                                pickupAddresses['company_name'] != null
+                            ? pickupAddresses['company_name']
+                                .toString()
+                                .toLowerCase()
+                            : '';
+                      }
+
+                      // Filter tasks by ID or Company Name
+                      return taskId.contains(query!.toLowerCase()) ||
+                          companyName.contains(query!.toLowerCase());
+                    }).toList();
+                  }
+                  return tasks; // Return unfiltered tasks if query is empty
+                }),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.blue,
+                      ),
+                    );
+                  } else if (snapshot.hasData) {
+                    List<Map<String, dynamic>> tasks = snapshot.data!;
+
+                    // Display filtered tasks
+                    if (tasks.isEmpty) {
+                      return const Center(child: Text('No results found'));
+                    }
+
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        Map<String, dynamic> task = tasks[index];
+
+                        return CustomPodHistoryContainer(
+                          consignment: task,
+                          ontab: () {
+                            Get.toNamed(AppRoutes.podhistoryview,
+                                arguments: task);
+                          },
+                        );
+                      },
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Text("Error: ${snapshot.error}"),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
             ],
           ),
         ),
       ),
-
     );
   }
 }

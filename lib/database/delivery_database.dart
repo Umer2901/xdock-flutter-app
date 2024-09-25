@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+
 import 'package:sqflite/sqflite.dart';
 
 class DeliveryDatabase {
@@ -18,7 +19,7 @@ class DeliveryDatabase {
   Future<void> fullcreate(Map<String, dynamic> data) async {
     try {
       await _database.insert('full_delivery', data);
-      print('Data inserted into the database: $data');
+      //print('Data inserted into the database: $data');
       _refreshStream();
     } catch (e) {
       print('Error inserting data into the database: $e');
@@ -28,7 +29,7 @@ class DeliveryDatabase {
   Future<void> partialcreate(Map<String, dynamic> data) async {
     try {
       await _database.insert('partial_delivery', data);
-      print('Data inserted into the database: $data');
+      //print('Data inserted into the database: $data');
       _refreshStream();
     } catch (e) {
       print('Error inserting data into the database: $e');

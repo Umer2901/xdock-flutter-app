@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:coldxpress/export.dart';
 
 class MyConsigmentTab extends StatefulWidget {
@@ -9,7 +10,7 @@ class MyConsigmentTab extends StatefulWidget {
 }
 
 class _MyConsigmentTabState extends State<MyConsigmentTab> {
-   late ConsignmentDatabase consignment;
+  late ConsignmentDatabase consignment;
   late PreCheckDatabase precheck;
   final ScrollController _scrollController = ScrollController();
   final _formKey = GlobalKey<FormBuilderState>();
@@ -54,7 +55,6 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
           await consignmentService.fetchAndStore(state.token);
         }
       } catch (e) {
-        debugPrint('Error refreshing consignments: $e');
       } finally {
         setState(() {
           _isLoading = false;
@@ -79,95 +79,98 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
   }
 
   Map<String, List<Map<String, dynamic>>> _groupConsignmentsByDate(
-    List<Map<String, dynamic>> consignments) {
-  final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
+      List<Map<String, dynamic>> consignments) {
+    final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
 
-  for (var consignment in consignments) {
-    final date = consignment['delivery_date'] ?? 'Not Provided';
-    if (!groupedByDate.containsKey(date)) {
-      groupedByDate[date] = [];
-    }
-    groupedByDate[date]!.add(consignment);
-  }
-
-  final sortedGroupedByDate = Map<String, List<Map<String, dynamic>>>.fromEntries(
-    groupedByDate.entries.toList()..sort((a, b) {
-      if (a.key == 'Not Provided') return 1;
-      if (b.key == 'Not Provided') return -1;
-
-      DateTime dateA = DateFormat('yyyy-MM-dd').parse(a.key);
-      DateTime dateB = DateFormat('yyyy-MM-dd').parse(b.key);
-
-      return dateA.compareTo(dateB); 
-    }),
-  );
-
-  return sortedGroupedByDate;
-}
-
-List<Widget> _buildGroupedConsignments(
-    Map<String, List<Map<String, dynamic>>> groupedConsignments,
-    AsyncSnapshot precheckSnapshot) {
-  List<Widget> widgets = [];
-
-  groupedConsignments.forEach((date, consignments) {
-    String formattedDate;
-    if (date != 'Not Provided') {
-      formattedDate = DateFormat('dd-MM-yyyy').format(DateFormat('yyyy-MM-dd').parse(date));
-    } else {
-      formattedDate = date;
+    for (var consignment in consignments) {
+      final date = consignment['delivery_date'] ?? 'Not Provided';
+      if (!groupedByDate.containsKey(date)) {
+        groupedByDate[date] = [];
+      }
+      groupedByDate[date]!.add(consignment);
     }
 
-    widgets.add(
-      Padding(
-        padding: EdgeInsets.symmetric(vertical: 2.h),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              formattedDate,  
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
+    final sortedGroupedByDate =
+        Map<String, List<Map<String, dynamic>>>.fromEntries(
+      groupedByDate.entries.toList()
+        ..sort((a, b) {
+          if (a.key == 'Not Provided') return 1;
+          if (b.key == 'Not Provided') return -1;
+
+          DateTime dateA = DateFormat('yyyy-MM-dd').parse(a.key);
+          DateTime dateB = DateFormat('yyyy-MM-dd').parse(b.key);
+
+          return dateA.compareTo(dateB);
+        }),
     );
 
-    widgets.addAll(
-      consignments.map((consignment) {
-        int index = consignments.indexOf(consignment) + 1;
-        return GestureDetector(
-          onTap: () {
-            if ((precheckSnapshot.data![0]['checklist'] == 0 &&
-                precheckSnapshot.data![0]['outbound'] == 0)) {
-              Get.toNamed(
-                AppRoutes.singleConsigment,
-                arguments: consignment,
-              );
-            }
-          },
-          child: Column(
+    return sortedGroupedByDate;
+  }
+
+  List<Widget> _buildGroupedConsignments(
+      Map<String, List<Map<String, dynamic>>> groupedConsignments,
+      AsyncSnapshot precheckSnapshot) {
+    List<Widget> widgets = [];
+
+    groupedConsignments.forEach((date, consignments) {
+      String formattedDate;
+      if (date != 'Not Provided') {
+        formattedDate = DateFormat('dd-MM-yyyy')
+            .format(DateFormat('yyyy-MM-dd').parse(date));
+      } else {
+        formattedDate = date;
+      }
+
+      widgets.add(
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 2.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CustomMyConsigmentContainer(
-                consignment: consignment,
-                isLoading: false,
-                index: index,
-                isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
-                    precheckSnapshot.data![0]['outbound'] == 1),
+              Text(
+                formattedDate,
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
-        );
-      }).toList(),
-    );
-  });
+        ),
+      );
 
-  return widgets;
-}
+      widgets.addAll(
+        consignments.map((consignment) {
+          int index = consignments.indexOf(consignment) + 1;
+          return GestureDetector(
+            onTap: () {
+              if ((precheckSnapshot.data![0]['checklist'] == 0 &&
+                  precheckSnapshot.data![0]['outbound'] == 0)) {
+                Get.toNamed(
+                  AppRoutes.singleConsigment,
+                  arguments: consignment,
+                );
+              }
+            },
+            child: Column(
+              children: [
+                CustomMyConsigmentContainer(
+                  consignment: consignment,
+                  isLoading: false,
+                  index: index,
+                  isPrecheckDone:
+                      (precheckSnapshot.data![0]['checklist'] == 1 &&
+                          precheckSnapshot.data![0]['outbound'] == 1),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      );
+    });
 
+    return widgets;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +280,8 @@ List<Widget> _buildGroupedConsignments(
                                 .addAll(consignmentSnapshot.data ?? []);
                           }
 
-                          Map<String, List<Map<String, dynamic>>> groupedConsignments =
+                          Map<String, List<Map<String, dynamic>>>
+                              groupedConsignments =
                               _groupConsignmentsByDate(allConsignments);
 
                           return Column(
@@ -329,8 +333,8 @@ List<Widget> _buildGroupedConsignments(
                                         ),
                                         SizedBox(width: 1.w),
                                         Text(
-                                          DateFormat('dd MMM, yyyy').format(
-                                              DateTime.now()),
+                                          DateFormat('dd MMM, yyyy')
+                                              .format(DateTime.now()),
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodySmall
@@ -359,7 +363,7 @@ List<Widget> _buildGroupedConsignments(
                                   ],
                                 ),
                               ),
-                               SizedBox(height: 1.5.h),
+                              SizedBox(height: 1.5.h),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -392,7 +396,8 @@ List<Widget> _buildGroupedConsignments(
                                                 AppColors.greyWhite,
                                             child: i == 0
                                                 ? SvgPicture.asset(
-                                                    AppSvgs.consignmentViewBlack,
+                                                    AppSvgs
+                                                        .consignmentViewBlack,
                                                     width: 10.w)
                                                 : i == 1
                                                     ? SvgPicture.asset(

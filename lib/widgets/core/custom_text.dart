@@ -1,8 +1,4 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-
-import '../../constants/text.dart';
 
 class CustomTextDisplay extends StatelessWidget {
   final String text;
@@ -21,11 +17,12 @@ class CustomTextDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-       text, // AppText.space + your custom text
+      text, // AppText.space + your custom text
       style: TextStyle(
         fontWeight: fontWeight,
         fontSize: fontSize,
         color: textColor.withOpacity(0.4),
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

@@ -2,12 +2,13 @@
 
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:coldxpress/database/delivery_database.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:http/http.dart' as http;
+import 'package:coldxpress/export.dart';
 import 'package:coldxpress/providers/proof-of-delivery-provider.dart';
 import 'package:coldxpress/views/tabs/consignments/sub_views/proof_of_delivery_photos.dart';
-import 'package:coldxpress/export.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:http/http.dart' as http;
 
 class TaskSyncpofProvider extends ChangeNotifier {
   final BuildContext context;
@@ -106,17 +107,14 @@ class TaskSyncpofProvider extends ChangeNotifier {
       }
 
       final podType = provider.selectedDeliveryType.toString().split('.').last;
-      print("i am pod type ${podType}");
       final Map<String, dynamic> taskToSave = {
         'task_name': 'delivery',
         'task_type': podType,
         'data': json.encode(taskData),
       };
-
-      debugPrint('Saving the following data to TaskSyncDatabase: $taskToSave');
- taskData.forEach((key, value) {
-          debugPrint('$key: $value');
-        });
+      taskData.forEach((key, value) {
+        debugPrint('$key: $value');
+      });
       await TaskSyncDatabase(context.read<DatabaseProvider>().database)
           .create(taskToSave);
 
@@ -141,7 +139,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
         final taskDatabase =
             TaskSyncDatabase(context.read<DatabaseProvider>().database);
         final tasks = await taskDatabase.read();
-       // await postDataToApi(tasks);
+        // await postDataToApi(tasks);
       }
     } catch (e) {
       debugPrint('Error saving data to database: $e');
@@ -156,138 +154,138 @@ class TaskSyncpofProvider extends ChangeNotifier {
             where: 'id = ?',
             whereArgs: [consignmentId],
           );
-      debugPrint(
-          'Updated consignment with id $consignmentId to is_complete = 1');
     } catch (e) {
       debugPrint('Error updating consignment completion: $e');
     }
   }
 
- Future<void> postDataToApi(List<Map<String, dynamic>> tasks) async {
-  var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
-  AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+  Future<void> postDataToApi(List<Map<String, dynamic>> tasks) async {
+    var provider = Provider.of<ProofOfDeliveryProvider>(context, listen: false);
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
 
-  if (state is Authenticated) {
-    try {
-      final Map postData = context.read<ProofOfDeliveryProvider>().data;
-      for (var task in tasks) {
-        final taskData = json.decode(task['data']);
-        final consignmentId = taskData['consignment_id'];
-        final isGroup = taskData['is_group'];
-        final int podType = taskData['pod_type'];
-        debugPrint("Consignment ID: $consignmentId");
+    if (state is Authenticated) {
+      try {
+        final Map postData = context.read<ProofOfDeliveryProvider>().data;
+        for (var task in tasks) {
+          final taskData = json.decode(task['data']);
+          final consignmentId = taskData['consignment_id'];
+          final isGroup = taskData['is_group'];
+          final int podType = taskData['pod_type'];
 
-        String url = '';
+          String url = '';
 
-        switch (podType) {
-          case 0:
-            url = '${AppHost.podfull}$consignmentId';
-            break;
-          case 2:
-            url = AppHost.group;
-            break;
-          case 5:
-            url = AppHost.grouppop;
-            break;
-          case 4:
-            url = '${AppHost.singlepop}$consignmentId';
-            break;
-          case 1:
-            url = '${AppHost.podpartial}$consignmentId';
-            break;
-          case 3:
-            List<String> rejectionReasons = provider.selectedOrderRejectionReasons;
-            for (String rejectionReason in rejectionReasons) {
-              switch (rejectionReason) {
-                case "Temperature issue":
-                  url = '${AppHost.temperateissue}$consignmentId';
-                  break;
-                case "Wrong Address":
-                  url = '${AppHost.wrongaddress}$consignmentId';
-                  break;
-                case "Damaged Goods":
-                  url = '${AppHost.damagegoods}$consignmentId';
-                  break;
-                case "Receiver Not Open":
-                  url = '${AppHost.notopen}$consignmentId';
-                  break;
-                case "Other Rejection":
-                  url = '${AppHost.otherrejection}$consignmentId';
-                  break;
-                default:
-                  throw Exception('Invalid rejection reason: $rejectionReason');
+          switch (podType) {
+            case 0:
+              url = '${AppHost.podfull}$consignmentId';
+              break;
+            case 2:
+              url = AppHost.group;
+              break;
+            case 5:
+              url = AppHost.grouppop;
+              break;
+            case 4:
+              url = '${AppHost.singlepop}$consignmentId';
+              break;
+            case 1:
+              url = '${AppHost.podpartial}$consignmentId';
+              break;
+            case 3:
+              List<String> rejectionReasons =
+                  provider.selectedOrderRejectionReasons;
+              for (String rejectionReason in rejectionReasons) {
+                switch (rejectionReason) {
+                  case "Temperature issue":
+                    url = '${AppHost.temperateissue}$consignmentId';
+                    break;
+                  case "Wrong Address":
+                    url = '${AppHost.wrongaddress}$consignmentId';
+                    break;
+                  case "Damaged Goods":
+                    url = '${AppHost.damagegoods}$consignmentId';
+                    break;
+                  case "Receiver Not Open":
+                    url = '${AppHost.notopen}$consignmentId';
+                    break;
+                  case "Other Rejection":
+                    url = '${AppHost.otherrejection}$consignmentId';
+                    break;
+                  default:
+                    throw Exception(
+                        'Invalid rejection reason: $rejectionReason');
+                }
               }
-            }
-            break;
-          default:
-            throw Exception('Invalid pod_type: $podType');
-        }
-
-        final requestBody = {
-          "carton": taskData['carton'],
-          "pallet": taskData['pallet'],
-          "space": taskData['space'],
-          "weigth": taskData['weight'],
-          "first_name": taskData['first_name'],
-          "last_name": taskData['last_name'],
-          "temperature": taskData['temperature'],
-          "signature": taskData['signature'],
-          "comments": taskData['comments'],
-          "service_window": taskData['service_window'],
-          "service_time_start": taskData['service_time_start'],
-          "service_time_end": taskData['service_time_end'],
-          "address_id": taskData['address_id'],
-          "pod_type": podType,
-          "customer_reference": taskData['customer_reference'],
-          "pictures": [taskData['pictures']],
-          "pictureSources": jsonDecode(taskData['pictureSources']),
-          "latitude": taskData['latitude'],
-          "longitude": taskData['longitude'],
-          "consignments": jsonDecode(taskData['consignments']),
-          "device": jsonDecode(taskData['device']),
-          "app_version": taskData['app_version'],
-          "driver_id": taskData['driver_id'],
-          "date_delivered": taskData['date_delivered'],
-          "platforms": jsonDecode(taskData['platforms']),
-          "current_app_version": taskData['current_app_version'],
-        };
-
-        requestBody.forEach((key, value) {
-          debugPrint('$key: $value');
-        });
-
-        final response = await http.post(
-          Uri.parse(url),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${state.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: jsonEncode(requestBody),
-        );
-
-        if (response.statusCode == 200) {
-          debugPrint('Data posted successfully to URL: $url');
-          await TaskSyncDatabase(context.read<DatabaseProvider>().database)
-              .delete(task['id']);
-          await ConsignmentDatabase(context.read<DatabaseProvider>().database)
-              .update(task['id'], {'is_complete': 1});
-
-          if (isGroup != null && isGroup != 'parent') {
-            await submitGroupAsIndividual(int.parse(isGroup));
-            await addNewConsignment(Get.arguments);
+              break;
+            default:
+              throw Exception('Invalid pod_type: $podType');
           }
-        } else {
-          debugPrint('Failed to post data to URL: $url');
-          debugPrint('Response status: ${response.statusCode}');
-          debugPrint('Response body: ${response.body}');
+
+          final requestBody = {
+            "carton": taskData['carton'],
+            "pallet": taskData['pallet'],
+            "space": taskData['space'],
+            "weigth": taskData['weight'],
+            "first_name": taskData['first_name'],
+            "last_name": taskData['last_name'],
+            "temperature": taskData['temperature'],
+            "signature": taskData['signature'],
+            "comments": taskData['comments'],
+            "service_window": taskData['service_window'],
+            "service_time_start": taskData['service_time_start'],
+            "service_time_end": taskData['service_time_end'],
+            "address_id": taskData['address_id'],
+            "pod_type": podType,
+            "customer_reference": taskData['customer_reference'],
+            "pictures": [taskData['pictures']],
+            "pictureSources": jsonDecode(taskData['pictureSources']),
+            "latitude": taskData['latitude'],
+            "longitude": taskData['longitude'],
+            "consignments": jsonDecode(taskData['consignments']),
+            "device": jsonDecode(taskData['device']),
+            "app_version": taskData['app_version'],
+            "driver_id": taskData['driver_id'],
+            "date_delivered": taskData['date_delivered'],
+            "platforms": jsonDecode(taskData['platforms']),
+            "current_app_version": taskData['current_app_version'],
+          };
+
+          requestBody.forEach((key, value) {
+            debugPrint('$key: $value');
+          });
+
+          final response = await http.post(
+            Uri.parse(url),
+            headers: <String, String>{
+              'Authorization': 'Bearer ${state.token}',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(requestBody),
+          );
+
+          if (response.statusCode == 200) {
+            debugPrint('Data posted successfully to URL: $url');
+            await TaskSyncDatabase(context.read<DatabaseProvider>().database)
+                .delete(task['id']);
+            await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+                .update(task['id'], {'is_complete': 1});
+
+            if (isGroup != null && isGroup != 'parent') {
+              await submitGroupAsIndividual(int.parse(isGroup));
+              await addNewConsignment(Get.arguments);
+            }
+          } else {
+            debugPrint('Failed to post data to URL: $url');
+            debugPrint('Response status: ${response.statusCode}');
+            debugPrint('Response body: ${response.body}');
+          }
         }
+      } catch (e) {
+        debugPrint('Error posting data to API: $e');
       }
-    } catch (e) {
-      debugPrint('Error posting data to API: $e');
     }
   }
-}
 
   Future<void> submitGroupAsIndividual(int id) async {
     List<Map<String, dynamic>> individualConsignments = [];

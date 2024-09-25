@@ -74,7 +74,6 @@ class _EditTimeState extends State<EditTime> {
 
     try {
       await dbProvider.database.insert('sync_task', taskData);
-      print('Task saved to TaskSyncDatabase successfully');
     } catch (e) {
       debugPrint('Error saving task to TaskSyncDatabase: $e');
     }

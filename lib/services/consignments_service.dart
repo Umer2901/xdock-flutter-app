@@ -282,7 +282,6 @@ class ConsignmentService {
 Future<void> sendReorderedConsignments(
       Map<String, List<int>> finalConsignments, String accessToken) async {
     try {
-      print('Sending reorder API request with data: $finalConsignments');
 
       final response = await http.post(
         Uri.parse(AppHost.reorderConsignments), // Use the correct API endpoint
@@ -294,20 +293,15 @@ Future<void> sendReorderedConsignments(
         },
       );
 
-      print('Reorder API response code: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         var responseData = json.decode(response.body);
         String status = responseData['status'];
-        print('Reorder API response: $responseData');
 
         if (status == 'success') {
-          print('Reorder successful.');
         } else {
-          print('Reorder failed with status: $status, Message: ${responseData['msg']}');
         }
       } else {
-        print('Reorder API failed with status code: ${response.statusCode} and response: ${response.body}');
       }
     } catch (e) {
       print('Error during reorder API call: $e');
