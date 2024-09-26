@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/widgets/core/custom-widget.dart';
@@ -62,7 +63,31 @@ class _PodHistoryViewState extends State<PodHistoryView> {
     Map<String, dynamic> task = Get.arguments;
 
     Map<String, dynamic> taskData = jsonDecode(task['data']);
-    print('Task POD HISTORY : $task');
+    //print('Task POD HISTORY : $task');
+
+    // Assuming you have signatureBase64 from taskData
+    String signatureBase64 = taskData['signature'];
+
+// Remove extra quotes from the signature if present
+    if (signatureBase64.startsWith('"') && signatureBase64.endsWith('"')) {
+      signatureBase64 =
+          signatureBase64.substring(1, signatureBase64.length - 1);
+    }
+
+// Remove 'data:image/png;base64,' prefix if present
+    if (signatureBase64.contains(',')) {
+      signatureBase64 = signatureBase64.split(',')[1];
+    }
+    signatureBase64 = signatureBase64.trim();
+
+    //print('Signature after cleaning: $signatureBase64');
+
+// Now decode the base64 string
+    Uint8List decodedSignature = base64Decode(signatureBase64);
+    //print('Decoded signature: $decodedSignature');
+
+    // Display the signature image using Image.memory()
+    Image signatureImage = Image.memory(decodedSignature);
 
     // Extract the 'data' field from the task
     Map<String, dynamic> data = {};
@@ -79,28 +104,14 @@ class _PodHistoryViewState extends State<PodHistoryView> {
     int space = data['space'] ?? 0;
     String companyName = data['company_name'] ?? 'N/A';
     int referenceId = data['address_id'] ?? 0;
-    //final int customerReference;
-    // if (data['customer_reference'] is int) {
-    //   customerReference = data['customer_reference'];
-    // } else if (data['customer_reference'] is String) {
-    //   customerReference = int.tryParse(data['customer_reference']) ?? 0;
-    // } else {
-    //   customerReference = 0; // Default value if it's neither int nor String
-    // }
+
+    String picturesString = data['pictures'] ?? null;
+
+    print('PictureString : $picturesString');
 
     String customerReference = data['customer_reference'] ?? 'N/A';
-
     String serviceTime = data['service_time_start'] ?? 'N/A';
     final int podType = int.tryParse(data['pod_type'].toString()) ?? -1;
-
-    // Handle image and signature
-    String imageBase64 = (data['pictureSources'] ?? '')
-        .replaceAll(RegExp(r'data:image\/[a-zA-Z]+;base64,'), '');
-    // Uint8List? imageBytes = imageBase64.isNotEmpty ? base64Decode(imageBase64) : null;
-
-    String signatureBase64 = (data['signature'] ?? '')
-        .replaceAll(RegExp(r'data:image\/[a-zA-Z]+;base64,'), '');
-    // Uint8List? signatureBytes =     signatureBase64.isNotEmpty ? base64Decode(signatureBase64) : null;
 
     Color containerColor;
     String displayText;
@@ -291,21 +302,15 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                         height: 2.h,
                       ),
                       Container(
-                        height: 15.h,
-                        width: 27.w,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child:
-                            // imageBytes != null
-                            //     ? Image.memory(
-                            //         imageBytes,
-                            //         fit: BoxFit.contain,
-                            //       )
-                            //     : const
-                            Icon(Icons
-                                .image_not_supported), // Fallback icon or widget
-                      ),
+                          height: 15.h,
+                          width: 27.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Image.asset(
+                            picturesString,
+                            fit: BoxFit.contain,
+                          )),
                     ],
                   ),
                 ),
@@ -317,7 +322,7 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                 height: 27.3.h,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Color(0xffF4F4F4),
+                  color: const Color(0xffF4F4F4),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
@@ -353,15 +358,7 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child:
-                            // signatureBytes != null
-                            //     ? Image.memory(
-                            //         signatureBytes,
-                            //         fit: BoxFit.contain,
-                            //       )
-                            //     :
-                            const Icon(
-                                Icons.edit_document), // Fallback icon or widget
+                        child: signatureImage,
                       ),
                     ],
                   ),
@@ -431,10 +428,10 @@ class _PodHistoryViewState extends State<PodHistoryView> {
                               padding: const EdgeInsets.only(
                                   top: 8.0, left: 10, right: 10, bottom: 8),
                               child: CustomTextDisplay(
-                                text:
-                                    "Temperature: ${taskData['temperature']}°C\n"
-                                    "Service Window: ${taskData['service_window']} minutes\n"
-                                    "Delivered on: ${taskData['date_delivered']}",
+                                text: "{${task}, },", maxLine: 12,
+                                // "Temperature: ${taskData['temperature']}°C\n"
+                                // "Service Window: ${taskData['service_window']} minutes\n"
+                                // "Delivered on: ${taskData['date_delivered']}",
                               ),
                             ),
                           ),

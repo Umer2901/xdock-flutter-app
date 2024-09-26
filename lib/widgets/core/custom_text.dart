@@ -5,10 +5,12 @@ class CustomTextDisplay extends StatelessWidget {
   final double fontSize;
   final FontWeight fontWeight;
   final Color textColor;
+  final int? maxLine;
 
   const CustomTextDisplay({
     Key? key,
-    required this.text, // The main text you want to display
+    required this.text,
+    this.maxLine,
     this.fontSize = 14.0,
     this.fontWeight = FontWeight.w700,
     this.textColor = const Color(0xFF000000), // Default color is black
@@ -17,6 +19,7 @@ class CustomTextDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
+      maxLines: maxLine ?? 1,
       text, // AppText.space + your custom text
       style: TextStyle(
         fontWeight: fontWeight,

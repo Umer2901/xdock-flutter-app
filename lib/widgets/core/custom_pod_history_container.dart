@@ -76,7 +76,7 @@ class _CustomPodHistoryContainerState extends State<CustomPodHistoryContainer> {
     int space = data['space'] ?? 0;
     //var podType = data['pod_type'];
     final int podType = int.tryParse(data['pod_type'].toString()) ?? -1;
-    int referenceId = data['address_id'] ?? 0;
+    int referenceId = data['consignment_id'] ?? 0;
     String customerReference = data['customer_reference'] ?? 'N/A';
     String serviceTime = data['service_time_start'] ?? 'N/A';
     String companyName = data['company_name'] ?? 'N/A';

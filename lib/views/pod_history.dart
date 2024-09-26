@@ -13,6 +13,7 @@ class PodHistory extends StatefulWidget {
 
 class _PodHistoryState extends State<PodHistory> {
   TaskSyncDatabase? taskDatabase;
+  late PreCheckDatabase precheck;
   Stream<List<Map<String, dynamic>>>? taskStream;
   String? query = ''; // This will store the search query
 
@@ -25,6 +26,7 @@ class _PodHistoryState extends State<PodHistory> {
   void _startSync() async {
     Database database = await context.read<DatabaseProvider>().database;
     taskDatabase = TaskSyncDatabase(database);
+    precheck = PreCheckDatabase(database); // Initialize precheck
 
     if (taskDatabase != null) {
       setState(() {
@@ -81,40 +83,49 @@ class _PodHistoryState extends State<PodHistory> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Search bar
-              Container(
-                height: 83,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xffF4F4F4),
-                  shape: BoxShape.rectangle,
-                ),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: 12.0,
-                      left: 15,
-                      right: 15,
-                      bottom: 12,
-                    ),
-                    child: CustomTextField(
-                      maxLines: 1,
-                      hight: 6.h,
-                      name: 'search',
-                      borderColor: AppColors.white,
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: AppColors.black.withOpacity(0.5),
-                      ),
-                      hintText: 'Search by ID or Company Name',
-                      onChanged: (value) {
-                        setState(() {
-                          query = value; // Update the search query
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ),
+              StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: taskStream,
+                  builder: (context, precheckSnapshot) {
+                    if (precheckSnapshot.hasData &&
+                        precheckSnapshot.connectionState !=
+                            ConnectionState.waiting) {
+                      return Container(
+                        height: 83,
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          color: Color(0xffF4F4F4),
+                          shape: BoxShape.rectangle,
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              top: 12.0,
+                              left: 15,
+                              right: 15,
+                              bottom: 12,
+                            ),
+                            child: CustomTextField(
+                              maxLines: 1,
+                              hight: 6.h,
+                              name: 'search',
+                              borderColor: AppColors.white,
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: AppColors.black.withOpacity(0.5),
+                              ),
+                              hintText: 'Search by ID or Company Name',
+                              onChanged: (value) {
+                                setState(() {
+                                  query = value; // Update the search query
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
               SizedBox(
                 height: 3.h,
               ),
@@ -124,14 +135,25 @@ class _PodHistoryState extends State<PodHistory> {
                   // Apply search filter on the stream data
                   if (query != null && query!.isNotEmpty) {
                     return tasks.where((task) {
-                      String taskId =
-                          task['id']?.toString().toLowerCase() ?? '';
+                      // Convert consignment_id to String for comparison
+                      String taskId = task['data']['consignment_id']
+                          .toString(); // Convert to String
+
+                      print("Task ID INSIDE POD HISTORY: $taskId");
+                      print(
+                          "Delivery Addresses INSIDE POD HISTORY: ${task['data']['delivery_addresses']}");
+                      print(
+                          "Pickup Addresses INSIDE POD HISTORY: ${task['data']['pickup_addresses']}");
+
+                      // Now you can safely use toLowerCase() on taskId
+                      bool matchesId = taskId.contains(query!.toLowerCase());
+
                       String companyName = '';
 
                       // Extract company name from delivery or pickup addresses
-                      if (task['consignment_type'] == 'delivery') {
+                      if (task['data']['consignment_type'] == 'delivery') {
                         Map? deliveryAddresses =
-                            task['delivery_addresses'] != null
+                            task['data']['delivery_addresses'] != null
                                 ? json.decode(task['delivery_addresses'])
                                 : null;
                         companyName = deliveryAddresses != null &&
@@ -141,9 +163,10 @@ class _PodHistoryState extends State<PodHistory> {
                                 .toLowerCase()
                             : '';
                       } else {
-                        Map? pickupAddresses = task['pickup_addresses'] != null
-                            ? json.decode(task['pickup_addresses'])
-                            : null;
+                        Map? pickupAddresses =
+                            task['data']['pickup_addresses'] != null
+                                ? json.decode(task['data']['pickup_addresses'])
+                                : null;
                         companyName = pickupAddresses != null &&
                                 pickupAddresses['company_name'] != null
                             ? pickupAddresses['company_name']
@@ -153,8 +176,9 @@ class _PodHistoryState extends State<PodHistory> {
                       }
 
                       // Filter tasks by ID or Company Name
-                      return taskId.contains(query!.toLowerCase()) ||
+                      return matchesId ||
                           companyName.contains(query!.toLowerCase());
+                      //return taskId.contains(query!.toLowerCase()) || companyName.contains(query!.toLowerCase());
                     }).toList();
                   }
                   return tasks; // Return unfiltered tasks if query is empty
