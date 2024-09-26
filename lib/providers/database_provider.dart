@@ -160,6 +160,7 @@ class DatabaseProvider with ChangeNotifier {
         task_name TEXT,
         task_type TEXT,
         data TEXT,
+        is_sync TEXT DEFAULT 'false',
         access_token TEXT
       )
     ''');
@@ -203,6 +204,7 @@ class DatabaseProvider with ChangeNotifier {
         date_delivered TEXT,
         platforms TEXT,
         access_token TEXT,
+        company_name TEXT,
         current_app_version TEXT
       )
     ''');
@@ -248,6 +250,7 @@ class DatabaseProvider with ChangeNotifier {
         reason TEXT,
         lodgeError TEXT,
         access_token TEXT,
+        company_name TEXT,
         platforms TEXT
       )
     ''');
@@ -256,6 +259,8 @@ class DatabaseProvider with ChangeNotifier {
       CREATE TABLE IF NOT EXISTS none_delivery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         pod_type INTEGER,
+        carton INTEGER,
+        pallet INTEGER,
         error_type TEXT,
         temp TEXT,
         rejection_reason TEXT,
@@ -283,6 +288,7 @@ class DatabaseProvider with ChangeNotifier {
         current_app_version TEXT,
         platforms TEXT,
         access_token TEXT,
+        company_name TEXT,
         consignment_id INTEGER
       )
     ''');
@@ -317,6 +323,7 @@ class DatabaseProvider with ChangeNotifier {
         date_delivered TEXT,
         platforms TEXT,
         access_token,
+        company_name TEXT,
         current_app_version TEXT
       )
     ''');

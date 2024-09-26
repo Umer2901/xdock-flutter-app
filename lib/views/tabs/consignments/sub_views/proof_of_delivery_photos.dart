@@ -12,7 +12,7 @@ class ProofOfDeliveryPhotos extends StatefulWidget {
   @override
   State<ProofOfDeliveryPhotos> createState() => _ProofOfDeliveryPhotosState();
 }
-String selectedTempCheck = ""; 
+String selectedTempCheck = "Vehicle"; 
 bool isLoading = false;
 late Map productTypes;
 late Map deliveryAddresses;
@@ -555,6 +555,7 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                       },
                     
                     ),
+                  
                       ],
                      ),
                     

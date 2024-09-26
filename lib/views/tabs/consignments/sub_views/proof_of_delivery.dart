@@ -1048,6 +1048,12 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
           "address_id": address_id,
           "pictures": images,
           "access_token": userData!['access_token'],
+          "company_name": (Get.arguments?['consignment_type'] =='delivery'
+                                                        ? deliveryAddresses[
+                                                            'company_name']
+                                                        : pickupAddresses[
+                                                            'company_name']) ??
+                                                    'Not Provided',
           "platforms": platforms,
         };
         debugPrint('Consignment IDs: ${consignmentIds}');
@@ -1470,8 +1476,8 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
             final last_name = _formKey.currentState!.fields['receiverLastName']!.value.toString();
             final comments = _formKey.currentState!.fields['commentspho']?.value.toString();
             final serviceTimeProvider = Provider.of<TimeProvider>(context, listen: false);
-            final service_time_start = '${serviceTimeProvider.startTime}:${serviceTimeProvider.startTime}';
-            final service_time_end = '${serviceTimeProvider.endTime}:${serviceTimeProvider.endTime}';
+          final service_time_start = '${serviceTimeProvider.startTime}';
+        final service_time_end = '${serviceTimeProvider.endTime}';
             final lengthofDelivery = int.tryParse(_formKey.currentState!.fields['length']!.value) ?? 0;
             final cartons = int.tryParse(_formKey.currentState!.fields['partailcartons']!.value) ?? 0;
             final pallets = int.tryParse(_formKey.currentState!.fields['partailpallets']!.value) ?? 0;
@@ -1526,6 +1532,12 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
               "address_id": address_id,
               "pictures": images,
               "access_token": userData!['access_token'],
+               "company_name": (Get.arguments?['consignment_type'] =='delivery'
+                                                        ? deliveryAddresses[
+                                                            'company_name']
+                                                        : pickupAddresses[
+                                                            'company_name']) ??
+                                                    'Not Provided',
               "lodgeError": jsonEncode({
                 "comments": comments,
                 "errorPictures": images,
@@ -1705,6 +1717,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                               .fields['Order rejection']
                                               ?.value
                                               .toString();
+                                              
                                           final platforms = jsonEncode([
                                             "android",
                                             "cordova",
@@ -1778,6 +1791,12 @@ Get.toNamed(
                                             "pictureSources": pictureSources,
                                             "app_version": "3.15.2",
                                             "current_app_version": "3.15.2",
+                                             "company_name": (Get.arguments?['consignment_type'] =='delivery'
+                                                        ? deliveryAddresses[
+                                                            'company_name']
+                                                        : pickupAddresses[
+                                                            'company_name']) ??
+                                                    'Not Provided',
                                             "platforms": platforms,
                                           };
 

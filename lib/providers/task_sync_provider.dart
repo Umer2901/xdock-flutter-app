@@ -348,152 +348,67 @@ class TaskSyncProvider with ChangeNotifier {
   }
 
   // Start syncing data from TaskSyncDatabase
-void startSync(Database database,BuildContext context) {
-  print('Starting sync...');
-  taskDatabase = TaskSyncDatabase(database);
+ void startSync(Database database, BuildContext context) {
+    print('Starting sync...');
+    taskDatabase = TaskSyncDatabase(database);
 
-  taskDatabase?.stream.listen((event) async {
-    print('Received data from TaskSyncDatabase: $event');
+    taskDatabase?.stream.listen((event) async {
+      print('Received data from TaskSyncDatabase: $event');
 
-    // Check if the event is not empty
-    if (event.isNotEmpty) {
-      for (var data in event) {
-        print('Processing data: $data');
-        try {
-          // Print the type of "data['data']" to ensure it is a JSON object (Map) not a list
-          print("Type of data['data']: ${data['data'].runtimeType}");
-          
-          // Attempt to decode "data['data']" into a Map
-          Map<String, dynamic> taskData;
-          if (data['data'] is String) {
-            taskData = json.decode(data['data']);
-          } else if (data['data'] is Map) {
-            taskData = data['data'];
-          } else {
-            print("Error: Unsupported data type");
-            continue;
+      // Check if the event is not empty
+      if (event.isNotEmpty) {
+        for (var data in event) {
+          print('Processing data: $data');
+          try {
+            // Ensure the data['data'] is a valid JSON object (Map)
+            print("Type of data['data']: ${data['data'].runtimeType}");
+
+            Map<String, dynamic> taskData;
+            if (data['data'] is String) {
+              taskData = json.decode(data['data']);
+            } else if (data['data'] is Map) {
+              taskData = data['data'];
+            } else {
+              print("Error: Unsupported data type");
+              continue;
+            }
+
+            taskData.forEach((key, value) {
+              debugPrint('$key: $value');
+            });
+
+            // Check if critical keys are null
+            if (data['task_name'] == null || data['id'] == null || taskData['access_token'] == null) {
+              print("Missing critical data: task_name, id, or access_token is null.");
+              continue;
+            }
+
+            // Only post if is_sync is false
+            if (data['is_sync'] == 'false') {
+              print("Task Name: ${data['task_name']}, Task Type: ${data['task_type']}");
+              if (data['task_name'] == 'delivery') {
+                await postDataToApi(data['id'], taskData['access_token'], taskData, context);
+              } else {
+                print('Unknown task type or name, skipping...');
+              }
+            }
+
+          } catch (e) {
+            print('Error processing task: $e');
           }
-
-          taskData.forEach((key, value) {
-            debugPrint('$key: $value');
-          });
-
-          // Check if critical keys are null
-          if (data['task_name'] == null) {
-            print("task_name is null");
-            continue;
-          }
-          if (data['id'] == null) {
-            print("id is null");
-            continue;
-          }
-          if (taskData['access_token'] == null) {
-            print("access_token is null");
-            continue;
-          }
-
-          // Print task_name and task_type for debugging
-          print("Task Name: ${data['task_name']}, Task Type: ${data['task_type']}");
-
-          if (data['task_name'] == 'delivery') {
-            await postDataToApi(data['id'], taskData['access_token'], taskData,context);
-          } else if (data['task_name'] == 'update time') {
-               print("bye");
-          //  await timeUpdateToApi(data['id'], taskData['access_token'], taskData);
-          } else if (data['task_type'] == 'reorder') {
-           // await reorder(data['id'], taskData['access_token'], taskData);
-           print("bye");
-          } else {
-            print('Unknown task type or name, skipping...');
-          }
-
-        } catch (e) {
-          print('Error processing task: $e');
         }
+      } else {
+        print('No data in TaskSyncDatabase to process.');
       }
-    } else {
-    //  print('No data in TaskSyncDatabase to process.');
-    }
-  });
-}
-
+    });
+  }
   // Stop syncing data
   void stopSync(Database database) {
     print('Stopping sync...');
     taskDatabase?.dispose();
   }
 
-  // Handle reorder API call
-  // Future<void> reorder(int taskId, String accessToken, var data) async {
-  //   try {
-  //     print('Attempting reorder API call with data: $data');
-      
-  //     final response = await http.post(
-  //       Uri.parse(AppHost.reorderConsignments),
-  //       body: jsonEncode(data),
-  //       headers: <String, String>{
-  //         'Authorization': 'Bearer $accessToken',
-  //         'Content-Type': 'application/json',
-  //         'Accept': 'application/json',
-  //       },
-  //     );
 
-  //     print('Reorder API response code: ${response.statusCode}');
-      
-  //     if (response.statusCode == 200) {
-  //       var responseData = json.decode(response.body);
-  //       String status = responseData['status'];
-  //       print('Reorder API response: $responseData');
-        
-  //       if (status == 'success') {
-  //         print('Reorder successful, deleting task from local database.');
-  //         taskDatabase?.delete(taskId);
-  //       } else {
-  //         print('Reorder failed with status: $status, Message: ${responseData['msg']}');
-  //       }
-  //     } else {
-  //       print('Reorder API failed with status code: ${response.statusCode} and response: ${response.body}');
-  //     }
-  //   } catch (e) {
-  //     print('Error during reorder API call: $e');
-  //   }
-  // }
-
-  // Handle time update API call
-  // Future<void> timeUpdateToApi(int taskId, String accessToken, var data) async {
-  //   try {
-  //     print('Attempting timeUpdate API call with data: $data');
-      
-  //     final response = await http.post(
-  //       Uri.parse(AppHost.updatetime),
-  //       body: jsonEncode(data),
-  //       headers: <String, String>{
-  //         'Authorization': 'Bearer $accessToken',
-  //         'Content-Type': 'application/json',
-  //         'Accept': 'application/json',
-  //       },
-  //     );
-
-  //     print('Time update API response code: ${response.statusCode}');
-      
-  //     if (response.statusCode == 200) {
-  //       var responseData = json.decode(response.body);
-  //       String status = responseData['status'];
-  //       print('Time update API response: $responseData');
-        
-  //       if (status == 'success') {
-  //         print('Time update successful, deleting task from local database.');
-  //         taskDatabase?.delete(taskId);
-  //       } else {
-  //         print('Time update failed with status: $status, Message: ${responseData['msg']}');
-  //       }
-  //     } else {
-  //       print('Time update API failed with status code: ${response.statusCode} and response: ${response.body}');
-  //     }
-  //   } catch (e) {
-  //     print('Error during time update API call: $e');
-  //   }
-  // }
 
 
   Future<void> postDataToApi(int taskId, String accessToken, var requesttaskBody,BuildContext context) async {
@@ -638,7 +553,7 @@ final body = podType == 3 ? jsonEncode(requestBody2) : jsonEncode(requestBody);
     if (response.statusCode == 200) {
       var responseData = json.decode(response.body);
       if (responseData['status'] == 'success') {
-        taskDatabase?.delete(taskId);
+         await taskDatabase?.update(taskId, {'is_sync': 'true'});
         print("Task deleted from local database.");
            if (isGroup != null && isGroup != 'parent') {
             await submitGroupAsIndividual(int.parse(isGroup),context);

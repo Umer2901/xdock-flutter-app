@@ -365,6 +365,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
               ),
               Expanded(
                 child: SingleChildScrollView(
+                   controller: _scrollController,
                   child: Column(
                     children: groupedConsignments.entries.map((entry) {
                       final date = entry.key;

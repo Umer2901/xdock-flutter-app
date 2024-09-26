@@ -474,6 +474,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
       final Map<String, dynamic> taskToSave = {
         'task_name': 'delivery',
         'task_type': podType,
+        "is_sync": 'false',
         'data': json.encode(taskData),
       };
 
@@ -504,7 +505,7 @@ class TaskSyncpofProvider extends ChangeNotifier {
           connectivityResult.contains(ConnectivityResult.mobile)) {
         final taskDatabase =
             TaskSyncDatabase(context.read<DatabaseProvider>().database);
-        final tasks = await taskDatabase.read();
+        final tasks = await taskDatabase.readForSync();
      //   await postDataToApi(tasks);
       }
     } catch (e) {
@@ -662,8 +663,8 @@ class TaskSyncpofProvider extends ChangeNotifier {
 
         if (response.statusCode == 200) {
           debugPrint('Data posted successfully to URL: $url');
-          await TaskSyncDatabase(context.read<DatabaseProvider>().database)
-              .delete(task['id']);
+          // await TaskSyncDatabase(context.read<DatabaseProvider>().database)
+          //     .markAsSynced(task['id']);
           await ConsignmentDatabase(context.read<DatabaseProvider>().database)
               .update(task['id'], {'is_complete': 1});
 
