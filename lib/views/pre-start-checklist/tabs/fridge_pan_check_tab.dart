@@ -408,12 +408,16 @@ void printQuestionsAndIds() {
                                 .read<PreStartProvider>()
                                 .data['fleet_and_compliance']
                             : null,
+                              contentPadding: EdgeInsets.symmetric(
+    horizontal: 4.w,
+    vertical: 1.5.h, 
+  ),
                         validator: FormBuilderValidators.required(),
                       ),
                       SizedBox(
                         height: 4.h,
                       ),
-                    Align(
+                   Align(
   alignment: Alignment.centerRight,
   child: SizedBox(
     height: 5.h,
@@ -445,6 +449,12 @@ void printQuestionsAndIds() {
           context.read<PreStartProvider>().addEntities({
             'fleet_and_compliance': _formKey.currentState!.fields['fleet_and_compliance']!.value
           }.entries);
+
+          // Print the saved data in the console
+          print("Saved Checklist Answers: $checklistAnswers");
+          print("Fleet and Compliance: ${_formKey.currentState!.fields['fleet_and_compliance']!.value}");
+
+          // Navigate to the next screen
           context.read<PreStartProvider>().setIndex(3);
         } else {
           String errorMessage = 'All sections must be filled out in order to continue.';
@@ -462,7 +472,6 @@ void printQuestionsAndIds() {
     ),
   ),
 ),
-
 
 
                       SizedBox(

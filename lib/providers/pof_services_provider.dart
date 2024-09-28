@@ -479,9 +479,9 @@ class TaskSyncpofProvider extends ChangeNotifier {
       };
 
       debugPrint('Saving the following data to TaskSyncDatabase: $taskToSave');
- taskData.forEach((key, value) {
-          debugPrint('$key: $value');
-        });
+//  taskData.forEach((key, value) {
+//           debugPrint('$key: $value');
+//         });
       await TaskSyncDatabase(context.read<DatabaseProvider>().database)
           .create(taskToSave);
 

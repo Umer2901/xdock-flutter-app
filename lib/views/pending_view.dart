@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:coldxpress/export.dart';
+import 'package:coldxpress/providers/task_sync_provider.dart';
+import 'package:coldxpress/widgets/core/custom_pod_history.dart';
 
 import '../widgets/core/custom-container.dart';
 
@@ -12,60 +14,109 @@ class PendingView extends StatefulWidget {
 }
 
 class _PendingViewState extends State<PendingView> {
-  late ConsignmentDatabase? consignment;
-  late PreCheckDatabase precheck;
+  TaskSyncDatabase? taskDatabase;
+  Stream<List<Map<String, dynamic>>>? taskStream;
+  String? query = '';
   bool _isLoading = false;
-  String? query;
-final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late PreCheckDatabase precheck;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
+    _startSync();
+
     AuthenticationState state =
         BlocProvider.of<AuthenticationCubit>(context).state;
-    if (state is Authenticated) {
-      consignment = ConsignmentDatabase(
-        context.read<DatabaseProvider>().database,
-        accessToken: state.token,
-      );
-    }
+
     precheck = PreCheckDatabase(context.read<DatabaseProvider>().database);
   }
 
-  @override
-  void dispose() {
-    consignment?.dispose();
-    super.dispose();
-  }
+  void _startSync() async {
+    Database database = await context.read<DatabaseProvider>().database;
+    taskDatabase = TaskSyncDatabase(database);
 
-  Future<void> _refreshConsignmentData() async {
-    if (!_isLoading) {
+    if (taskDatabase != null) {
       setState(() {
-        _isLoading = true;
+        taskStream = taskDatabase!.stream;
       });
-
-      try {
-        final consignmentService =
-            ConsignmentService(context.read<DatabaseProvider>().database);
-        final state = BlocProvider.of<AuthenticationCubit>(context).state;
-        if (state is Authenticated) {
-          await consignmentService.fetchAndStore(state.token);
-        }
-      } catch (e) {
-        // Handle error if needed
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    } else {
+      print('Error: TaskSyncDatabase is null.');
     }
   }
+
+  Map<String, dynamic>? _getDataField(dynamic dataField) {
+    if (dataField is Map<String, dynamic>) {
+      return dataField;
+    }
+
+    if (dataField is String) {
+      try {
+        return json.decode(dataField) as Map<String, dynamic>?;
+      } catch (e) {
+        debugPrint('Error decoding JSON: $e');
+        return null;
+      }
+    }
+
+    // If it's neither, return null
+    return null;
+  }
+Future<void> _refreshConsignmentData() async {
+  if (!_isLoading) {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Retrieve the database instance from the DatabaseProvider
+      Database database = await context.read<DatabaseProvider>().database;
+
+      // Initialize the TaskSyncDatabase if not already
+      if (taskDatabase == null) {
+        taskDatabase = TaskSyncDatabase(database);
+      }
+
+      // Fetch the unsynced tasks from the local database
+      final unsyncedTasks = await taskDatabase?.readForSync() ?? [];
+
+      // Create an instance of TaskSyncProvider and pass the database
+      final taskSyncProvider = TaskSyncProvider();
+
+      // Call the startSync method to ensure connectivity is checked
+      taskSyncProvider.startSync(database, context);
+
+      // Iterate through each unsynced task and call `postDataToApi` using TaskSyncProvider instance
+      for (var task in unsyncedTasks) {
+        final Map<String, dynamic> taskData = json.decode(task['data']);
+        final taskId = task['id'];
+        final accessToken = taskData['access_token'];
+
+        if (accessToken != null) {
+          // Call the postDataToApi function using the TaskSyncProvider instance
+          await taskSyncProvider.postDataToApi(taskId, accessToken, taskData, context);
+        } else {
+          print('Access token is null for task: $taskId');
+        }
+      }
+
+      print('All unsynced tasks have been processed.');
+
+    } catch (e) {
+      print('Error during sync: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+}
 
   Widget _buildRefreshButton() {
     return GestureDetector(
       onTap: _refreshConsignmentData,
       child: CircleAvatar(
-        radius: 8.w,
+        radius: 7.w,
         backgroundColor: AppColors.yellow,
         child: _isLoading
             ? const CircularProgressIndicator(
@@ -73,124 +124,18 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
               )
             : Image.asset(
                 AppImages.refreshicon,
-                width: 8.w,
-                height: 8.h,
+                width: 7.w,
+                height: 7.h,
               ),
       ),
     );
   }
 
-  Map<String, List<Map<String, dynamic>>> _groupConsignmentsByDate(
-      List<Map<String, dynamic>> consignments) {
-    final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
-
-    for (var consignment in consignments) {
-      final date = consignment['delivery_date'] ?? 'Not Provided';
-      if (!groupedByDate.containsKey(date)) {
-        groupedByDate[date] = [];
-      }
-      groupedByDate[date]!.add(consignment);
-    }
-
-    final sortedGroupedByDate =
-        Map<String, List<Map<String, dynamic>>>.fromEntries(
-      groupedByDate.entries.toList()
-        ..sort((a, b) {
-          if (a.key == 'Not Provided') return 1;
-          if (b.key == 'Not Provided') return -1;
-
-          DateTime dateA = DateFormat('yyyy-MM-dd').parse(a.key);
-          DateTime dateB = DateFormat('yyyy-MM-dd').parse(b.key);
-
-          return dateA.compareTo(dateB);
-        }),
-    );
-
-    return sortedGroupedByDate;
-  }
-
-  List<Widget> _buildGroupedConsignments(
-      Map<String, List<Map<String, dynamic>>> groupedConsignments,
-      AsyncSnapshot precheckSnapshot) {
-    List<Widget> widgets = [];
-
-    groupedConsignments.forEach((date, consignments) {
-      String formattedDate;
-      if (date != 'Not Provided') {
-        formattedDate = DateFormat('dd-MM-yyyy')
-            .format(DateFormat('yyyy-MM-dd').parse(date));
-      } else {
-        formattedDate = date;
-      }
-
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 2.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                formattedDate,
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-      );
-
-      widgets.addAll(
-        consignments.map((consignment) {
-          int index = consignments.indexOf(consignment) + 1;
-          return GestureDetector(
-            onTap: () {
-              if ((precheckSnapshot.data![0]['checklist'] == 0 &&
-                  precheckSnapshot.data![0]['outbound'] == 0)) {
-                Get.toNamed(
-                  AppRoutes.singleConsigment,
-                  arguments: consignment,
-                );
-              }
-            },
-            child: Column(
-              children: [
-                CustomMyConsigmentContainer(
-                  consignment: consignment,
-                  isLoading: false,
-                  index: index,
-                  isPrecheckDone:
-                      (precheckSnapshot.data![0]['checklist'] == 1 &&
-                          precheckSnapshot.data![0]['outbound'] == 1),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      );
-    });
-
-    return widgets;
-  }
-
-  Map<String, dynamic> _decodeIfString(dynamic data) {
-    if (data is String) {
-      return json.decode(data) as Map<String, dynamic>;
-    } else if (data is Map<String, dynamic>) {
-      return data;
-    } else if (data is int) {
-      return {'value': data};
-    } else {
-      throw TypeError();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold( 
-key: _scaffoldKey,
-      floatingActionButton: Column(
+    return Scaffold(
+      key: _scaffoldKey,
+       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           _buildRefreshButton(),
@@ -229,7 +174,7 @@ key: _scaffoldKey,
         backgroundColor: Colors.transparent,
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.of(context).pop();
           },
           icon: Icon(
             Icons.arrow_back_ios,
@@ -239,8 +184,7 @@ key: _scaffoldKey,
         actions: [
           IconButton(
             onPressed: () {
-  _scaffoldKey.currentState?.openEndDrawer();
-
+              _scaffoldKey.currentState?.openEndDrawer();
             },
             icon: Icon(
               Icons.more_horiz,
@@ -250,155 +194,134 @@ key: _scaffoldKey,
         ],
         centerTitle: true,
         title: Text(
-          AppText.pending,
+          AppText.podHoistory,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 10.0, left: 14, right: 14),
-        child: Column(
-          children: [
-            StreamBuilder(
-              stream: precheck.stream,
-              builder: (context, precheckSnapshot) {
-                if (precheckSnapshot.hasData &&
-                    precheckSnapshot.connectionState !=
-                        ConnectionState.waiting) {
-                  return Container(
-                    height: 83,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color(0xffF4F4F4),
-                      shape: BoxShape.rectangle,
-                    ),
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          top: 12.0,
-                          left: 15,
-                          right: 15,
-                          bottom: 12,
-                        ),
-                        child: CustomTextField(
-                          maxLines: 1,
-                          hight: 6.h,
-                          name: 'search',
-                          borderColor: AppColors.white,
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: AppColors.black.withOpacity(0.5),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 10.0, left: 14, right: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StreamBuilder(
+                stream: precheck.stream,
+                builder: (context, precheckSnapshot) {
+                  if (precheckSnapshot.hasData &&
+                      precheckSnapshot.connectionState !=
+                          ConnectionState.waiting) {
+                    return Container(
+                      height: 83,
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                        color: Color(0xffF4F4F4),
+                        shape: BoxShape.rectangle,
+                      ),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            top: 12.0,
+                            left: 15,
+                            right: 15,
+                            bottom: 12,
                           ),
-                          hintText: 'Search',
-                          onChanged: (value) {
-                            setState(() {
-                              query = value;
-                            });
-                          },
+                          child: CustomTextField(
+                            maxLines: 1,
+                            hight: 6.h,
+                            name: 'search',
+                            borderColor: AppColors.white,
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: AppColors.black.withOpacity(0.5),
+                            ),
+                            hintText: 'Search',
+                            onChanged: (value) {
+                              setState(() {
+                                query = value;
+                              });
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-           
-            SizedBox(height: 3.h),
-            Expanded(
-              child: StreamBuilder<List<Map<String, dynamic>>>(
-                stream: consignment?.stream,
-                builder: (context, consignmentSnapshot) {
-                  if (consignmentSnapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.blue,
-                      ),
                     );
-                  } else if (consignmentSnapshot.hasData) {
-                    List<Map<String, dynamic>> consignments =
-                        consignmentSnapshot.data!;
-
-                    // print('Consignments : $consignments');
-                    // Iterate through each consignment
-                    // for (var consignment in consignments) {
-                    //   print(
-                    //       ' consignment Type: ${consignment['consignment_type']}');
-                    // }
-
-                    // Filter consignments based on the search query
-                    if (query != null && query!.isNotEmpty) {
-                      consignments = consignments.where((itr) {
-                        Map deliveryAddresses =
-                            json.decode(itr['delivery_addresses']);
-                        Map pickupAddresses =
-                            json.decode(itr['pickup_addresses']);
-                        return itr['id']
-                                .toString()
-                                .toLowerCase()
-                                .contains(query!.toLowerCase()) ||
-                            itr['customer_reference']
-                                .toString()
-                                .toLowerCase()
-                                .contains(query!.toLowerCase()) ||
-                            (itr['consignment_type'] == 'delivery'
-                                    ? (deliveryAddresses['customer_name']
-                                            ?.toString()
-                                            .toLowerCase() ??
-                                        'Not Provided')
-                                    : (pickupAddresses['customer_name']
-                                            ?.toString()
-                                            .toLowerCase() ??
-                                        'Not Provided'))
-                                .contains(query!.toLowerCase()) ||
-                            (itr['consignment_type'] == 'delivery'
-                                    ? (deliveryAddresses['company_name']
-                                            ?.toString()
-                                            .toLowerCase() ??
-                                        'Not Provided')
-                                    : (pickupAddresses['company_name']
-                                            ?.toString()
-                                            .toLowerCase() ??
-                                        'Not Provided'))
-                                .contains(query!.toLowerCase());
-                      }).toList();
-                    }
-
-                    Map<String, List<Map<String, dynamic>>>
-                        groupedConsignments =
-                        _groupConsignmentsByDate(consignments);
-
-                    return ListView.builder(
-                      itemCount: consignments.length,
-                      itemBuilder: (context, index) {
-                        Map<String, dynamic> itr = consignments[index];
-
-                        //print('Itr Values : ${itr.values}');
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomContainer(
-                              ontab: () {},
-                              consignment: itr,
-                            ),
-                            SizedBox(height: 3.h),
-                          ],
-                        );
-                      },
-                    );
-                  } else if (consignmentSnapshot.hasError) {
-                    return Center(
-                        child: Text("Error: ${consignmentSnapshot.error}"));
                   }
-                  return const Center(child: Text("No Data Available"));
+                  return const SizedBox.shrink();
                 },
               ),
-            ),
-          ],
+              SizedBox(
+                height: 3.h,
+              ),
+              Expanded(
+                child: StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: taskStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.blue,
+                        ),
+                      );
+                    } else if (snapshot.hasData) {
+                      // Filter tasks with is_sync set to false
+                      List<Map<String, dynamic>> tasks = snapshot.data!
+                          .where((task) => task['is_sync'] == 'false')
+                          .toList();
+
+                      // Apply search query filter
+                      if (query != null && query!.isNotEmpty) {
+                        tasks = tasks.where((task) {
+                          final data = _getDataField(task['data']);
+                          if (data == null) return false;
+
+                          final taskId = data['consignment_id']?.toString().toLowerCase() ?? '';
+                          final consignmentType = data['consignment_type'];
+                          String companyName = data['company_name']?.toString().toLowerCase() ?? '';
+                          return taskId.contains(query!.toLowerCase()) ||
+                              companyName.contains(query!.toLowerCase());
+                        }).toList();
+                      }
+
+                      // Display filtered tasks
+                      if (tasks.isEmpty) {
+                        return const Center(child: Text('No results found'));
+                      }
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                          Map<String, dynamic> task = tasks[index];
+
+                          return GestureDetector(
+                            onTap: () {
+                              Get.toNamed(AppRoutes.podhistoryview,
+                                  arguments: task);
+                            },
+                            child: CustomPodHistoryContainer(
+                              consignment: task,
+                              ontab: () {
+                                Get.toNamed(AppRoutes.podhistoryview,
+                                    arguments: task);
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Text("Error: ${snapshot.error}"),
+                      );
+                    }
+
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-endDrawer: const CustomDrawer(),
+      endDrawer: const CustomDrawer(),
     );
   }
 }

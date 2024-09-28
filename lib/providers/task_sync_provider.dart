@@ -353,15 +353,15 @@ class TaskSyncProvider with ChangeNotifier {
     taskDatabase = TaskSyncDatabase(database);
 
     taskDatabase?.stream.listen((event) async {
-      print('Received data from TaskSyncDatabase: $event');
+     // print('Received data from TaskSyncDatabase: $event');
 
       // Check if the event is not empty
       if (event.isNotEmpty) {
         for (var data in event) {
-          print('Processing data: $data');
+       //   print('Processing data: $data');
           try {
             // Ensure the data['data'] is a valid JSON object (Map)
-            print("Type of data['data']: ${data['data'].runtimeType}");
+           // print("Type of data['data']: ${data['data'].runtimeType}");
 
             Map<String, dynamic> taskData;
             if (data['data'] is String) {
@@ -373,9 +373,9 @@ class TaskSyncProvider with ChangeNotifier {
               continue;
             }
 
-            taskData.forEach((key, value) {
-              debugPrint('$key: $value');
-            });
+            // taskData.forEach((key, value) {
+            //   debugPrint('$key: $value');
+            // });
 
             // Check if critical keys are null
             if (data['task_name'] == null || data['id'] == null || taskData['access_token'] == null) {
@@ -385,7 +385,7 @@ class TaskSyncProvider with ChangeNotifier {
 
             // Only post if is_sync is false
             if (data['is_sync'] == 'false') {
-              print("Task Name: ${data['task_name']}, Task Type: ${data['task_type']}");
+          //    print("Task Name: ${data['task_name']}, Task Type: ${data['task_type']}");
               if (data['task_name'] == 'delivery') {
                 await postDataToApi(data['id'], taskData['access_token'], taskData, context);
               } else {
@@ -533,7 +533,7 @@ class TaskSyncProvider with ChangeNotifier {
     };
 
     // Debugging: Print the constructed request body to verify its content
-    print("Request body: ${jsonEncode(requestBody)}");
+   // print("Request body: ${jsonEncode(requestBody)}");
 final body = podType == 3 ? jsonEncode(requestBody2) : jsonEncode(requestBody);
     // Perform the API call
     final response = await http.post(
