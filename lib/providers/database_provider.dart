@@ -289,7 +289,9 @@ class DatabaseProvider with ChangeNotifier {
         platforms TEXT,
         access_token TEXT,
         company_name TEXT,
+        rejection_details TEXT,
         consignment_id INTEGER
+
       )
     ''');
 

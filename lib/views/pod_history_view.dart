@@ -31,8 +31,9 @@ class _PodHistoryViewState extends State<PodHistoryView> {
 
 
     String signatureBase64 = '';
+
 if (data['signature'] != null && data['signature'] is String) {
-  signatureBase64 = data['signature']
+  signatureBase64 = jsonDecode(data['signature']) 
       .replaceAll(RegExp(r'\s+'), '')
       .replaceAll(RegExp(r'data:image\/[a-zA-Z]+;base64,'), '');
 }
@@ -275,11 +276,12 @@ key: _scaffoldKey,
                 ),
               ),
               SizedBox(height: 1.h),
-             if (podType == 3 && signatureBytes != null) 
+       
+if (podType != 3 && signatureBytes != null && signatureBytes.isNotEmpty)
   Container(
     width: double.infinity,
     decoration: BoxDecoration(
-      color: Color(0xffF4F4F4),
+      color: const Color(0xffF4F4F4),
       borderRadius: BorderRadius.circular(10),
     ),
     child: Padding(
@@ -308,6 +310,7 @@ key: _scaffoldKey,
       ),
     ),
   ),
+
 
               SizedBox(height: 1.5.h),
               Padding(

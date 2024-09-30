@@ -236,7 +236,7 @@ class TaskSyncDatabase {
 
   // Start listening for changes with separate timers for sync and view
   void _startListeningToChanges() {
-    _syncTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       _refreshSyncStream();  // Fetch tasks for syncing every 30 seconds
     });
 

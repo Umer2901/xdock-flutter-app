@@ -141,12 +141,29 @@ List<Widget> _buildGroupedConsignments(
         int index = consignments.indexOf(consignment) + 1;
         return GestureDetector(
           onTap: () {
-            if ((precheckSnapshot.data![0]['checklist'] == 1 &&
-                precheckSnapshot.data![0]['outbound'] == 1)) {
-              Get.toNamed(
-                AppRoutes.singleConsigment,
-                arguments: consignment,
-              );
+            if ((precheckSnapshot.data![0]['checklist'] == 0 &&
+                precheckSnapshot.data![0]['outbound'] == 0)) {
+                  
+               Map<String, dynamic> updatedArguments = Map.from(consignment);
+    print(updatedArguments['status']);
+
+    int status = int.tryParse(updatedArguments['status'].toString()) ?? -1;
+
+    if (status == 11) {
+      updatedArguments['consignment_type'] = 'delivery';
+      debugPrint('Status is 10, consignment_type set to delivery.');
+    } else {
+      debugPrint('Status is not 10, no changes made to consignment_type.');
+    }
+
+    Get.toNamed(
+      AppRoutes.singleConsigment,
+      arguments: {
+        ...updatedArguments,
+      
+      },
+    );
+
             }
           },
           child: Column(

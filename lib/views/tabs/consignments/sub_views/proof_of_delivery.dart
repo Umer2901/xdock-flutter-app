@@ -1539,7 +1539,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                                             'company_name']) ??
                                                     'Not Provided',
               "lodgeError": jsonEncode({
-                "comments": comments,
+                "comments": reason,
                 "errorPictures": images,
                 "errorPictureSources": pictureSources,
               }),

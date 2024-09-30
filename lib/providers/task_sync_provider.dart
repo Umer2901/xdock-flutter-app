@@ -387,7 +387,7 @@ class TaskSyncProvider with ChangeNotifier {
             if (data['is_sync'] == 'false') {
           //    print("Task Name: ${data['task_name']}, Task Type: ${data['task_type']}");
               if (data['task_name'] == 'delivery') {
-                await postDataToApi(data['id'], taskData['access_token'], taskData, context);
+               await postDataToApi(data['id'], taskData['access_token'], taskData, context);
               } else {
                 print('Unknown task type or name, skipping...');
               }

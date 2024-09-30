@@ -742,10 +742,10 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                                         vertical: 1.h, horizontal: 2.w),
                                       child: CustomTextField(
                                         borderColor: AppColors.white,
-                                        name: 'rejection_details',
+                                        name: 'comments',
                                         hintText: "Enter details for $rejectionReason",
                                         onChanged: (value) {
-                                          provider.data['rejection_details'] = value;
+                                          provider.data['comments'] = value;
                                         },
                                       ),
                                     ),
@@ -762,11 +762,14 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                         SizedBox(
                           width: 50.w,
                           child: 
-                         CustomButton(
+                       CustomButton(
   label: "Submit POD",
   onPressed: provider.images.isNotEmpty
     ? () {
         if (_formKey.currentState!.saveAndValidate()) {
+          // Debug print to check form values
+          print("Form Values: ${_formKey.currentState!.value}");
+
           // Create the temp map that will hold all the fields that need to be sent
           final Map<String, dynamic> temp = {
             "pictures": jsonEncode(provider.base64Images),
@@ -775,51 +778,41 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
           };
 
           if (provider.selectedDeliveryType == DeliveryType.none || provider.data['rejection_reason'] == 'Temperature issue') {
-  temp.addAll({
-    "customer_probe_checked": provider.probeChecked,
-    "customer_probe_temp": _formKey.currentState!.fields['CustumerProbeTemp']?.value != null
-        ? int.tryParse(_formKey.currentState!.fields['CustumerProbeTemp']!.value.toString()) ?? 0
-        : 0, 
-    "driver_probe_temp": _formKey.currentState!.fields['Driverprobetemp']?.value != null
-        ? int.tryParse(_formKey.currentState!.fields['Driverprobetemp']!.value.toString()) ?? 0
-        : 0, 
-    "driver_infrared_temp": _formKey.currentState!.fields['driverinfraredtemp']?.value != null
-        ? int.tryParse(_formKey.currentState!.fields['driverinfraredtemp']!.value.toString()) ?? 0
-        : 0, 
-    "customer_probe_why": _formKey.currentState!.fields['why']?.value?.toString(),
-    "where_temp_checked": selectedTempCheck,
-  });
-}
+            // Check if fields have the correct values
+            print("Customer Probe Temp: ${_formKey.currentState!.fields['CustumerProbeTemp']?.value}");
+            print("Driver Probe Temp: ${_formKey.currentState!.fields['Driverprobetemp']?.value}");
+            print("Driver Infrared Temp: ${_formKey.currentState!.fields['driverinfraredtemp']?.value}");
 
-
-          if (provider.selectedDeliveryType == DeliveryType.none || provider.data['rejection_reason'] == 'Damaged Goods') {
             temp.addAll({
-              "customer_probe_checked": "",  
-              "customer_probe_temp": null,   
-              "driver_probe_temp": null,    
-              "driver_infrared_temp": null,  
-              "customer_probe_why": "",      
-              "where_temp_checked": "",
-              "carton": int.tryParse(_formKey.currentState!.fields['nocartons']?.value ?? '0') ?? 0,
-              "pallet": int.tryParse(_formKey.currentState!.fields['nopallet']?.value ?? '0') ?? 0,
-              "space": int.tryParse(_formKey.currentState!.fields['nospace']?.value ?? '0') ?? 0,
+              "customer_probe_checked": provider.probeChecked,
+              "customer_probe_temp": _formKey.currentState!.fields['CustumerProbeTemp']?.value != null
+                  ? int.tryParse(_formKey.currentState!.fields['CustumerProbeTemp']!.value.toString()) ?? 0
+                  : null, 
+              "driver_probe_temp": _formKey.currentState!.fields['Driverprobetemp']?.value != null
+                  ? int.tryParse(_formKey.currentState!.fields['Driverprobetemp']!.value.toString()) ?? 0
+                  : null, 
+              "driver_infrared_temp": _formKey.currentState!.fields['driverinfraredtemp']?.value != null
+                  ? int.tryParse(_formKey.currentState!.fields['driverinfraredtemp']!.value.toString()) ?? 0
+                  : null, 
+              "customer_probe_why": _formKey.currentState!.fields['why']?.value?.toString(),
+              "where_temp_checked": selectedTempCheck,
+              "carton": int.tryParse(_formKey.currentState!.fields['nocartons']?.value ?? Get.arguments?['carton']?.toString() ?? '0' ?? 0,) ?? 0,
+              "pallet": int.tryParse(_formKey.currentState!.fields['nopallet']?.value ?? Get.arguments?['pallet']?.toString() ?? '0' ?? 0,) ?? 0,
+              "space": int.tryParse(_formKey.currentState!.fields['nospace']?.value ?? Get.arguments?['space']?.toString() ?? '0' ?? 0,) ?? 0,
+               "comments": _formKey.currentState!.fields['comments']?.value?.toString(),
+
             });
           }
-            if (provider.selectedDeliveryType == DeliveryType.none || provider.data['rejection_reason'] == 'Wrong Address'|| provider.data['rejection_reason'] == 'Other Rejection'|| provider.data['rejection_reason'] == 'Receiver Not Open') {
-            temp.addAll({
-              "customer_probe_checked": "",  
-              "customer_probe_temp": null,   
-              "driver_probe_temp": null,     
-              "driver_infrared_temp": null,  
-              "customer_probe_why": "",     
-              "where_temp_checked": "",
-              "comments": _formKey.currentState!.fields['rejection_details']?.value?.toString(),
-            });
-          }
-          
+
+          // Check and print the temp map before submission
+          print("Temp Map for Temperature Issue: ${jsonEncode(temp)}");
 
           provider.addEntities(temp.entries);
 
+          // Print the final data before submission
+          print("Data to be submitted: ${jsonEncode(temp)}");
+
+          // Submit the data
           Provider.of<TaskSyncpofProvider>(context, listen: false).submitData(context);
         } else {
           print("Form is not valid");
