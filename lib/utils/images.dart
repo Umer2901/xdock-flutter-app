@@ -29,5 +29,6 @@ class AppImages {
   static const String simplePic = 'assets/images/simplepic.png';
   static const String upload = 'assets/images/upload.png';
   static const String refreshicon = 'assets/images/refreshicon.png';
+    static const String path = 'assets/images/Path.png';
 
 }

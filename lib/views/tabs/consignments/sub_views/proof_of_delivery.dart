@@ -172,7 +172,23 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
   Widget build(BuildContext context) {
     var provider = Provider.of<ProofOfDeliveryProvider>(context);
     bool isPickup = arguments['consignment_type'] == 'pickup';
-    String appBarTitle = isPickup ? 'Pickup' : 'Delivery';
+   String appBarTitle;
+
+switch (arguments['consignment_type']) {
+  case 'pickup':
+    appBarTitle = 'Pickup';
+    break;
+  case 'delivery':
+    appBarTitle = 'Delivery';
+    break;
+  case 'return':
+    appBarTitle = 'Return';
+    break;
+  default:
+    appBarTitle = 'Consignment';
+    break;
+}
+
     void showSignaturePopup(SignatureController controller) {
       showDialog(
         barrierDismissible: false,
@@ -528,9 +544,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                     SizedBox(
                       height: 2.h,
                     ),
-                    if (Provider.of<ProofOfDeliveryProvider>(context)
-                            .selectedDeliveryType ==
-                        DeliveryType.full)
+                    if (Provider.of<ProofOfDeliveryProvider>(context) .selectedDeliveryType ==DeliveryType.full)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -544,8 +558,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              if (Get.arguments?['consignment_type'] ==
-                                  'pickup')
+                              if (Get.arguments?['consignment_type'] == 'pickup' && Get.arguments?['is_group'] == 'null' )
                                 PalletContainer(
                                   name: 'fullcartons',
                                   heading: AppText.cartons,
@@ -588,8 +601,7 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                     ),
                                   ),
                                 ),
-                              if (Get.arguments?['consignment_type'] ==
-                                  'pickup')
+                               if (Get.arguments?['consignment_type'] == 'pickup' && Get.arguments?['is_group'] == 'null' )
                                 PalletContainer(
                                   name: 'fullpallets',
                                   heading: AppText.pallets,
@@ -623,6 +635,9 @@ class _ProofOfDeliveryViewState extends State<ProofOfDeliveryView> {
                                 ),
                             ],
                           ),
+                        
+                        
+                        
                           SizedBox(
                             height: 3.h,
                           ),

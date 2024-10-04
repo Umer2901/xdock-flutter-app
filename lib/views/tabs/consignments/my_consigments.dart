@@ -9,7 +9,7 @@ class MyConsigmentTab extends StatefulWidget {
 }
 
 class _MyConsigmentTabState extends State<MyConsigmentTab> {
-   late ConsignmentDatabase consignment;
+  late ConsignmentDatabase consignment;
   late PreCheckDatabase precheck;
   final ScrollController _scrollController = ScrollController();
   final _formKey = GlobalKey<FormBuilderState>();
@@ -20,8 +20,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
   @override
   void initState() {
     super.initState();
-    AuthenticationState state =
-        BlocProvider.of<AuthenticationCubit>(context).state;
+    AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
     if (state is Authenticated) {
       consignment = ConsignmentDatabase(
         context.read<DatabaseProvider>().database,
@@ -47,8 +46,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
       });
 
       try {
-        final consignmentService =
-            ConsignmentService(context.read<DatabaseProvider>().database);
+        final consignmentService = ConsignmentService(context.read<DatabaseProvider>().database);
         final state = BlocProvider.of<AuthenticationCubit>(context).state;
         if (state is Authenticated) {
           await consignmentService.fetchAndStore(state.token);
@@ -80,111 +78,93 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
 
   Map<String, List<Map<String, dynamic>>> _groupConsignmentsByDate(
     List<Map<String, dynamic>> consignments) {
-  final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
+    final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
 
-  for (var consignment in consignments) {
-    final date = consignment['delivery_date'] ?? 'Not Provided';
-    if (!groupedByDate.containsKey(date)) {
-      groupedByDate[date] = [];
+    for (var consignment in consignments) {
+      final date = consignment['delivery_date'] ?? 'Not Provided';
+      if (!groupedByDate.containsKey(date)) {
+        groupedByDate[date] = [];
+      }
+      groupedByDate[date]!.add(consignment);
     }
-    groupedByDate[date]!.add(consignment);
+
+    return groupedByDate;
   }
 
-  final sortedGroupedByDate = Map<String, List<Map<String, dynamic>>>.fromEntries(
-    groupedByDate.entries.toList()..sort((a, b) {
-      if (a.key == 'Not Provided') return 1;
-      if (b.key == 'Not Provided') return -1;
-
-      DateTime dateA = DateFormat('yyyy-MM-dd').parse(a.key);
-      DateTime dateB = DateFormat('yyyy-MM-dd').parse(b.key);
-
-      return dateA.compareTo(dateB); 
-    }),
-  );
-
-  return sortedGroupedByDate;
-}
-
-List<Widget> _buildGroupedConsignments(
+  List<Widget> _buildGroupedConsignments(
     Map<String, List<Map<String, dynamic>>> groupedConsignments,
     AsyncSnapshot precheckSnapshot) {
-  List<Widget> widgets = [];
+    List<Widget> widgets = [];
 
-  groupedConsignments.forEach((date, consignments) {
-    String formattedDate;
-    if (date != 'Not Provided') {
-      formattedDate = DateFormat('dd-MM-yyyy').format(DateFormat('yyyy-MM-dd').parse(date));
-    } else {
-      formattedDate = date;
-    }
+    groupedConsignments.forEach((date, consignments) {
+      String formattedDate = date;
 
-    widgets.add(
-      Padding(
-        padding: EdgeInsets.symmetric(vertical: 2.h),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              formattedDate,  
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    widgets.addAll(
-      consignments.map((consignment) {
-        int index = consignments.indexOf(consignment) + 1;
-        return GestureDetector(
-          onTap: () {
-            if ((precheckSnapshot.data![0]['checklist'] == 0 &&
-                precheckSnapshot.data![0]['outbound'] == 0)) {
-                  
-               Map<String, dynamic> updatedArguments = Map.from(consignment);
-    print(updatedArguments['status']);
-
-    int status = int.tryParse(updatedArguments['status'].toString()) ?? -1;
-
-    if (status == 11) {
-      updatedArguments['consignment_type'] = 'delivery';
-      debugPrint('Status is 10, consignment_type set to delivery.');
-    } else {
-      debugPrint('Status is not 10, no changes made to consignment_type.');
-    }
-
-    Get.toNamed(
-      AppRoutes.singleConsigment,
-      arguments: {
-        ...updatedArguments,
-      
-      },
-    );
-
-            }
-          },
-          child: Column(
+      widgets.add(
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 2.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CustomMyConsigmentContainer(
-                consignment: consignment,
-                isLoading: false,
-                index: index,
-                isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
-                    precheckSnapshot.data![0]['outbound'] == 1),
+              Text(
+                formattedDate,
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
-        );
-      }).toList(),
-    );
-  });
+        ),
+      );
 
-  return widgets;
-}
+      widgets.addAll(
+        consignments.map((consignment) {
+          int index = consignments.indexOf(consignment) + 1;
+          return GestureDetector(
+            onTap: () {
+              if ((precheckSnapshot.data![0]['checklist'] == 0 &&
+                  precheckSnapshot.data![0]['outbound'] == 0)) {
+                Map<String, dynamic> updatedArguments = Map.from(consignment);
+                print(updatedArguments['status']);
 
+                int status = int.tryParse(updatedArguments['status'].toString()) ?? -1;
+
+                if (status == 10) {
+                  updatedArguments['consignment_type'] = 'delivery';
+                  debugPrint('Status is 10, consignment_type set to delivery.');
+                } else if (status == 6) {
+                  updatedArguments['consignment_type'] = 'pickup';
+                  debugPrint('Status is 6, consignment_type set to pickup.');
+                } else {
+                  debugPrint('Status is not 10, no changes made to consignment_type.');
+                }
+
+                Get.toNamed(
+                  AppRoutes.singleConsigment,
+                  arguments: {
+                    ...updatedArguments,
+                  },
+                );
+              }
+            },
+            child: Column(
+              children: [
+                CustomMyConsigmentContainer(
+                  consignment: consignment,
+                  isLoading: false,
+                  index: index,
+                  isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
+                      precheckSnapshot.data![0]['outbound'] == 1),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      );
+    });
+
+    return widgets;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -231,13 +211,11 @@ List<Widget> _buildGroupedConsignments(
                 stream: precheck.stream,
                 builder: (context, precheckSnapshot) {
                   if (precheckSnapshot.hasData &&
-                      precheckSnapshot.connectionState !=
-                          ConnectionState.waiting) {
+                      precheckSnapshot.connectionState != ConnectionState.waiting) {
                     return StreamBuilder(
                       stream: consignment.stream,
                       builder: (context, consignmentSnapshot) {
-                        if (consignmentSnapshot.connectionState ==
-                            ConnectionState.waiting) {
+                        if (consignmentSnapshot.connectionState == ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(
                               color: AppColors.blue,
@@ -247,12 +225,9 @@ List<Widget> _buildGroupedConsignments(
                           List<Map<String, dynamic>> allConsignments = [];
 
                           if (query != null && query!.isNotEmpty) {
-                            for (Map<String, dynamic> itr
-                                in consignmentSnapshot.data ?? []) {
-                              Map deliveryAddresses =
-                                  json.decode(itr['delivery_addresses']);
-                              Map pickupAddresses =
-                                  json.decode(itr['pickup_addresses']);
+                            for (Map<String, dynamic> itr in consignmentSnapshot.data ?? []) {
+                              Map deliveryAddresses = json.decode(itr['delivery_addresses']);
+                              Map pickupAddresses = json.decode(itr['pickup_addresses']);
 
                               bool matchesQuery = itr['id']
                                       .toString()
@@ -290,9 +265,12 @@ List<Widget> _buildGroupedConsignments(
                               }
                             }
                           } else {
-                            allConsignments
-                                .addAll(consignmentSnapshot.data ?? []);
+                            allConsignments.addAll(consignmentSnapshot.data ?? []);
                           }
+
+                          // Print the order of consignment IDs from the database
+                          List<int> consignmentIds = allConsignments.map((consignment) => consignment['id'] as int).toList();
+                          print('Order of consignment IDs: $consignmentIds');
 
                           Map<String, List<Map<String, dynamic>>> groupedConsignments =
                               _groupConsignmentsByDate(allConsignments);
@@ -300,8 +278,7 @@ List<Widget> _buildGroupedConsignments(
                           return Column(
                             children: [
                               Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 4.w, vertical: 2.h),
+                                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
                                 decoration: BoxDecoration(
                                   color: AppColors.blue,
                                   borderRadius: BorderRadius.circular(8.sp),
@@ -346,8 +323,7 @@ List<Widget> _buildGroupedConsignments(
                                         ),
                                         SizedBox(width: 1.w),
                                         Text(
-                                          DateFormat('dd MMM, yyyy').format(
-                                              DateTime.now()),
+                                          DateFormat('dd MMM, yyyy').format(DateTime.now()),
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodySmall
@@ -365,8 +341,7 @@ List<Widget> _buildGroupedConsignments(
                                         Icons.search,
                                         color: AppColors.black.withOpacity(0.5),
                                       ),
-                                      hintText:
-                                          'Search by ID, REF or Recipient',
+                                      hintText: 'Search by ID, REF or Recipient',
                                       onChanged: (value) {
                                         setState(() {
                                           query = value;
@@ -376,10 +351,9 @@ List<Widget> _buildGroupedConsignments(
                                   ],
                                 ),
                               ),
-                               SizedBox(height: 1.5.h),
+                              SizedBox(height: 1.5.h),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   for (int i = 0; i < 4; i++) ...{
                                     Column(
@@ -387,49 +361,31 @@ List<Widget> _buildGroupedConsignments(
                                         GestureDetector(
                                           onTap: () {
                                             if (i == 0) {
-                                              Get.toNamed(
-                                                  AppRoutes.consignmentMap);
+                                              Get.toNamed(AppRoutes.consignmentMap);
                                             } else if (i == 1) {
-                                              Get.toNamed(
-                                                  AppRoutes.consigmentReorder,
-                                                  arguments:
-                                                      consignmentSnapshot.data);
+                                              Get.toNamed(AppRoutes.consigmentReorder,
+                                                  arguments: consignmentSnapshot.data);
                                             } else if (i == 2) {
-                                              Get.toNamed(
-                                                  AppRoutes.consigmentGroup,
-                                                  arguments:
-                                                      consignmentSnapshot.data);
+                                              Get.toNamed(AppRoutes.consigmentGroup,
+                                                  arguments: consignmentSnapshot.data);
                                             } else {
                                               _refreshConsignmentData();
                                             }
                                           },
                                           child: CircleAvatar(
                                             radius: 9.w,
-                                            backgroundColor:
-                                                AppColors.greyWhite,
+                                            backgroundColor: AppColors.greyWhite,
                                             child: i == 0
-                                                ? SvgPicture.asset(
-                                                    AppSvgs.consignmentViewBlack,
-                                                    width: 10.w)
+                                                ? Image.asset(AppImages.path, width: 10.w)
                                                 : i == 1
-                                                    ? SvgPicture.asset(
-                                                        AppSvgs.reorderBlack,
-                                                        width: 10.w)
+                                                    ? SvgPicture.asset(AppSvgs.reorderBlack, width: 10.w)
                                                     : i == 2
-                                                        ? SvgPicture.asset(
-                                                            AppSvgs.groupBlack,
-                                                            width: 10.w)
+                                                        ? SvgPicture.asset(AppSvgs.groupBlack, width: 10.w)
                                                         : _buildRefreshButton(),
                                           ),
                                         ),
                                         Text(
-                                          i == 0
-                                              ? 'Map'
-                                              : i == 1
-                                                  ? 'Re-order'
-                                                  : i == 2
-                                                      ? 'Group'
-                                                      : 'Refresh',
+                                          i == 0 ? 'Map' : i == 1 ? 'Re-order' : i == 2 ? 'Group' : 'Refresh',
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium
@@ -444,8 +400,7 @@ List<Widget> _buildGroupedConsignments(
                                 ],
                               ),
                               SizedBox(height: 1.5.h),
-                              ..._buildGroupedConsignments(
-                                  groupedConsignments, precheckSnapshot),
+                              ..._buildGroupedConsignments(groupedConsignments, precheckSnapshot),
                               GestureDetector(
                                 onTap: () {
                                   _scrollController.animateTo(
@@ -477,9 +432,7 @@ List<Widget> _buildGroupedConsignments(
                                 children: [
                                   Text(
                                     AppText.todayConsignments.toUpperCase(),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall,
+                                    style: Theme.of(context).textTheme.headlineSmall,
                                   ),
                                 ],
                               ),

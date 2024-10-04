@@ -57,7 +57,24 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
     final String? rejectionReason = provider.data['rejection_reason'];
     bool isNoDelivery = provider.selectedDeliveryType == DeliveryType.none;
     bool isPickup = arguments['consignment_type'] == 'pickup';
-    String appBarTitle = isPickup ? 'Pickup' : 'Delivery';
+    String buttonText = isPickup ? 'POP Capture' : 'POD Capture';
+   String appBarTitle;
+
+switch (arguments['consignment_type']) {
+  case 'pickup':
+    appBarTitle = 'Pickup';
+    break;
+  case 'delivery':
+    appBarTitle = 'Delivery';
+    break;
+  case 'return':
+    appBarTitle = 'Return';
+    break;
+  default:
+    appBarTitle = 'Consignment';
+    break;
+}
+
 
     return Scaffold(
       key: _scaffoldKey,
@@ -763,7 +780,8 @@ class _ProofOfDeliveryPhotosState extends State<ProofOfDeliveryPhotos> {
                           width: 50.w,
                           child: 
                        CustomButton(
-  label: "Submit POD",
+                        
+  label: buttonText ,
   onPressed: provider.images.isNotEmpty
     ? () {
         if (_formKey.currentState!.saveAndValidate()) {

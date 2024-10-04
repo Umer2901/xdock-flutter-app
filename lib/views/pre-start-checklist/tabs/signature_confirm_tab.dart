@@ -412,6 +412,7 @@
 // }
 part of '../pre_start_checklist.dart';
 
+
 class PreStartSignatureConfirmationTab extends StatefulWidget {
   const PreStartSignatureConfirmationTab({super.key});
 
@@ -446,6 +447,15 @@ class _PreStartSignatureConfirmationTabState
         BlocProvider.of<AuthenticationCubit>(context).state;
     if (state is Authenticated) {
       try {
+        // Get the data from the provider
+        final requestData = context.read<PreStartProvider>().data;
+
+        // Print the data being sent to the API
+        print("Data being sent to API: ${jsonEncode(requestData)}");
+   requestData.forEach((key, value) {
+              debugPrint('$key: $value');
+            });
+
         await http
             .post(
           Uri.parse(AppHost.storePreChecklist),
@@ -454,14 +464,20 @@ class _PreStartSignatureConfirmationTabState
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          body: jsonEncode(context.read<PreStartProvider>().data),
+          body: jsonEncode(requestData), // Sending the data as a JSON body
         )
             .then((response) {
           setState(() {
             isLoading = false;
           });
-          if (response.statusCode == 200) {
+         if (response.statusCode == 200) {
+    print("Response from API:");
+    response.body.split('\n').forEach((line) {
+      print(line);
+    });
+             
             PreCheckDatabase(
+              
               context.read<DatabaseProvider>().database,
               accessToken: state.token,
             ).update(
@@ -501,7 +517,7 @@ class _PreStartSignatureConfirmationTabState
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                   content: Text(
-                    'Your Pre-Start Checklist has been complete successfully. Drive safe!',
+                    'Your Pre-Start Checklist has been completed successfully. Drive safe!',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 10.sp,
                         ),
@@ -591,9 +607,7 @@ class _PreStartSignatureConfirmationTabState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      height: 4.h,
-                    ),
+                    SizedBox(height: 4.h),
                     Text(
                       AppText.signatureConfirmation.toUpperCase(),
                       style: Theme.of(context)
@@ -609,9 +623,7 @@ class _PreStartSignatureConfirmationTabState
                           .bodySmall
                           ?.copyWith(color: AppColors.grey),
                     ),
-                    SizedBox(
-                      height: 2.h,
-                    ),
+                    SizedBox(height: 2.h),
                     Stack(
                       children: [
                         if (_controller.isEmpty)
@@ -658,9 +670,7 @@ class _PreStartSignatureConfirmationTabState
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: 3.h,
-                    ),
+                    SizedBox(height: 3.h),
                     Align(
                       alignment: Alignment.centerRight,
                       child: SizedBox(
@@ -776,9 +786,7 @@ class _PreStartSignatureConfirmationTabState
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: 3.h,
-                    ),
+                    SizedBox(height: 3.h),
                   ],
                 ),
               ),

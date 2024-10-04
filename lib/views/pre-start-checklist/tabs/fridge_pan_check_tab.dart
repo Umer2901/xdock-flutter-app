@@ -397,16 +397,16 @@ void printQuestionsAndIds() {
                         height: 1.h,
                       ),
                       CustomTextField(
-                        name: 'fleet_and_compliance',
+                        name: 'note',
                         maxLines: 3,
                         hintText: AppText.fleetAndCompliance,
                         initialValue: context
                                 .read<PreStartProvider>()
                                 .data
-                                .containsKey('fleet_and_compliance')
+                                .containsKey('note')
                             ? context
                                 .read<PreStartProvider>()
-                                .data['fleet_and_compliance']
+                                .data['note']
                             : null,
                               contentPadding: EdgeInsets.symmetric(
     horizontal: 4.w,
@@ -447,12 +447,12 @@ void printQuestionsAndIds() {
             !hasIllicitDrugUse && !hasMedicationIssue && !hasAlcoholConsumption) {
           context.read<PreStartProvider>().addEntities(checklistAnswers.entries);
           context.read<PreStartProvider>().addEntities({
-            'fleet_and_compliance': _formKey.currentState!.fields['fleet_and_compliance']!.value
+            'note': _formKey.currentState!.fields['note']!.value
           }.entries);
 
           // Print the saved data in the console
           print("Saved Checklist Answers: $checklistAnswers");
-          print("Fleet and Compliance: ${_formKey.currentState!.fields['fleet_and_compliance']!.value}");
+          print("note: ${_formKey.currentState!.fields['note']!.value}");
 
           // Navigate to the next screen
           context.read<PreStartProvider>().setIndex(3);

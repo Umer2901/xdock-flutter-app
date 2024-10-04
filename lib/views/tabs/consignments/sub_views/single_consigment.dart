@@ -65,7 +65,24 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     bool isPickup = Get.arguments['consignment_type'] == 'pickup';
-  String appBarTitle = isPickup ? 'Pickup' : 'Delivery';
+    
+ String appBarTitle;
+
+switch (Get.arguments['consignment_type']) {
+  case 'pickup':
+    appBarTitle = 'Pickup';
+    break;
+  case 'delivery':
+    appBarTitle = 'Delivery';
+    break;
+  case 'return':
+    appBarTitle = 'Return';
+    break;
+  default:
+    appBarTitle = 'Consignment';
+    break;
+}
+
   String buttonText = isPickup ? 'POP Capture' : 'POD Capture';
     return Scaffold(
       key: _scaffoldKey,  
