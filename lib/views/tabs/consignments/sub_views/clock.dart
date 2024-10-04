@@ -1,8 +1,8 @@
 import 'dart:convert';
+
 import 'package:coldxpress/export.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class EditTime extends StatefulWidget {
   const EditTime({super.key});
@@ -21,6 +21,7 @@ class _EditTimeState extends State<EditTime> {
 
   late Map deliveryAddresses;
   late Map pickupAddresses;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -55,53 +56,64 @@ class _EditTimeState extends State<EditTime> {
         ? PickedTime(h: 15, m: 30)
         : PickedTime(h: endTime!.hour, m: endTime!.minute);
   }
-Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, PickedTime startTime, PickedTime endTime) async {
-  try {
-   
-   final requestBody = {
-      "addressId": addressId,
-      "startTime": "${startTime.h.toString().padLeft(2, '0')}:${startTime.m.toString().padLeft(2, '0')}",
-      "endTime": "${endTime.h.toString().padLeft(2, '0')}:${endTime.m.toString().padLeft(2, '0')}"
-    };
 
-    // Proceed with sending the request since there is internet connection
-    final response = await http.post(
-      Uri.parse(AppHost.updatetime),
-      body: jsonEncode(requestBody),
-      headers: <String, String>{
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    );
+  Future<void> saveTimeUpdateToTaskSync(String accessToken, int addressId,
+      PickedTime startTime, PickedTime endTime) async {
+    try {
+      final requestBody = {
+        "addressId": addressId,
+        "startTime":
+            "${startTime.h.toString().padLeft(2, '0')}:${startTime.m.toString().padLeft(2, '0')}",
+        "endTime":
+            "${endTime.h.toString().padLeft(2, '0')}:${endTime.m.toString().padLeft(2, '0')}"
+      };
 
-    print('Reorder API response code: ${response.statusCode}');
-
-    if (response.statusCode == 200) {
-      var responseData = json.decode(response.body);
-      String status = responseData['status'];
-      print('Reorder API response: $responseData');
-
-      if (status == 'success') {
-        print('Reorder successful.');
-      } else {
-        print('Reorder failed with status: $status, Message: ${responseData['msg']}');
-         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+      // Proceed with sending the request since there is internet connection
+      final response = await http.post(
+        Uri.parse(AppHost.updatetime),
+        body: jsonEncode(requestBody),
+        headers: <String, String>{
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       );
+
+      print('Reorder API response code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        var responseData = json.decode(response.body);
+        String status = responseData['status'];
+        print('Reorder API response: $responseData');
+
+        if (status == 'success') {
+          print('Reorder successful.');
+        } else {
+          print(
+              'Reorder failed with status: $status, Message: ${responseData['msg']}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'Access Denied! You cannot sort the run as the loadsheets are printed.')),
+          );
+        }
+      } else {
+        print(
+            'Reorder API failed with status code: ${response.statusCode} and response: ${response.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Access Denied! You cannot sort the run as the loadsheets are printed.')),
+        );
       }
-    } else {
-      print('Reorder API failed with status code: ${response.statusCode} and response: ${response.body}');
-       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Access Denied! You cannot sort the run as the loadsheets are printed.')),
       );
     }
-  } catch (e) {
-     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Access Denied! You cannot sort the run as the loadsheets are printed.')),
-      );
   }
-}
 
   // Future<void> saveTimeUpdateToTaskSync(
   //     DatabaseProvider dbProvider, String accessToken, int addressId, PickedTime startTime, PickedTime endTime) async {
@@ -185,7 +197,8 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                                         ? deliveryAddresses['customer_name']
                                         : pickupAddresses['customer_name']) ??
                                     'Not Provided',
-                                style: Theme.of(context).textTheme.headlineMedium,
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium,
                               ),
                             ],
                           ),
@@ -195,9 +208,10 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                           onTap: () async {
                             final Uri launchUri = Uri(
                               scheme: 'tel',
-                              path: consignment['consignment_type'] == 'delivery'
-                                  ? deliveryAddresses['telephone']
-                                  : pickupAddresses['telephone'],
+                              path:
+                                  consignment['consignment_type'] == 'delivery'
+                                      ? deliveryAddresses['telephone']
+                                      : pickupAddresses['telephone'],
                             );
                             await launchUrl(launchUri);
                           },
@@ -239,13 +253,19 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                               SizedBox(width: 1.w),
                               Text(
                                 "Start Time",
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.black),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(color: AppColors.black),
                               ),
                             ],
                           ),
                           Text(
                             "${_startTime.h}:${_startTime.m}",
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: const Color(0xFFE29400)),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(color: const Color(0xFFE29400)),
                           ),
                         ],
                       ),
@@ -266,13 +286,19 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                               SizedBox(width: 1.w),
                               Text(
                                 "End Time",
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.black),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(color: AppColors.black),
                               ),
                             ],
                           ),
                           Text(
                             "${_endTime.h}:${_endTime.m}",
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: AppColors.blue),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(color: AppColors.blue),
                           ),
                         ],
                       ),
@@ -283,7 +309,10 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                   Center(
                     child: Text(
                       "*24 HR CLOCK",
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(color: AppColors.grey),
                     ),
                   ),
                   SizedBox(height: 1.h),
@@ -329,8 +358,10 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                                     stops: [0.0, 1.0],
                                   ),
                                 ),
-                                baseColor: const Color.fromARGB(255, 200, 198, 198),
-                                initHandlerDecoration: TimePickerHandlerDecoration(
+                                baseColor:
+                                    const Color.fromARGB(255, 200, 198, 198),
+                                initHandlerDecoration:
+                                    TimePickerHandlerDecoration(
                                   color: AppColors.grey,
                                   shape: BoxShape.circle,
                                   radius: 12.0,
@@ -340,7 +371,8 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                                     color: AppColors.yellow,
                                   ),
                                 ),
-                                endHandlerDecoration: TimePickerHandlerDecoration(
+                                endHandlerDecoration:
+                                    TimePickerHandlerDecoration(
                                   color: AppColors.grey,
                                   shape: BoxShape.circle,
                                   radius: 12.0,
@@ -361,7 +393,10 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                   Center(
                     child: Text(
                       "*Changing these hours may impact drop order",
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(color: AppColors.grey),
                     ),
                   ),
                   SizedBox(height: 3.h),
@@ -384,96 +419,140 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
                       SizedBox(
                         width: 30.w,
                         child: CustomButton(
+                          isLoading: isLoading,
                           label: "Save",
                           onPressed: () async {
+                            setState(() {
+                              isLoading = true;
+                            });
                             // Get the user's token from the authentication state
-                            AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+                            AuthenticationState state =
+                                BlocProvider.of<AuthenticationCubit>(context)
+                                    .state;
                             if (state is Authenticated) {
                               String accessToken = state.token;
 
                               // Save the time update task to TaskSyncDatabase
-                              await saveTimeUpdateToTaskSync(
-                                  accessToken,
-                                  address_id,
-                                  _startTime,
-                                  _endTime );
+                              await saveTimeUpdateToTaskSync(accessToken,
+                                  address_id, _startTime, _endTime);
 
                               // Now, update the consignment data in the local database
-                              await ConsignmentDatabase(context.read<DatabaseProvider>().database)
+                              await ConsignmentDatabase(
+                                      context.read<DatabaseProvider>().database)
                                   .readById(consignment['id'])
                                   .then((value) {
                                 if (value.isNotEmpty) {
                                   // Update consignment delivery or pickup data
-                                  if (consignment['consignment_type'] == 'delivery') {
+                                  if (consignment['consignment_type'] ==
+                                      'delivery') {
                                     deliveryAddresses['service_time_start'] =
                                         startTime != null
                                             ? startTime!
-                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .copyWith(
+                                                    hour: _startTime.h,
+                                                    minute: _startTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first
                                             : parseDate(consignment['date'])
-                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .copyWith(
+                                                    hour: _startTime.h,
+                                                    minute: _startTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first;
 
                                     deliveryAddresses['service_time_end'] =
                                         endTime != null
-                                            ? endTime!.copyWith(hour: _endTime.h, minute: _endTime.m)
+                                            ? endTime!
+                                                .copyWith(
+                                                    hour: _endTime.h,
+                                                    minute: _endTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first
                                             : parseDate(consignment['date'])
-                                                .copyWith(hour: _endTime.h, minute: _endTime.m)
+                                                .copyWith(
+                                                    hour: _endTime.h,
+                                                    minute: _endTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first;
 
                                     // Save the updated delivery addresses
-                                    String temp = json.encode(deliveryAddresses);
-                                    ConsignmentDatabase(context.read<DatabaseProvider>().database)
-                                        .update(consignment['id'], {'delivery_addresses': temp});
+                                    String temp =
+                                        json.encode(deliveryAddresses);
+                                    ConsignmentDatabase(context
+                                            .read<DatabaseProvider>()
+                                            .database)
+                                        .update(consignment['id'],
+                                            {'delivery_addresses': temp});
                                   } else {
                                     pickupAddresses['service_time_start'] =
                                         startTime != null
                                             ? startTime!
-                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .copyWith(
+                                                    hour: _startTime.h,
+                                                    minute: _startTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first
                                             : parseDate(consignment['date'])
-                                                .copyWith(hour: _startTime.h, minute: _startTime.m)
+                                                .copyWith(
+                                                    hour: _startTime.h,
+                                                    minute: _startTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first;
 
                                     pickupAddresses['service_time_end'] =
                                         endTime != null
-                                            ? endTime!.copyWith(hour: _endTime.h, minute: _endTime.m)
+                                            ? endTime!
+                                                .copyWith(
+                                                    hour: _endTime.h,
+                                                    minute: _endTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first
                                             : parseDate(consignment['date'])
-                                                .copyWith(hour: _endTime.h, minute: _endTime.m)
+                                                .copyWith(
+                                                    hour: _endTime.h,
+                                                    minute: _endTime.m)
                                                 .toString()
                                                 .split('.')
                                                 .first;
 
                                     // Save the updated pickup addresses
                                     String temp = json.encode(pickupAddresses);
-                                    ConsignmentDatabase(context.read<DatabaseProvider>().database)
-                                        .update(consignment['id'], {'pickup_addresses': temp});
+                                    ConsignmentDatabase(context
+                                            .read<DatabaseProvider>()
+                                            .database)
+                                        .update(consignment['id'],
+                                            {'pickup_addresses': temp});
                                   }
                                 }
 
                                 // Update the time in TimeProvider
-                                var timeProvider = Provider.of<TimeProvider>(context, listen: false);
+                                var timeProvider = Provider.of<TimeProvider>(
+                                    context,
+                                    listen: false);
                                 timeProvider.updateTimes(
-                                  DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, _startTime.h, _startTime.m),
-                                  DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, _endTime.h, _endTime.m)
-                                );
+                                    DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month,
+                                        DateTime.now().day,
+                                        _startTime.h,
+                                        _startTime.m),
+                                    DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month,
+                                        DateTime.now().day,
+                                        _endTime.h,
+                                        _endTime.m));
 
+                                setState(() {
+                                  isLoading = false;
+                                });
                                 // Go back to the previous screen
                                 Navigator.pop(context);
                               });
@@ -497,13 +576,16 @@ Future<void> saveTimeUpdateToTaskSync( String accessToken, int addressId, Picked
       return DateTime.now();
     }
     List<String> value = date.split('/');
-    return DateTime(int.parse(value[2]), int.parse(value[1]), int.parse(value[0]));
+    return DateTime(
+        int.parse(value[2]), int.parse(value[1]), int.parse(value[0]));
   }
 }
 
 class TimeProvider extends ChangeNotifier {
-  DateTime _startTime = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30);
-  DateTime _endTime = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 19, 30);
+  DateTime _startTime = DateTime(
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30);
+  DateTime _endTime = DateTime(
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 19, 30);
 
   DateTime get startTime => _startTime;
   DateTime get endTime => _endTime;

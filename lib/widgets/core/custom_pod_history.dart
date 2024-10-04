@@ -119,7 +119,7 @@ class _CustomPodHistoryContainerState extends State<CustomPodHistoryContainer> {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10.0),
         child: Container(
-          height: 18.3.h,
+          //height: 18.3.h,
           width: double.infinity,
           decoration: BoxDecoration(
             color: const Color(0xffF4F4F4),

@@ -105,7 +105,7 @@ class _CustomContainerState extends State<CustomContainer> {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10.0),
         child: Container(
-          height: 18.3.h,
+          //height: 18.3.h,
           width: double.infinity,
           decoration: BoxDecoration(
             color: Color(0xffF4F4F4),

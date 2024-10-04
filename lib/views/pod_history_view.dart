@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:coldxpress/export.dart';
 import 'package:coldxpress/widgets/core/custom-widget.dart';
 import 'package:coldxpress/widgets/core/custom_text.dart';
-
 
 class PodHistoryView extends StatefulWidget {
   const PodHistoryView({super.key});
@@ -16,10 +16,10 @@ class _PodHistoryViewState extends State<PodHistoryView> {
   @override
   Widget build(BuildContext context) {
     Map<String, dynamic> task = Get.arguments;
- final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
     Map<String, dynamic> taskData = jsonDecode(task['data']);
-    print('Task POD HISTORY : $task');
+    //print('Task POD HISTORY : $task');
 
     Map<String, dynamic> data = {};
     try {
@@ -29,7 +29,6 @@ class _PodHistoryViewState extends State<PodHistoryView> {
       data = {};
     }
 
-
     String signatureBase64 = '';
 
 if (data['signature'] != null && data['signature'] is String) {
@@ -38,19 +37,18 @@ if (data['signature'] != null && data['signature'] is String) {
       .replaceAll(RegExp(r'data:image\/[a-zA-Z]+;base64,'), '');
 }
 
-Uint8List? signatureBytes;
-if (signatureBase64.isNotEmpty) {
-  try {
-    signatureBytes = Base64Decoder().convert(signatureBase64);
-  } catch (e) {
-    debugPrint('Error decoding signature base64: $e');
-    signatureBytes = null;
-  }
-} else {
-  debugPrint('Signature data is either null or empty');
-  signatureBytes = null;
-}
-
+    Uint8List? signatureBytes;
+    if (signatureBase64.isNotEmpty) {
+      try {
+        signatureBytes = Base64Decoder().convert(signatureBase64);
+      } catch (e) {
+        debugPrint('Error decoding signature base64: $e');
+        signatureBytes = null;
+      }
+    } else {
+      debugPrint('Signature data is either null or empty');
+      signatureBytes = null;
+    }
 
     Map<String, dynamic>? pictures;
     if (data['pictures'] is Map<String, dynamic>) {
@@ -68,8 +66,9 @@ if (signatureBase64.isNotEmpty) {
 
     if (pictures != null) {
       pictures.forEach((key, value) {
-        String base64String = value.toString().replaceAll(
-            RegExp(r'data:image\/[a-zA-Z]+;base64,'), '');
+        String base64String = value
+            .toString()
+            .replaceAll(RegExp(r'data:image\/[a-zA-Z]+;base64,'), '');
         if (base64String.isNotEmpty) {
           imageBytesList.add(Base64Decoder().convert(base64String));
         }
@@ -120,8 +119,7 @@ if (signatureBase64.isNotEmpty) {
     }
 
     return Scaffold(
-key: _scaffoldKey,
-
+      key: _scaffoldKey,
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
         backgroundColor: Colors.transparent,
@@ -136,8 +134,8 @@ key: _scaffoldKey,
         ),
         actions: [
           IconButton(
-            onPressed: () {    
-  _scaffoldKey.currentState?.openEndDrawer();
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
             },
             icon: Icon(
               Icons.more_horiz,
@@ -163,7 +161,8 @@ key: _scaffoldKey,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 10.0, left: 15, right: 10),
+                  padding:
+                      const EdgeInsets.only(top: 10.0, left: 15, right: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -196,7 +195,8 @@ key: _scaffoldKey,
                           const CustomTextDisplay(text: "|"),
                           SizedBox(width: 1.5.w),
                           Expanded(
-                            child: CustomTextDisplay(text: "Reference: $customerReference"),
+                            child: CustomTextDisplay(
+                                text: "Reference: $customerReference"),
                           ),
                         ],
                       ),
@@ -209,7 +209,8 @@ key: _scaffoldKey,
                           const CustomTextDisplay(text: "|"),
                           SizedBox(width: 1.5.w),
                           Expanded(
-                            child: CustomTextDisplay(text: "Time: $serviceTime"),
+                            child:
+                                CustomTextDisplay(text: "Time: $serviceTime"),
                           ),
                         ],
                       ),
@@ -248,16 +249,16 @@ key: _scaffoldKey,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 10.0, left: 15, right: 10),
+                  padding:
+                      const EdgeInsets.only(top: 10.0, left: 15, right: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomWidget(text: "POD Histories view", onTap: () {}),
                       SizedBox(height: 2.h),
                       SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
+                        scrollDirection: Axis.horizontal,
                         child: Row(
-                          
                           children: imageBytesList.map((bytes) {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 10),
@@ -356,8 +357,7 @@ if (podType != 3 && signatureBytes != null && signatureBytes.isNotEmpty)
           ),
         ),
       ),
-     
-endDrawer: const CustomDrawer(),
+      endDrawer: const CustomDrawer(),
     );
   }
 }

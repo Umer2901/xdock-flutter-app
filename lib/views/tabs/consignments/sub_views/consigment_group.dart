@@ -51,7 +51,6 @@
 //     });
 //   }
 
-  
 // void _groupSelectedConsignments() async {
 //   Map<String, dynamic> precheckStatus = await precheck.getPrecheckStatus();
 //   if (selectedConsignments.isEmpty || precheckStatus['checklist'] != 1 || precheckStatus['outbound'] != 1) {
@@ -75,7 +74,7 @@
 //   for (var consignment in selectedConsignments) {
 //     final consignmentDate = jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
 //     final String consignmentProductTypeName = jsonDecode(consignment['product_types'])['name'] ?? 'Unknown';
-      
+
 //     if (consignmentDate == date && consignmentProductTypeName == selectedProductTypeName) {
 //       groupedConsignments.add(consignment);
 //       consignmentNames.add(consignment['name'] ?? 'Unnamed');
@@ -153,7 +152,6 @@
 //           style: Theme.of(context).textTheme.headlineSmall,
 //         ),
 //       ),
-  
 
 //       body: SafeArea(
 //         child: Padding(
@@ -219,7 +217,7 @@
 //                         print('Product Type Name: $consignmentProductTypeName');
 //                         print('Consignment Type: $consignmentType');
 //                         print('Product Type: $productTypes');
-                        
+
 //                         if (consignmentIds.contains(consignment['id'])) {
 //                           setState(() {
 //                             consignmentIds.remove(consignment['id']);
@@ -238,7 +236,7 @@
 //                                 selectedConsignments.add(consignment);
 //                               });
 //                             } else {
-                            
+
 //                               Get.snackbar(
 //                                 'Error',
 //                                 'Cannot group consignments of different types or dates.',
@@ -328,8 +326,8 @@
 //   }
 // }
 import 'dart:convert';
+
 import 'package:coldxpress/export.dart';
-import 'package:intl/intl.dart'; // Import for date formatting
 
 class MyConsigmentGroup extends StatefulWidget {
   const MyConsigmentGroup({super.key});
@@ -347,13 +345,15 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
   Map<String, List<dynamic>> groupedConsignmentsByDate = {};
   late PreCheckDatabase precheck;
   late ConsignmentDatabase consignment;
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _consignments.addAll(json.decode(json.encode(Get.arguments)));
     _groupConsignmentsByDate();
-    AuthenticationState state = BlocProvider.of<AuthenticationCubit>(context).state;
+    AuthenticationState state =
+        BlocProvider.of<AuthenticationCubit>(context).state;
     if (state is Authenticated) {
       consignment = ConsignmentDatabase(
         context.read<DatabaseProvider>().database,
@@ -372,7 +372,8 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
       final date = consignment['delivery_date'] ?? 'Not Provided';
 
       if (date != 'Not Provided') {
-        final formattedDate = DateFormat('dd-MM-yyyy').format(DateFormat('yyyy-MM-dd').parse(date));
+        final formattedDate = DateFormat('dd-MM-yyyy')
+            .format(DateFormat('yyyy-MM-dd').parse(date));
         if (!tempGroupedConsignments.containsKey(formattedDate)) {
           tempGroupedConsignments[formattedDate] = [];
         }
@@ -393,7 +394,7 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
 
           DateTime dateA = DateFormat('dd-MM-yyyy').parse(a.key);
           DateTime dateB = DateFormat('dd-MM-yyyy').parse(b.key);
-          return dateA.compareTo(dateB); 
+          return dateA.compareTo(dateB);
         }),
     );
 
@@ -403,30 +404,43 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
   }
 
   void _groupSelectedConsignments() async {
+    setState(() {
+      isLoading = true;
+    });
     Map<String, dynamic> precheckStatus = await precheck.getPrecheckStatus();
-    if (selectedConsignments.isEmpty || precheckStatus['checklist'] != 1 || precheckStatus['outbound'] != 1) {
+    if (selectedConsignments.isEmpty ||
+        precheckStatus['checklist'] != 1 ||
+        precheckStatus['outbound'] != 1) {
       Get.snackbar(
         'Action Restricted',
         'Please fill the Checklist and Outbound to continue',
         backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: const Duration(seconds: 1),
       );
+      setState(() {
+        isLoading = false;
+      });
       return;
     }
 
-    print('Selected Consignment IDs: $consignmentIds');
-
-    final date = jsonDecode(selectedConsignments[0]['run_sheets'])['date'] ?? 'Not Provided';
-    final String selectedProductTypeName = jsonDecode(selectedConsignments[0]['product_types'])['name'] ?? 'Unknown';
+    final date = jsonDecode(selectedConsignments[0]['run_sheets'])['date'] ??
+        'Not Provided';
+    final String selectedProductTypeName =
+        jsonDecode(selectedConsignments[0]['product_types'])['name'] ??
+            'Unknown';
     final List<dynamic> groupedConsignments = [];
     final List<String> consignmentNames = [];
     final List<String> companyNames = [];
 
     for (var consignment in selectedConsignments) {
-      final consignmentDate = jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
-      final String consignmentProductTypeName = jsonDecode(consignment['product_types'])['name'] ?? 'Unknown';
+      final consignmentDate =
+          jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
+      final String consignmentProductTypeName =
+          jsonDecode(consignment['product_types'])['name'] ?? 'Unknown';
 
-      if (consignmentDate == date && consignmentProductTypeName == selectedProductTypeName) {
+      if (consignmentDate == date &&
+          consignmentProductTypeName == selectedProductTypeName) {
         groupedConsignments.add(consignment);
         consignmentNames.add(consignment['name'] ?? 'Unnamed');
         Map? deliveryAddresses = json.decode(consignment['delivery_addresses']);
@@ -436,38 +450,49 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
             : (pickupAddresses?['company_name'] ?? 'Not Provided');
         companyNames.add(companyName);
       } else {
-        Get.snackbar(
-          'Error',
-          'Cannot group consignments of different product types or dates.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        Get.snackbar('Error',
+            'Cannot group consignments of different product types or dates.',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: Duration(seconds: 1));
+        setState(() {
+          isLoading = false;
+        });
         return;
       }
     }
 
     if (groupedConsignments.isNotEmpty) {
-      final totalCartons = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['carton'] as int? ?? 0));
-      final totalPallets = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['pallet'] as int? ?? 0));
-      final totalSpace = groupedConsignments.fold<int>(0, (prev, element) => prev + (element['space'] as int? ?? 0));
-      final totalWeight = groupedConsignments.fold<double>(0.0, (prev, element) => prev + (element['weight'] as double? ?? 0.0));
+      final totalCartons = groupedConsignments.fold<int>(
+          0, (prev, element) => prev + (element['carton'] as int? ?? 0));
+      final totalPallets = groupedConsignments.fold<int>(
+          0, (prev, element) => prev + (element['pallet'] as int? ?? 0));
+      final totalSpace = groupedConsignments.fold<int>(
+          0, (prev, element) => prev + (element['space'] as int? ?? 0));
+      final totalWeight = groupedConsignments.fold<double>(
+          0.0, (prev, element) => prev + (element['weight'] as double? ?? 0.0));
 
       Map<String, dynamic> groupedConsignment = selectedConsignments[0];
-      groupedConsignment['grouped_consignments'] = jsonEncode(groupedConsignments);
-      groupedConsignment['total_grouped_consignments'] = groupedConsignments.length;
+      groupedConsignment['grouped_consignments'] =
+          jsonEncode(groupedConsignments);
+      groupedConsignment['total_grouped_consignments'] =
+          groupedConsignments.length;
       groupedConsignment['carton'] = totalCartons;
       groupedConsignment['pallet'] = totalPallets;
       groupedConsignment['space'] = totalSpace;
       groupedConsignment['weight'] = totalWeight;
       groupedConsignment['consignment_names'] = consignmentNames;
       groupedConsignment['company_names'] = companyNames;
-       groupedConsignment['is_group'] = 'parent';
+      groupedConsignment['is_group'] = 'parent';
 
       Get.offAndToNamed(
         AppRoutes.singleConsigment,
         arguments: groupedConsignment,
       );
     }
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -540,6 +565,7 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
                         },
                       ),
                       CustomButton(
+                        isLoading: isLoading,
                         width: 40.w,
                         height: 5.h,
                         label: AppText.group.toUpperCase(),
@@ -562,12 +588,12 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
                   for (var consignment in groupedConsignmentsByDate[date]!) ...[
                     GestureDetector(
                       onTap: () {
-                        final String consignmentType = consignment['consignment_type'] ?? 'Unknown';
-                        final Map productTypes = jsonDecode(consignment['product_types']);
-                        final String consignmentProductTypeName = productTypes?['name'] ?? 'Unknown';
-                        print('Product Type Name: $consignmentProductTypeName');
-                        print('Consignment Type: $consignmentType');
-                        print('Product Type: $productTypes');
+                        final String consignmentType =
+                            consignment['consignment_type'] ?? 'Unknown';
+                        final Map productTypes =
+                            jsonDecode(consignment['product_types']);
+                        final String consignmentProductTypeName =
+                            productTypes?['name'] ?? 'Unknown';
 
                         if (consignmentIds.contains(consignment['id'])) {
                           setState(() {
@@ -576,12 +602,25 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
                           });
                         } else {
                           if (selectedConsignments.isNotEmpty) {
-                            final String selectedDate = jsonDecode(selectedConsignments[0]['run_sheets'])['date'] ?? 'Not Provided';
-                            final String consignmentDate = jsonDecode(consignment['run_sheets'])['date'] ?? 'Not Provided';
-                            final String selectedType = selectedConsignments[0]['consignment_type'] ?? 'Unknown';
-                            final String selectedProductTypeName = jsonDecode(selectedConsignments[0]['product_types'])['name'] ?? 'Unknown';
+                            final String selectedDate = jsonDecode(
+                                    selectedConsignments[0]
+                                        ['run_sheets'])['date'] ??
+                                'Not Provided';
+                            final String consignmentDate =
+                                jsonDecode(consignment['run_sheets'])['date'] ??
+                                    'Not Provided';
+                            final String selectedType = selectedConsignments[0]
+                                    ['consignment_type'] ??
+                                'Unknown';
+                            final String selectedProductTypeName = jsonDecode(
+                                    selectedConsignments[0]
+                                        ['product_types'])['name'] ??
+                                'Unknown';
 
-                            if (selectedDate == consignmentDate && selectedType == consignmentType && selectedProductTypeName == consignmentProductTypeName) {
+                            if (selectedDate == consignmentDate &&
+                                selectedType == consignmentType &&
+                                selectedProductTypeName ==
+                                    consignmentProductTypeName) {
                               setState(() {
                                 consignmentIds.add(consignment['id']);
                                 selectedConsignments.add(consignment);
@@ -657,10 +696,11 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
                         },
                         child: Text(
                           AppText.returnToTop,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.midBlue,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.midBlue,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                         ),
                       ),
                 SizedBox(
