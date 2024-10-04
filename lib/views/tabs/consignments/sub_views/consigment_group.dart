@@ -367,41 +367,69 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
   }
 
   void _groupConsignmentsByDate() {
-    Map<String, List<dynamic>> tempGroupedConsignments = {};
-    for (var consignment in _consignments) {
-      final date = consignment['delivery_date'] ?? 'Not Provided';
+  Map<String, List<dynamic>> tempGroupedConsignments = {};
 
-      if (date != 'Not Provided') {
-        final formattedDate = DateFormat('dd-MM-yyyy')
-            .format(DateFormat('yyyy-MM-dd').parse(date));
-        if (!tempGroupedConsignments.containsKey(formattedDate)) {
-          tempGroupedConsignments[formattedDate] = [];
-        }
-        tempGroupedConsignments[formattedDate]!.add(consignment);
-      } else {
-        if (!tempGroupedConsignments.containsKey(date)) {
-          tempGroupedConsignments[date] = [];
-        }
-        tempGroupedConsignments[date]!.add(consignment);
-      }
+  // Use a set to track sort_app values for each date to prevent duplicates
+  final Map<String, Set<int>> sortAppTracker = {};
+
+  for (var consignment in _consignments) {
+    final date = consignment['delivery_date'] ?? 'Not Provided';
+    final sortAppValue = int.tryParse(consignment['sort_app'].toString());
+
+    // Skip consignments without a valid sort_app value
+    if (sortAppValue == null) continue;
+
+    // Format the date to maintain consistent display
+    final formattedDate = date != 'Not Provided'
+        ? DateFormat('dd-MM-yyyy').format(DateFormat('yyyy-MM-dd').parse(date))
+        : date;
+
+    // Initialize the grouped date entry and sortApp tracker if not present
+    if (!tempGroupedConsignments.containsKey(formattedDate)) {
+      tempGroupedConsignments[formattedDate] = [];
+      sortAppTracker[formattedDate] = <int>{};
     }
 
-    final sortedGroupedConsignments = Map<String, List<dynamic>>.fromEntries(
-      tempGroupedConsignments.entries.toList()
-        ..sort((a, b) {
-          if (a.key == 'Not Provided') return 1;
-          if (b.key == 'Not Provided') return -1;
-
-          DateTime dateA = DateFormat('dd-MM-yyyy').parse(a.key);
-          DateTime dateB = DateFormat('dd-MM-yyyy').parse(b.key);
-          return dateA.compareTo(dateB);
-        }),
-    );
-
-    setState(() {
-      groupedConsignmentsByDate = sortedGroupedConsignments;
-    });
+    // Check if the consignment's sort_app value is already present for the current date
+    if (!sortAppTracker[formattedDate]!.contains(sortAppValue)) {
+      tempGroupedConsignments[formattedDate]!.add(consignment);
+      sortAppTracker[formattedDate]!.add(sortAppValue);
+    } else {
+      // If a duplicate sort_app is found, replace the old consignment with the new one
+      tempGroupedConsignments[formattedDate] = tempGroupedConsignments[formattedDate]!
+          .where((existing) => int.tryParse(existing['sort_app'].toString()) != sortAppValue)
+          .toList();
+      tempGroupedConsignments[formattedDate]!.add(consignment);
+    }
   }
+
+  // Sort consignments within each date group by 'sort_app'
+  tempGroupedConsignments.forEach((date, consignments) {
+    consignments.sort((a, b) {
+      int sortA = int.tryParse(a['sort_app'].toString()) ?? 0;
+      int sortB = int.tryParse(b['sort_app'].toString()) ?? 0;
+      return sortA.compareTo(sortB); // Ascending order by sort_app
+    });
+  });
+
+  // Sort the date keys to ensure that older dates appear first
+  final sortedGroupedConsignments = Map<String, List<dynamic>>.fromEntries(
+    tempGroupedConsignments.entries.toList()
+      ..sort((a, b) {
+        if (a.key == 'Not Provided') return 1;
+        if (b.key == 'Not Provided') return -1;
+
+        // Parse the dates and sort in ascending order (older dates first)
+        DateTime dateA = DateFormat('dd-MM-yyyy').parse(a.key);
+        DateTime dateB = DateFormat('dd-MM-yyyy').parse(b.key);
+        return dateA.compareTo(dateB); // Ascending order: older dates first
+      }),
+  );
+
+  setState(() {
+    groupedConsignmentsByDate = sortedGroupedConsignments;
+  });
+}
 
   void _groupSelectedConsignments() async {
     setState(() {
@@ -602,12 +630,12 @@ class _MyConsigmentGroupState extends State<MyConsigmentGroup> {
                           });
                         } else {
                           if (selectedConsignments.isNotEmpty) {
-                            final String selectedDate = jsonDecode(
+                            final String selectedDate = 
                                     selectedConsignments[0]
-                                        ['run_sheets'])['date'] ??
+                                        ['delivery_date'] ??
                                 'Not Provided';
                             final String consignmentDate =
-                                jsonDecode(consignment['run_sheets'])['date'] ??
+                              consignment['delivery_date'] ??
                                     'Not Provided';
                             final String selectedType = selectedConsignments[0]
                                     ['consignment_type'] ??

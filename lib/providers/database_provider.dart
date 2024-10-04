@@ -69,6 +69,7 @@ class DatabaseProvider with ChangeNotifier {
       CREATE TABLE IF NOT EXISTS consignments (
         id INTEGER PRIMARY KEY,
         invoice_id INTEGER,
+        sort_app TEXT,
         driver_invoice_id INTEGER,
         removed_from_driver_invoice INTEGER,
         sale_order_id INTEGER,

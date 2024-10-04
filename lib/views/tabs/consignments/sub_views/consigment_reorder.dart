@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:coldxpress/export.dart';
 import 'package:http/http.dart' as http;
 
@@ -26,7 +25,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
     _consignments.addAll(arguments);
     print("Initial Consignments: $_consignments");
 
-    // Group consignments by date and print the grouped result for debugging
+    // Group consignments by date and sort them using 'sort_app'
     groupedConsignments = _groupConsignmentsByDate();
     print("Grouped Consignments: $groupedConsignments");
   }
@@ -120,7 +119,8 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                                         .toList();
                               }
                             }
-                            print("Final Consignments before sending to API: $finalConsignments");
+                            print(
+                                "Final Consignments before sending to API: $finalConsignments");
                             await sendReorderedConsignments(
                               finalConsignments,
                               authState.token,
@@ -137,8 +137,7 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                                 duration: Duration(seconds: 1),
-                                content:
-                                    Text('No reordering changes were made.')),
+                                content: Text('No reordering changes were made.')),
                           );
                         }
                       },
@@ -190,7 +189,8 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
                                         consignment['id'] as int)
                                     .toList();
 
-                                print("Reordered Consignments for date $date: ${reorderedConsignmentsByDate[date]}");
+                                print(
+                                    "Reordered Consignments for date $date: ${reorderedConsignmentsByDate[date]}");
                               });
                             },
                             children: List.generate(
@@ -238,46 +238,71 @@ class _MyConsigmentReorderState extends State<MyConsigmentReorder> {
     );
   }
 
-  // Group consignments by date and sort them
-  Map<String, List<dynamic>> _groupConsignmentsByDate() {
-    final Map<String, List<dynamic>> groupedByDate = {};
+  // Group consignments by date and sort them by 'sort_app'
+// Group consignments by date and sort them by 'sort_app' and date in ascending order
+Map<String, List<dynamic>> _groupConsignmentsByDate() {
+  final Map<String, List<dynamic>> groupedByDate = {};
 
-    for (var consignment in _consignments) {
-      final date = consignment['delivery_date'] ?? 'Not Provided';
-      if (date != 'Not Provided') {
-        final formattedDate = DateFormat('dd-MM-yyyy')
-            .format(DateFormat('yyyy-MM-dd').parse(date));
+  // Use a set to track sort_app values for each date to prevent duplicates
+  final Map<String, Set<int>> sortAppTracker = {};
 
-        if (!groupedByDate.containsKey(formattedDate)) {
-          groupedByDate[formattedDate] = [];
-        }
-        groupedByDate[formattedDate]!.add(consignment);
-      } else {
-        if (!groupedByDate.containsKey(date)) {
-          groupedByDate[date] = [];
-        }
-        groupedByDate[date]!.add(consignment);
-      }
+  for (var consignment in _consignments) {
+    final date = consignment['delivery_date'] ?? 'Not Provided';
+    final sortAppValue = int.tryParse(consignment['sort_app'].toString());
+
+    // Skip consignments without a valid sort_app value
+    if (sortAppValue == null) continue;
+
+    // If the date is not in the group, initialize it
+    if (!groupedByDate.containsKey(date)) {
+      groupedByDate[date] = [];
+      sortAppTracker[date] = <int>{};
     }
 
-    final sortedGroupedByDate = Map<String, List<dynamic>>.fromEntries(
-      groupedByDate.entries.toList()
-        ..sort((a, b) {
-          if (a.key == 'Not Provided') return 1;
-          if (b.key == 'Not Provided') return -1;
-
-          DateTime dateA = DateFormat('dd-MM-yyyy').parse(a.key);
-          DateTime dateB = DateFormat('dd-MM-yyyy').parse(b.key);
-          return dateA.compareTo(dateB);
-        }),
-    );
-
-    print("Grouped Consignments after sorting: $sortedGroupedByDate");
-
-    return sortedGroupedByDate;
+    // Check if this sort_app value is already present for this date
+    if (!sortAppTracker[date]!.contains(sortAppValue)) {
+      // Add the consignment to the group and track the sort_app value
+      groupedByDate[date]!.add(consignment);
+      sortAppTracker[date]!.add(sortAppValue);
+    } else {
+      // Handle the duplicate case: remove the old consignment with the same sort_app
+      // and keep the latest consignment.
+      groupedByDate[date] = groupedByDate[date]!
+          .where((existing) => int.tryParse(existing['sort_app'].toString()) != sortAppValue)
+          .toList();
+      groupedByDate[date]!.add(consignment);
+    }
   }
 
-  // Send reordered consignments to API
+  // Sort consignments within each date group by the 'sort_app' field
+  groupedByDate.forEach((date, consignments) {
+    consignments.sort((a, b) {
+      int sortA = int.tryParse(a['sort_app'].toString()) ?? 0;
+      int sortB = int.tryParse(b['sort_app'].toString()) ?? 0;
+      return sortA.compareTo(sortB);
+    });
+  });
+
+  // Sort dates in the grouped consignments map in ascending order (oldest dates first)
+  final sortedGroupedByDate = Map<String, List<dynamic>>.fromEntries(
+    groupedByDate.entries.toList()
+      ..sort((a, b) {
+        if (a.key == 'Not Provided') return 1;
+        if (b.key == 'Not Provided') return -1;
+
+        // Parse the dates in ascending order to show older dates first
+        DateTime dateA = DateFormat('yyyy-MM-dd').parse(a.key); // Adjust the format if needed
+        DateTime dateB = DateFormat('yyyy-MM-dd').parse(b.key);
+        return dateA.compareTo(dateB); // Ascending order: older dates first
+      }),
+  );
+
+  print("Grouped Consignments after sorting by date (oldest first): $sortedGroupedByDate");
+
+  return sortedGroupedByDate;
+}
+
+
 Future<void> sendReorderedConsignments(
     Map<String, List<int>> finalConsignments, String accessToken) async {
   try {

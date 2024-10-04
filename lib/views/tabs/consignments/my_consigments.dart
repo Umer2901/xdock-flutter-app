@@ -76,95 +76,154 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
     );
   }
 
-  Map<String, List<Map<String, dynamic>>> _groupConsignmentsByDate(
-    List<Map<String, dynamic>> consignments) {
-    final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
+  // Updated grouping method to filter out consignments without valid 'sort_app' values
+// Updated grouping method to filter out duplicate 'sort_app' values
+Map<String, List<Map<String, dynamic>>> _groupConsignmentsByDate(
+  List<Map<String, dynamic>> consignments,
+) {
+  final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
 
-    for (var consignment in consignments) {
-      final date = consignment['delivery_date'] ?? 'Not Provided';
-      if (!groupedByDate.containsKey(date)) {
-        groupedByDate[date] = [];
-      }
-      groupedByDate[date]!.add(consignment);
+  // Use a set to track sort_app values for each date to prevent duplicates
+  final Map<String, Set<int>> sortAppTracker = {};
+
+  // Filter and group consignments, ensuring no duplicates based on 'sort_app'
+  for (var consignment in consignments) {
+    final date = consignment['delivery_date'] ?? 'Not Provided';
+    final sortAppValue = int.tryParse(consignment['sort_app'].toString());
+
+    // Skip consignments without a valid sort_app value
+    if (sortAppValue == null) continue;
+
+    // If the date is not in the group, initialize it
+    if (!groupedByDate.containsKey(date)) {
+      groupedByDate[date] = [];
+      sortAppTracker[date] = <int>{};
     }
 
-    return groupedByDate;
+    // Check if this sort_app value is already present for this date
+    if (!sortAppTracker[date]!.contains(sortAppValue)) {
+      // Add the consignment to the group and track the sort_app value
+      groupedByDate[date]!.add(consignment);
+      sortAppTracker[date]!.add(sortAppValue);
+    } else {
+      // Handle the duplicate case: remove the old consignment with same sort_app
+      // and keep the latest consignment.
+      groupedByDate[date] = groupedByDate[date]!
+          .where((existing) => int.tryParse(existing['sort_app'].toString()) != sortAppValue)
+          .toList();
+      groupedByDate[date]!.add(consignment);
+    }
   }
 
-  List<Widget> _buildGroupedConsignments(
-    Map<String, List<Map<String, dynamic>>> groupedConsignments,
-    AsyncSnapshot precheckSnapshot) {
-    List<Widget> widgets = [];
+  // Sort consignments within each date group by the 'sort_app' field
+  groupedByDate.forEach((date, consignments) {
+    consignments.sort((a, b) {
+      int sortA = int.tryParse(a['sort_app'].toString()) ?? 0;
+      int sortB = int.tryParse(b['sort_app'].toString()) ?? 0;
+      return sortA.compareTo(sortB);
+    });
+  });
 
-    groupedConsignments.forEach((date, consignments) {
-      String formattedDate = date;
+  return groupedByDate;
+}
 
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 2.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+
+  // Updated UI rendering method to display consignments in sorted order
+List<Widget> _buildGroupedConsignments(
+  Map<String, List<Map<String, dynamic>>> groupedConsignments,
+  AsyncSnapshot precheckSnapshot,
+) {
+  List<Widget> widgets = [];
+
+  groupedConsignments.forEach((date, consignments) {
+    String formattedDate;
+    if (date != 'Not Provided') {
+      formattedDate = DateFormat('dd-MM-yyyy').format(DateFormat('yyyy-MM-dd').parse(date));
+    } else {
+      formattedDate = date;
+    }
+
+    widgets.add(
+      Padding(
+        padding: EdgeInsets.symmetric(vertical: 2.h),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              formattedDate,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    widgets.addAll(
+      consignments.map((consignment) {
+        int index = consignments.indexOf(consignment) + 1;
+        String sortAppValue = consignment['sort_app'].toString(); // Get sort_app value as a string
+
+        return GestureDetector(
+          onTap: () {
+            if ((precheckSnapshot.data![0]['checklist'] == 0 &&
+                precheckSnapshot.data![0]['outbound'] == 0)) {
+              Map<String, dynamic> updatedArguments = Map.from(consignment);
+              print(updatedArguments['status']);
+
+              int status = int.tryParse(updatedArguments['status'].toString()) ?? -1;
+
+              if (status == 10) {
+                updatedArguments['consignment_type'] = 'delivery';
+                debugPrint('Status is 10, consignment_type set to delivery.');
+              } else if (status == 6) {
+                updatedArguments['consignment_type'] = 'pickup';
+                debugPrint('Status is 6, consignment_type set to pickup.');
+              } else {
+                debugPrint('Status is not 10, no changes made to consignment_type.');
+              }
+
+              Get.toNamed(
+                AppRoutes.singleConsigment,
+                arguments: {
+                  ...updatedArguments,
+                },
+              );
+            }
+          },
+          child: Column(
             children: [
-              Text(
-                formattedDate,
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+              // Text(
+              //         'Consignment ID: ${consignment['id']}',
+              //         style: Theme.of(context).textTheme.bodyMedium,
+              //       ),
+              //       // Display the sort_app value
+              //       Text(
+              //         'Sort Order: $sortAppValue',
+              //         style: Theme.of(context)
+              //             .textTheme
+              //             .bodyMedium
+              //             ?.copyWith(color: AppColors.blue),
+              //       ),
+              CustomMyConsigmentContainer(
+                consignment: consignment,
+                isLoading: false,
+                index: index,
+                isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
+                    precheckSnapshot.data![0]['outbound'] == 1),
+               
               ),
             ],
           ),
-        ),
-      );
+        );
+      }).toList(),
+    );
+  });
 
-      widgets.addAll(
-        consignments.map((consignment) {
-          int index = consignments.indexOf(consignment) + 1;
-          return GestureDetector(
-            onTap: () {
-              if ((precheckSnapshot.data![0]['checklist'] == 0 &&
-                  precheckSnapshot.data![0]['outbound'] == 0)) {
-                Map<String, dynamic> updatedArguments = Map.from(consignment);
-                print(updatedArguments['status']);
-
-                int status = int.tryParse(updatedArguments['status'].toString()) ?? -1;
-
-                if (status == 10) {
-                  updatedArguments['consignment_type'] = 'delivery';
-                  debugPrint('Status is 10, consignment_type set to delivery.');
-                } else if (status == 6) {
-                  updatedArguments['consignment_type'] = 'pickup';
-                  debugPrint('Status is 6, consignment_type set to pickup.');
-                } else {
-                  debugPrint('Status is not 10, no changes made to consignment_type.');
-                }
-
-                Get.toNamed(
-                  AppRoutes.singleConsigment,
-                  arguments: {
-                    ...updatedArguments,
-                  },
-                );
-              }
-            },
-            child: Column(
-              children: [
-                CustomMyConsigmentContainer(
-                  consignment: consignment,
-                  isLoading: false,
-                  index: index,
-                  isPrecheckDone: (precheckSnapshot.data![0]['checklist'] == 1 &&
-                      precheckSnapshot.data![0]['outbound'] == 1),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      );
-    });
-
-    return widgets;
-  }
+  return widgets;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -268,10 +327,7 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                             allConsignments.addAll(consignmentSnapshot.data ?? []);
                           }
 
-                          // Print the order of consignment IDs from the database
-                          List<int> consignmentIds = allConsignments.map((consignment) => consignment['id'] as int).toList();
-                          print('Order of consignment IDs: $consignmentIds');
-
+                          // Group consignments by date and sort by 'sort_app' field
                           Map<String, List<Map<String, dynamic>>> groupedConsignments =
                               _groupConsignmentsByDate(allConsignments);
 
@@ -385,7 +441,13 @@ class _MyConsigmentTabState extends State<MyConsigmentTab> {
                                           ),
                                         ),
                                         Text(
-                                          i == 0 ? 'Map' : i == 1 ? 'Re-order' : i == 2 ? 'Group' : 'Refresh',
+                                          i == 0
+                                              ? 'Map'
+                                              : i == 1
+                                                  ? 'Re-order'
+                                                  : i == 2
+                                                      ? 'Group'
+                                                      : 'Refresh',
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium

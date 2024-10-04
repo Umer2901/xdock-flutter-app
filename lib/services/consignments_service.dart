@@ -213,7 +213,6 @@
 //     return consignments;
 //   }
 // }
-
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -309,7 +308,8 @@ class ConsignmentService {
     'access_token',
     'address_grouping',
     'required_delivery_time',
-    'is_complete'
+    'is_complete',
+    'sort_app' // New field added to allowedFields list
   ];
 
   // Helper method to filter data fields
@@ -318,89 +318,96 @@ class ConsignmentService {
       return allowedFields.contains(entry.key);
     }));
   }
-// Method to fetch and store consignments from the API
-Future<void> fetchAndStore(String accessToken) async {
-  var connectivityResult = await InternetAddress.lookup('google.com');
-  if (connectivityResult.isEmpty || connectivityResult[0].rawAddress.isEmpty) {
-    throw Exception('No Internet Connection');
-  }
 
-  final response = await http.get(
-    Uri.parse(AppHost.consignments),
-    headers: {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-
-    // Print the list of fetched IDs from the API
-    List<String> fetchedIds = [];
-    data['data'].forEach((key, value) {
-      value['consignments'].forEach((consignment) {
-        fetchedIds.add(consignment['id'].toString());
-      });
-    });
-    print('Fetched Consignment IDs from API: $fetchedIds');
-
-    if (data['status'] == 'success') {
-      await _database.transaction((txn) async {
-        await _processData(txn, data['data'], accessToken);
-      });
-    } else {
-      throw Exception('Failed to fetch data: ${data['message']}');
+  // Method to fetch and store consignments from the API
+  Future<void> fetchAndStore(String accessToken) async {
+    var connectivityResult = await InternetAddress.lookup('google.com');
+    if (connectivityResult.isEmpty || connectivityResult[0].rawAddress.isEmpty) {
+      throw Exception('No Internet Connection');
     }
-  } else {
-    throw Exception('Failed to fetch data with status code: ${response.statusCode}');
-  }
-}
 
-Future<void> _processData(Transaction txn, Map<String, dynamic> dataByDate, String accessToken) async {
-  List<String> savedIds = []; // List to store saved consignment IDs
+    final response = await http.get(
+      Uri.parse(AppHost.consignments),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
 
-  for (var date in dataByDate.keys) {
-    var submissionData = dataByDate[date]['consignments'];
-    for (var dataIteration in submissionData) {
-      var filteredData = filterFields(dataIteration);
-      filteredData['delivery_addresses'] = json.encode(filteredData['delivery_addresses']);
-      filteredData['pickup_addresses'] = json.encode(filteredData['pickup_addresses']);
-      filteredData['delivery_runs'] = json.encode(filteredData['delivery_runs']);
-      filteredData['customers'] = json.encode(filteredData['customers']);
-      filteredData['product_types'] = json.encode(filteredData['product_types']);
-      filteredData['run_sheets'] = json.encode(filteredData['run_sheets']);
-      filteredData['consignment_pallets'] = json.encode(filteredData['consignment_pallets']);
-      filteredData['grouped_consignments'] = filteredData.containsKey('grouped_consignments')
-          ? json.encode(filteredData['grouped_consignments'])
-          : null;
-      filteredData['datetime'] = DateFormat('dd/MM/yyyy').format(DateTime.now());
-      filteredData['is_complete'] = 0;
-      filteredData['access_token'] = accessToken;
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
 
-      List consignment = await txn.query(
-        'consignments',
-        where: 'id = ?',
-        whereArgs: [filteredData['id']],
-      );
+      // Print the list of fetched IDs from the API
+      List<String> fetchedIds = [];
+      data['data'].forEach((key, value) {
+        value['consignments'].forEach((consignment) {
+          fetchedIds.add(consignment['id'].toString());
+        });
+      });
+      print('Fetched Consignment IDs from API: $fetchedIds');
 
-      if (consignment.isEmpty) {
-        await txn.insert('consignments', filteredData);
-        savedIds.add(filteredData['id'].toString()); // Add ID to saved list
+      if (data['status'] == 'success') {
+        await _database.transaction((txn) async {
+          await _processData(txn, data['data'], accessToken);
+        });
       } else {
-        await txn.update(
+        throw Exception('Failed to fetch data: ${data['message']}');
+      }
+    } else {
+      throw Exception('Failed to fetch data with status code: ${response.statusCode}');
+    }
+  }
+
+  // Updated _processData method to add sort_app field
+  Future<void> _processData(Transaction txn, Map<String, dynamic> dataByDate, String accessToken) async {
+    List<String> savedIds = []; // List to store saved consignment IDs
+    int sortAppCounter = 1; // Counter to generate unique sort_app values
+
+    for (var date in dataByDate.keys) {
+      var submissionData = dataByDate[date]['consignments'];
+      for (var dataIteration in submissionData) {
+        var filteredData = filterFields(dataIteration);
+
+        // Adding the sort_app field with a unique value
+        filteredData['sort_app'] = sortAppCounter++;
+
+        filteredData['delivery_addresses'] = json.encode(filteredData['delivery_addresses']);
+        filteredData['pickup_addresses'] = json.encode(filteredData['pickup_addresses']);
+        filteredData['delivery_runs'] = json.encode(filteredData['delivery_runs']);
+        filteredData['customers'] = json.encode(filteredData['customers']);
+        filteredData['product_types'] = json.encode(filteredData['product_types']);
+        filteredData['run_sheets'] = json.encode(filteredData['run_sheets']);
+        filteredData['consignment_pallets'] = json.encode(filteredData['consignment_pallets']);
+        filteredData['grouped_consignments'] = filteredData.containsKey('grouped_consignments')
+            ? json.encode(filteredData['grouped_consignments'])
+            : null;
+        filteredData['datetime'] = DateFormat('dd/MM/yyyy').format(DateTime.now());
+        filteredData['is_complete'] = 0;
+        filteredData['access_token'] = accessToken;
+
+        List consignment = await txn.query(
           'consignments',
-          filteredData,
           where: 'id = ?',
           whereArgs: [filteredData['id']],
         );
-        savedIds.add(filteredData['id'].toString()); // Add ID to saved list
+
+        if (consignment.isEmpty) {
+          await txn.insert('consignments', filteredData);
+          savedIds.add(filteredData['id'].toString()); // Add ID to saved list
+        } else {
+          await txn.update(
+            'consignments',
+            filteredData,
+            where: 'id = ?',
+            whereArgs: [filteredData['id']],
+          );
+          savedIds.add(filteredData['id'].toString()); // Add ID to saved list
+        }
       }
     }
-  }
 
-  // Print the list of saved IDs in the database
-  print('Saved Consignment IDs in Database: $savedIds');
-}
+    // Print the list of saved IDs in the database
+    print('Saved Consignment IDs in Database: $savedIds');
+  }
 }
